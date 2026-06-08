@@ -81,7 +81,7 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
 
         // Pre-warm SabreService so it is already initialized when the first
         // FETCH_REQUEST arrives. Without this, a cold-start service has to
-        // initialize OkHttp, WebViewInterceptor, etc. while HR is already
+        // initialize OkHttp, the Waze session, etc. while HR is already
         // waiting for a response, causing the "plugin not responding" error.
         ForegroundServiceStarter.start(context, null, null);
     }
