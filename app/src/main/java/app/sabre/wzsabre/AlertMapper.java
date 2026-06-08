@@ -100,7 +100,15 @@ public class AlertMapper {
 
         switch (t) {
             case "POLICE":
-                return s.contains("HIDDEN") ? "POLICE_HIDDEN" : "POLICE_VISIBLE";
+                // Waze RT uses POLICE_HIDING for hidden police (speed traps) and
+                // POLICE_WITH_MOBILE_CAMERA for mobile speed cameras; the georss
+                // feed used POLICE_HIDDEN. Treat all covert enforcement as hidden.
+                return (s.contains("HIDDEN") || s.contains("HIDING") || s.contains("CAMERA"))
+                        ? "POLICE_HIDDEN" : "POLICE_VISIBLE";
+
+            case "CAMERA":
+                // Fixed/mobile speed & red-light cameras — flag for enforcement awareness.
+                return "POLICE_HIDDEN";
 
             case "ACCIDENT":
                 return s.contains("MAJOR") ? "ACCIDENT_MAJOR" : "ACCIDENT_MINOR";

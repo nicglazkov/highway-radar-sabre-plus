@@ -26,6 +26,9 @@ public class AlertMapperTest {
 
     @Test public void waze_police_visible()  { assertEquals("POLICE_VISIBLE",  AlertMapper.fromWazeType("POLICE", "")); }
     @Test public void waze_police_hidden()   { assertEquals("POLICE_HIDDEN",   AlertMapper.fromWazeType("POLICE", "POLICE_HIDDEN")); }
+    @Test public void waze_police_hiding()   { assertEquals("POLICE_HIDDEN",   AlertMapper.fromWazeType("POLICE", "POLICE_HIDING")); }
+    @Test public void waze_police_camera()   { assertEquals("POLICE_HIDDEN",   AlertMapper.fromWazeType("POLICE", "POLICE_WITH_MOBILE_CAMERA")); }
+    @Test public void waze_camera_type()     { assertEquals("POLICE_HIDDEN",   AlertMapper.fromWazeType("CAMERA", "")); }
     @Test public void waze_accident_major()  { assertEquals("ACCIDENT_MAJOR",  AlertMapper.fromWazeType("ACCIDENT", "ACCIDENT_MAJOR")); }
     @Test public void waze_accident_minor()  { assertEquals("ACCIDENT_MINOR",  AlertMapper.fromWazeType("ACCIDENT", "")); }
     @Test public void waze_hazard_debris()   { assertEquals("HAZARD_ON_ROAD_DEBRIS",      AlertMapper.fromWazeType("HAZARD", "")); }
