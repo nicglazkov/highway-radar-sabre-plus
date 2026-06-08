@@ -27,14 +27,14 @@ public class SabreService extends Service {
 
     private ExecutorService executor;
     private CHPSource chpSource;
-    private WazeSource wazeSource;
+    private app.sabre.wzsabre.waze.WazeProtocolSource wazeSource;
 
     @Override
     public void onCreate() {
         super.onCreate();
         executor   = Executors.newFixedThreadPool(4);
         chpSource  = new CHPSource();
-        wazeSource = new WazeSource(this);
+        wazeSource = new app.sabre.wzsabre.waze.WazeProtocolSource(this);
         createNotificationChannel();
         startForeground(NOTIFICATION_ID, buildForegroundNotification());
         Log.d(TAG, "Service started");

@@ -1,5 +1,6 @@
 package app.sabre.wzsabre.waze;
 
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.nio.charset.StandardCharsets;
@@ -14,7 +15,8 @@ import java.util.Map;
  * reporting/keepalive/pooling).
  *
  * No backend or pre-shared credentials are needed: register() asks Waze itself for
- * a fresh username/password.
+ * a fresh username/password. Credentials + device can be injected (persisted across
+ * runs) so we don't re-register on every fetch — Waze caps anonymous accounts per day.
  */
 final class WazeSession {
     private static final String TAG = "WazeRT";
@@ -23,18 +25,32 @@ final class WazeSession {
     private final DeviceIdentity device;
     private final WazeHttpClient http;
 
-    private WazeCredentials credentials;   // from register()
+    private WazeCredentials credentials;   // from register() or injected
     private WazeSessionInfo session;       // from login()
-    private int seqCount = 1;
+    private int  seqCount = 1;
+    private long lastRequestMs = 0L;
 
     WazeSession(String region) {
+        this(region, DeviceIdentity.random(), null);
+    }
+
+    WazeSession(String region, DeviceIdentity device, WazeCredentials credentials) {
         this.region = region;
-        this.device = DeviceIdentity.random();
+        this.device = device;
+        this.credentials = credentials;
         this.http = new WazeHttpClient();
     }
 
+    WazeCredentials getCredentials() { return credentials; }
+    DeviceIdentity  getDevice()      { return device; }
+
     private String url(String path) { return "https://" + WazeConstants.rtHost(region) + path; }
     private String nextSeq() { return String.valueOf(seqCount++); }
+
+    private boolean sessionValid() {
+        return session != null
+                && (SystemClock.elapsedRealtime() - lastRequestMs) < WazeConstants.SESSION_IDLE_TIMEOUT_MS;
+    }
 
     // ── register ─────────────────────────────────────────────────────────────
 
@@ -96,7 +112,8 @@ final class WazeSession {
                 session = new WazeSessionInfo(s.getServerSessionId(), s.getSecretKey(),
                         String.valueOf(s.getGlobalUserId()));
                 seqCount = 2;
-                Log.d(TAG, "Login OK: sessionId=" + s.getServerSessionId() + " globalUserId=" + s.getGlobalUserId());
+                lastRequestMs = SystemClock.elapsedRealtime();
+                Log.d(TAG, "Login OK: sessionId=" + s.getServerSessionId());
                 return;
             }
         }
@@ -118,14 +135,19 @@ final class WazeSession {
         WazeHttpClient.HttpResult r = http.post(url(WazeConstants.PATH_COMMAND),
                 payload.getBytes(StandardCharsets.UTF_8), headers);
         if (r.body.length == 0) throw new WazeExceptions.WazeOperationException("empty command response");
+        lastRequestMs = SystemClock.elapsedRealtime();
         return WazeProto.Batch.parseFrom(r.body);
     }
 
-    /** Full flow: ensure logged in, handshake, then query the area around (lat,lon). */
-    List<WazeAlert> fetchArea(double lat, double lon, double radiusMeters) throws Exception {
+    /** Register (if no creds) and log in (if no valid session). */
+    private void ensureReady(double lon, double lat) throws Exception {
         if (credentials == null) register(lon, lat);
-        if (session == null)     login(lon, lat);
+        if (!sessionValid())     login(lon, lat);
+    }
 
+    /** Full flow: ensure ready, handshake, then query the area around (lat,lon). */
+    List<WazeAlert> fetchArea(double lat, double lon, double radiusMeters) throws Exception {
+        ensureReady(lon, lat);
         command(WazeRtCodec.handshakePayload(lon, lat));   // SeeMe / SetMood / Location / MapDisplayed
 
         double latDelta = radiusMeters / WazeConstants.M_PER_DEG_LAT;
