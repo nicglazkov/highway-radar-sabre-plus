@@ -24,6 +24,11 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
                 // HR sends SHUTDOWN when ending a session but immediately starts a new one.
                 // Keep the service running so the next FETCH_REQUEST can be handled.
                 Log.d(TAG, "Shutdown received — keeping service alive for next session");
+            } else if (BuildConfig.DEBUG && action != null && action.endsWith(".WAZE_TEST")) {
+                // Debug-only: exercise the Waze RT protocol (register -> login -> query).
+                final double lat = intent.getDoubleExtra("lat", 37.8044);
+                final double lon = intent.getDoubleExtra("lon", -122.2712);
+                new Thread(() -> app.sabre.wzsabre.waze.WazeProtocolSource.selfTest(lat, lon)).start();
             }
         } catch (Exception e) {
             Log.e(TAG, "Error handling broadcast", e);
