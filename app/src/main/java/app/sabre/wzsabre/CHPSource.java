@@ -111,7 +111,18 @@ public class CHPSource {
                     if ("Log".equals(parser.getName())) currentTag = null;
                     break;
             }
-            eventType = parser.next();
+            try {
+                eventType = parser.next();
+            } catch (Exception e) {
+                // CHP's IIS server caps the feed at ~80KB (Content-Length: 81920) and
+                // truncates mid-record when statewide incident volume is high, leaving
+                // malformed XML at the end. Salvage every complete <Log> parsed so far
+                // instead of dropping all of them (which would yield zero alerts exactly
+                // when the roads are busiest).
+                Log.w(TAG, "CHP feed truncated mid-stream — salvaged " + alerts.size()
+                        + " complete records before the cut");
+                break;
+            }
         }
         return alerts;
     }
