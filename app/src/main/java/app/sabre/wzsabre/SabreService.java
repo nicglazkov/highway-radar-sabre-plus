@@ -145,10 +145,13 @@ public class SabreService extends Service {
         };
         List<SabreAlert> out = new ArrayList<>();
         long nowSec = System.currentTimeMillis() / 1000L;
-        double dLat = 0.0011; // ~120m north (ahead when heading north)
         double lonScale = 0.00025 / Math.cos(Math.toRadians(lat));
         for (int i = 0; i < specs.length; i++) {
-            double aLat = lat + dLat;
+            // Put the HAZARD/WEATHER types ~120m north (ahead) and the POLICE/ACCIDENT
+            // types ~3.3km north (out of the immediate card range) so the hazards can be
+            // observed in isolation, without police/accident outranking them.
+            boolean isHazard = specs[i][0].startsWith("HAZARD");
+            double aLat = lat + (isHazard ? 0.0011 : 0.0300);
             double aLon = lon + (i - specs.length / 2.0) * lonScale; // spread E-W
             out.add(new SabreAlert("chp_TEST" + i, SabreResponseBuilder.SOURCE_CHP,
                     specs[i][0], aLat, aLon, 0.0, specs[i][1], nowSec));
