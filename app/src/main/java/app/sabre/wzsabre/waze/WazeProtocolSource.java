@@ -176,17 +176,15 @@ public final class WazeProtocolSource {
         long t0 = System.currentTimeMillis();
         try {
             List<WazeAlert> alerts = new WazeSession(region(lat, lon)).fetchArea(lat, lon, 10000);
-            StringBuilder sb = new StringBuilder("Waze RT OK: " + alerts.size()
-                    + " alerts in " + (System.currentTimeMillis() - t0) + "ms");
-            int n = 0;
+            String summary = "Waze RT OK: " + alerts.size()
+                    + " alerts in " + (System.currentTimeMillis() - t0) + "ms";
+            Log.d(TAG, summary);
             for (WazeAlert a : alerts) {
-                if (n++ >= 6) break;
-                sb.append("\n  ").append(a.type).append('/').append(a.subtype)
-                  .append(" @ ").append(String.format(Locale.US, "%.5f,%.5f", a.lat, a.lon))
-                  .append(a.street != null ? " (" + a.street + ")" : "");
+                Log.d(TAG, "  alert " + a.type + '/' + a.subtype
+                        + " @ " + String.format(Locale.US, "%.5f,%.5f", a.lat, a.lon)
+                        + (a.street != null ? " (" + a.street + ")" : ""));
             }
-            Log.d(TAG, sb.toString());
-            return sb.toString();
+            return summary;
         } catch (Exception e) {
             String msg = "Waze RT FAILED: " + e.getClass().getSimpleName() + ": " + e.getMessage();
             Log.e(TAG, msg, e);

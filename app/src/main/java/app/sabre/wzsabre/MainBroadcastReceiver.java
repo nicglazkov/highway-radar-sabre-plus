@@ -29,6 +29,13 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
                 final double lat = intent.getDoubleExtra("lat", 37.8044);
                 final double lon = intent.getDoubleExtra("lon", -122.2712);
                 new Thread(() -> app.sabre.wzsabre.waze.WazeProtocolSource.selfTest(lat, lon)).start();
+            } else if (BuildConfig.DEBUG && action != null && action.endsWith(".INJECT_TEST")) {
+                // Debug-only: toggle synthetic one-of-each-type alerts to validate HR rendering.
+                SabreService.injectTestAlerts = intent.getBooleanExtra("on", true);
+                if (intent.hasExtra("lat")) SabreService.testLat = intent.getDoubleExtra("lat", SabreService.testLat);
+                if (intent.hasExtra("lon")) SabreService.testLon = intent.getDoubleExtra("lon", SabreService.testLon);
+                Log.d(TAG, "injectTestAlerts=" + SabreService.injectTestAlerts
+                        + " @ " + SabreService.testLat + "," + SabreService.testLon);
             }
         } catch (Exception e) {
             Log.e(TAG, "Error handling broadcast", e);
