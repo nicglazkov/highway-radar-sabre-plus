@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 
 /**
  * Validates that SabreResponseBuilder produces JSON that exactly matches
- * HR's kotlinx.serialization schema (compatible with the wzsabre 1.8 SABRE protocol).
+ * HR's kotlinx.serialization schema (compatible with the wzsabre SABRE protocol).
  *
  * SabreFetchResponseAlert requires ALL 11 fields (bitmask 2047 = 0b11111111111):
  *   0  alert_source   String  non-null

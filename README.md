@@ -93,7 +93,7 @@ If you already have wzsabre installed:
 - On Android 15: open this app first, then HR. The background service must be running before HR requests data.
 
 **CHP alerts visible but no Waze alerts**
-- Waze requires a real internet connection. The plugin loads `waze.com` in a background WebView to establish a session — this can take 5–30 seconds on first use.
+- Waze requires a real internet connection. On first use the plugin registers an anonymous Waze session in the background — Waze alerts can take ~10–20 seconds to appear after you start a session, then refresh continuously thereafter.
 - Check that the app has network permission (it should request none explicitly; all network access is in the background service).
 
 **No alerts at all**
@@ -107,14 +107,15 @@ If you already have wzsabre installed:
 ```
 Highway Radar  ──broadcast──▶  MainBroadcastReceiver
                                       │
-                               startService()
+                        startForegroundService()
+                          (+ exact-alarm fallback)
                                       │
                                SabreService (foreground)
                                  ┌────┴────┐
                               CHP feed   Waze
-                              (XML)     (WebView
-                                        cookie +
-                                        OkHttp)
+                              (XML)     (mobile "RT"
+                                        protocol,
+                                        protobuf)
                                  └────┬────┘
                                sendBroadcast(response)
                                       │
@@ -122,7 +123,7 @@ Highway Radar  ──broadcast──▶  MainBroadcastReceiver
 ```
 
 - **CHP**: fetches `https://media.chp.ca.gov/sa_xml/sa.xml`, filters by radius and incident age, applies your category settings.
-- **Waze**: loads `waze.com` in a hidden WebView to harvest session cookies, then makes a direct HTTP call to the Waze georss API with the correct bounding-box parameters. This mirrors the exact approach used by wzsabre 1.8.
+- **Waze**: emulates the Waze mobile app's binary "RT" protocol — it registers an anonymous Waze session, logs in, and queries crowd-sourced alerts over Waze's protobuf API (the older live-map/georss API is now blocked). This matches the approach in the current official wzsabre.
 - **SABRE protocol**: a broadcast-intent IPC protocol defined by Highway Radar. Our plugin responds to `FETCH_REQUEST` broadcasts with a JSON payload containing `SabreFetchResponseAlert` objects.
 
 ---
@@ -135,7 +136,7 @@ Pull requests welcome. Run the test suite before submitting:
 ./gradlew test
 ```
 
-324 unit tests cover the SABRE response format, alert type mapping, CHP XML parsing, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup.
+121 unit tests cover the SABRE response format, alert type mapping, CHP XML parsing, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup.
 
 ---
 

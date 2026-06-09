@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 /**
  * Builds the SABRE fetch-response JSON that Highway Radar deserializes into
- * SabreFetchResponse / SabreFetchResponseAlert (compatible with the wzsabre 1.8 SABRE protocol).
+ * SabreFetchResponse / SabreFetchResponseAlert (compatible with the wzsabre SABRE protocol).
  *
  * Extracted from SabreService so it can be exercised by JVM unit tests without
  * starting an Android service.

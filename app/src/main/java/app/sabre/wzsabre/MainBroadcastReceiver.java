@@ -66,7 +66,7 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
         response.put("id",           pkg);
         response.put("name",         "CHP + Waze SABRE");
         response.put("package_name", pkg);
-        response.put("version",      "1.0");
+        response.put("version",      BuildConfig.VERSION_NAME);
         JSONArray sources = new JSONArray();
         JSONObject s1 = new JSONObject(); s1.put("id", "chp");  s1.put("name", "CHP Live Feed"); sources.put(s1);
         JSONObject s2 = new JSONObject(); s2.put("id", "waze"); s2.put("name", "Waze");          sources.put(s2);
