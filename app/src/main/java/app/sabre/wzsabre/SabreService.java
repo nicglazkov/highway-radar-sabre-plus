@@ -32,14 +32,16 @@ public class SabreService extends Service {
     private ExecutorService requestExecutor;
     private ExecutorService fetchExecutor;
     private CHPSource chpSource;
+    private LcsSource lcsSource;
     private app.sabre.wzsabre.waze.WazeProtocolSource wazeSource;
 
     @Override
     public void onCreate() {
         super.onCreate();
         requestExecutor = Executors.newSingleThreadExecutor();
-        fetchExecutor   = Executors.newFixedThreadPool(2);
+        fetchExecutor   = Executors.newFixedThreadPool(3);
         chpSource  = new CHPSource();
+        lcsSource  = new LcsSource();
         wazeSource = new app.sabre.wzsabre.waze.WazeProtocolSource(this);
         createNotificationChannel();
         startForeground(NOTIFICATION_ID, buildForegroundNotification());
@@ -90,9 +92,13 @@ public class SabreService extends Service {
                 // Load config fresh on each request so changes take effect immediately
                 ChpConfig chpConfig = ChpConfig.load(SabreService.this);
 
-                // CHP and Waze run in parallel
+                // All sources run in parallel. Waze and LCS serve from caches and
+                // return in milliseconds; CHP is the only real network call here.
                 Future<List<SabreAlert>> chpFuture  = fetchExecutor.submit(() -> chpSource.fetchAlerts(lat, lon, radius, chpConfig));
                 Future<List<SabreAlert>> wazeFuture = fetchExecutor.submit(() -> wazeSource.fetchAlerts(lat, lon, radius));
+                Future<List<SabreAlert>> lcsFuture  = chpConfig.lcsEnabled
+                        ? fetchExecutor.submit(() -> lcsSource.fetchAlerts(lat, lon, radius))
+                        : null;
 
                 List<SabreAlert> allAlerts = new ArrayList<>();
 
@@ -119,6 +125,18 @@ public class SabreService extends Service {
                 } else {
                     Log.w(TAG, "No budget left for Waze");
                     wazeFuture.cancel(true);
+                }
+
+                // LCS serves from cache and never blocks; 1s is generous
+                if (lcsFuture != null) {
+                    try {
+                        List<SabreAlert> lcsAlerts = lcsFuture.get(1, TimeUnit.SECONDS);
+                        allAlerts.addAll(lcsAlerts);
+                        Log.d(TAG, "LCS: " + lcsAlerts.size() + " alerts");
+                    } catch (TimeoutException e) {
+                        Log.w(TAG, "LCS timed out");
+                        lcsFuture.cancel(true);
+                    }
                 }
 
                 if (BuildConfig.DEBUG && injectTestAlerts) {

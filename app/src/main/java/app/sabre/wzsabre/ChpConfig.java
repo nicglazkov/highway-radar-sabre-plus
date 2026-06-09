@@ -34,6 +34,10 @@ public class ChpConfig {
     // ── Age filter ───────────────────────────────────────────────────────────
     public int maxAgeMinutes;
 
+    // ── Caltrans LCS lane/road closures ──────────────────────────────────────
+    public boolean lcsEnabled;
+    private static final String KEY_LCS_ENABLED = "lcs_enabled";
+
     // ── Constructor (defaults) ───────────────────────────────────────────────
     private ChpConfig() {
         for (ChpCategory cat : ChpCategory.values()) {
@@ -41,6 +45,7 @@ public class ChpConfig {
             typeOverride[cat.ordinal()] = null;  // null = keep default
         }
         maxAgeMinutes = 60;  // 1 hour default
+        lcsEnabled = true;
     }
 
     // ── Accessors ─────────────────────────────────────────────────────────────
@@ -94,6 +99,7 @@ public class ChpConfig {
                     validOverrideOrNull(prefs.getString(cat.name() + KEY_OVERRIDE, null));
         }
         cfg.maxAgeMinutes = prefs.getInt(KEY_MAX_AGE, 60);
+        cfg.lcsEnabled    = prefs.getBoolean(KEY_LCS_ENABLED, true);
         return cfg;
     }
 
@@ -109,6 +115,7 @@ public class ChpConfig {
             }
         }
         ed.putInt(KEY_MAX_AGE, maxAgeMinutes);
+        ed.putBoolean(KEY_LCS_ENABLED, lcsEnabled);
         ed.apply();
     }
 

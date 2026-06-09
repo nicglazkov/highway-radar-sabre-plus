@@ -48,6 +48,12 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        // android.util.Log no-ops in JVM unit tests (LcsSource logs in its
+        // feed-salvage path, which the truncation tests exercise)
+        unitTests.isReturnDefaultValues = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

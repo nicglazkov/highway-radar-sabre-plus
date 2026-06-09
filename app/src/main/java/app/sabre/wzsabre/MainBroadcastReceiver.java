@@ -78,8 +78,9 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
         response.put("package_name", pkg);
         response.put("version",      BuildConfig.VERSION_NAME);
         JSONArray sources = new JSONArray();
-        JSONObject s1 = new JSONObject(); s1.put("id", "chp");  s1.put("name", "CHP Live Feed"); sources.put(s1);
-        JSONObject s2 = new JSONObject(); s2.put("id", "waze"); s2.put("name", "Waze");          sources.put(s2);
+        JSONObject s1 = new JSONObject(); s1.put("id", "chp");  s1.put("name", "CHP Live Feed");      sources.put(s1);
+        JSONObject s2 = new JSONObject(); s2.put("id", "waze"); s2.put("name", "Waze");               sources.put(s2);
+        JSONObject s3 = new JSONObject(); s3.put("id", "lcs");  s3.put("name", "Caltrans Closures");  sources.put(s3);
         response.put("supported_sources", sources);
         response.put("request_action",  "app.sabre.wzsabre.FETCH_REQUEST");
         response.put("report_action",   "app.sabre.wzsabre.SUBMIT_REPORT");

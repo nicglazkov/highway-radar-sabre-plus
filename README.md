@@ -12,8 +12,9 @@ A drop-in replacement for **wzsabre** that brings CHP live incident alerts and W
 |--------|------|----------------|
 | **CHP Live Feed** | Accidents, road closures, debris, officer on road, weather hazards — directly from the California Highway Patrol statewide XML feed | Every HR map refresh |
 | **Waze** | Crowdsourced police, accidents, hazards, road closures | Every HR map refresh |
+| **Caltrans Closures (LCS)** | Lane and road closures that are physically in place right now (CHP code 1097), from the per-district Caltrans Lane Closure System feeds | Cached, refreshed every 5 min |
 
-Both sources run in parallel and feed into the standard HR crowdsourced-alerts layer — the same map overlay that wzsabre used to power.
+All sources run in parallel and feed into the standard HR crowdsourced-alerts layer — the same map overlay that wzsabre used to power.
 
 ---
 
@@ -124,6 +125,7 @@ Highway Radar  ──broadcast──▶  MainBroadcastReceiver
 
 - **CHP**: fetches `https://media.chp.ca.gov/sa_xml/sa.xml`, filters by radius and incident age, applies your category settings.
 - **Waze**: emulates the Waze mobile app's binary "RT" protocol — it registers an anonymous Waze session, logs in, and queries crowd-sourced alerts over Waze's protobuf API (the older live-map/georss API is now blocked). This matches the approach in the current official wzsabre.
+- **Caltrans LCS**: fetches the per-district lane-closure feeds (`https://cwwp2.dot.ca.gov/data/d<N>/lcs/lcsStatusD<NN>.xml`) for whichever districts cover your location. Only closures that are physically established (CHP code 1097 set, not picked up or canceled) are shown; shoulder-only closures are skipped. Closures longer than 2 km get a pin at each end. The ~4 MB feeds are parsed in the background and cached for 5 minutes, so they never delay a Highway Radar request.
 - **SABRE protocol**: a broadcast-intent IPC protocol defined by Highway Radar. Our plugin responds to `FETCH_REQUEST` broadcasts with a JSON payload containing `SabreFetchResponseAlert` objects.
 
 ---
@@ -136,7 +138,7 @@ Pull requests welcome. Run the test suite before submitting:
 ./gradlew test
 ```
 
-121 unit tests cover the SABRE response format, alert type mapping, CHP XML parsing, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup.
+162 unit tests cover the SABRE response format, alert type mapping, CHP XML parsing, Caltrans LCS parsing and filtering, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup.
 
 ---
 

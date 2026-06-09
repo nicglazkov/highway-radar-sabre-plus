@@ -49,7 +49,17 @@ public class MainActivity extends Activity {
 
         updateServiceStatus();
         buildCategoryRows();
+        buildLcsSwitch();
         buildAgeSpinner();
+    }
+
+    private void buildLcsSwitch() {
+        Switch sw = findViewById(R.id.lcsSwitch);
+        sw.setChecked(config.lcsEnabled);
+        sw.setOnCheckedChangeListener((CompoundButton btn, boolean isChecked) -> {
+            config.lcsEnabled = isChecked;
+            config.save(this);
+        });
     }
 
     /**

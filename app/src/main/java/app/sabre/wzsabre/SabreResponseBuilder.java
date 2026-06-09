@@ -25,6 +25,7 @@ public class SabreResponseBuilder {
      */
     public static final String SOURCE_CHP  = "chp";
     public static final String SOURCE_WAZE = "waze";
+    public static final String SOURCE_LCS  = "lcs";
 
     // USER_ID_REGEX matches Waze alert IDs of the form "alert-<digits>/..."
     private static final Pattern USER_ID_PATTERN = Pattern.compile("alert-(\\d*)/.*");
