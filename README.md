@@ -112,12 +112,13 @@ Highway Radar  ──broadcast──▶  MainBroadcastReceiver
                           (+ exact-alarm fallback)
                                       │
                                SabreService (foreground)
-                                 ┌────┴────┐
-                              CHP feed   Waze
-                              (XML)     (mobile "RT"
-                                        protocol,
-                                        protobuf)
-                                 └────┬────┘
+                              ┌───────┼─────────┐
+                          CHP feed   Waze    Caltrans LCS
+                          (XML)     (mobile  (per-district
+                                    "RT"      closure XML,
+                                    protocol, cached)
+                                    protobuf)
+                              └───────┼─────────┘
                                sendBroadcast(response)
                                       │
                                Highway Radar  ◀──────

@@ -46,9 +46,10 @@ Current test suites:
 | Suite | Tests | What it covers |
 |-------|-------|----------------|
 | `AlertMapperTest` | 46 | Every CHP log type and Waze type maps to the correct SABRE type (incl. injury-collision codes) |
-| `ChpConfigTest` | 32 | Category toggles, type overrides, age filter, LogTime parsing |
-| `SabreProtocolTest` | 28 | HR JSON schema — all 11 required alert fields, types, nullability |
-| `CHPSourceTest` | 14 | XML parsing, radius filter, coordinate parsing, haversine distance |
+| `ChpConfigTest` | 42 | Category toggles, type overrides, age filter, LogTime parsing (both CHP feed formats) |
+| `SabreProtocolTest` | 32 | HR JSON schema — all 11 required alert fields, type whitelist, nullability, drop-bad-alert semantics |
+| `LcsSourceTest` | 25 | Caltrans LCS parsing, 1097/1098/1022 state filtering, shoulder skip, span pins, district selection |
+| `CHPSourceTest` | 17 | XML parsing (incl. entity refs + real feed shape), radius filter, coordinate parsing, haversine |
 
 ## Project structure
 
@@ -57,13 +58,14 @@ app/src/main/java/app/sabre/wzsabre/
 ├── MainActivity.java            # Settings UI (category toggles, age picker) + permission prompts
 │
 ├── MainBroadcastReceiver.java   # Receives HR intents, starts SabreService
-├── SabreService.java            # Foreground service; orchestrates CHP + Waze fetches
+├── SabreService.java            # Foreground service; orchestrates CHP + Waze + LCS fetches
 ├── ForegroundServiceStarter.java# Robust FGS start (startForegroundService → exact-alarm → WorkManager)
 ├── ServiceStartWorker.java      # WorkManager fallback for service start
 ├── BootReceiver.java            # Starts the service after device boot
 ├── AltStartupActivity.java      # Foreground-launch hook HR can use to start the service
 │
 ├── CHPSource.java               # CHP XML fetch + parse + filter (truncation-tolerant)
+├── LcsSource.java               # Caltrans LCS lane/road closures (per-district feeds, async cache)
 ├── AlertMapper.java             # CHP log type → SABRE type; Waze type → SABRE type
 ├── ChpCategory.java             # Enum of 6 CHP alert categories
 ├── ChpConfig.java               # User config (SharedPreferences), resolves final type
@@ -102,6 +104,16 @@ with a `uid` auth header). Because an RT query long-polls (~10s), `WazeProtocolS
 a cache and refreshes it on a background thread, and persists/reuses the account so it
 registers at most once. The protobuf schema lives at `app/src/main/proto/waze.proto` and is
 compiled with `protobuf-javalite` (gradle `com.google.protobuf` plugin).
+
+### Caltrans LCS closures
+Lane/road closures come from the per-district Caltrans Lane Closure System feeds
+(`https://cwwp2.dot.ca.gov/data/d<N>/lcs/lcsStatusD<NN>.xml`). `LcsSource` picks districts by
+bounding box around the requested location, streams the ~4 MB XML (never held in memory as a
+string), and keeps a parsed per-district cache (5-min TTL, 30-min max serve age) refreshed on
+a background thread — the HR request path only ever reads the cache. A closure is reported
+only when it is physically in place: CHP code **1097** (established) set, **1098** (picked up)
+and **1022** (canceled) not set; shoulder-only closures are skipped, and closures spanning
+more than 2 km get a pin at both ends.
 
 ### Android 15/16 foreground service start
 On Android 15/16 both a plain `startService()` (background service start) and a bare
