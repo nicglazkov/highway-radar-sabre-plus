@@ -37,6 +37,9 @@ public class SabreResponseBuilder {
      */
     public static final double HEADING_UNKNOWN = -720.0;
 
+    /** Max alerts per response batch — matches the official wzsabre (200). */
+    public static final int MAX_ALERTS_PER_BATCH = 200;
+
     // USER_ID_REGEX matches Waze alert IDs of the form "alert-<digits>/..."
     private static final Pattern USER_ID_PATTERN = Pattern.compile("alert-(\\d*)/.*");
 
@@ -131,13 +134,26 @@ public class SabreResponseBuilder {
      * </pre>
      */
     public static String build(String requestId, List<SabreAlert> alerts) throws JSONException {
+        return build(requestId, alerts, 1, 0);
+    }
+
+    /**
+     * Build one batch of a multi-batch response. HR's wire format carries
+     * {@code n_batches} (total) and {@code batch_id} (0-based); the official
+     * wzsabre splits a fetch response into batches of {@value #MAX_ALERTS_PER_BATCH}
+     * alerts, each sent as a separate broadcast. {@code batchAlerts} is the slice
+     * for this batch.
+     */
+    public static String build(String requestId, List<SabreAlert> batchAlerts,
+                               int nBatches, int batchId) throws JSONException {
         JSONObject root = new JSONObject();
         root.put("request_id",    requestId);
         root.put("error_message", JSONObject.NULL);
 
         JSONObject responseData = new JSONObject();
-        responseData.put("n_batches", 1);
-        responseData.put("batch_id",  0);
+        responseData.put("n_batches", nBatches);
+        responseData.put("batch_id",  batchId);
+        List<SabreAlert> alerts = batchAlerts;
 
         // One malformed alert must never take down the whole response (HR would
         // get nothing and show "plugin not responding") — drop it and keep the rest.

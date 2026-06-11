@@ -238,12 +238,23 @@ public class SabreService extends Service {
 
     private void sendFetchResponse(String responseAction, String requestId,
                                     List<SabreAlert> alerts) throws JSONException {
-        String responseJson = SabreResponseBuilder.build(requestId, alerts);
-        Intent intent = new Intent(responseAction);
-        intent.putExtra("data", responseJson);
-        sendBroadcast(intent);
-        Log.d(TAG, "Response sent to: " + responseAction);
-        Log.d(TAG, "Response JSON: " + responseJson);
+        // Split into batches of MAX_ALERTS_PER_BATCH, each its own broadcast, with
+        // n_batches/batch_id set — mirrors the official wzsabre. Always ≥1 batch
+        // (an empty list still sends one empty batch so HR sees a response).
+        int n = alerts.size();
+        int batchSize = SabreResponseBuilder.MAX_ALERTS_PER_BATCH;
+        int nBatches = Math.max(1, (n + batchSize - 1) / batchSize);
+        for (int i = 0; i < nBatches; i++) {
+            int from = i * batchSize;
+            int to = Math.min(n, from + batchSize);
+            String responseJson = SabreResponseBuilder.build(
+                    requestId, alerts.subList(from, to), nBatches, i);
+            Intent intent = new Intent(responseAction);
+            intent.putExtra("data", responseJson);
+            sendBroadcast(intent);
+            Log.d(TAG, "Response batch " + (i + 1) + "/" + nBatches + " sent to: " + responseAction);
+            Log.d(TAG, "Response JSON: " + responseJson);
+        }
     }
 
     private void createNotificationChannel() {
