@@ -12,7 +12,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import app.sabre.wzsabre.AlertMapper;
 import app.sabre.wzsabre.SabreAlert;
 import app.sabre.wzsabre.SabreResponseBuilder;
 
@@ -168,10 +167,16 @@ public final class WazeProtocolSource {
         }
     }
 
-    /** Map a cached Waze alert to a SABRE alert, or null for a type we don't carry. */
+    /**
+     * Map a cached Waze alert to a SABRE alert. Mirrors the official's request():
+     * the SABRE type is the raw Waze subtype name, or the type name when the
+     * subtype is empty — HR natively understands the full Waze vocabulary, so no
+     * remap/whitelist is applied (the old remap silently dropped whole categories
+     * like SOS/stopped-vehicle and flattened "car stopped" into generic debris).
+     */
     private SabreAlert toSabreAlert(WazeAlert wa) {
-        String type = AlertMapper.fromWazeType(wa.type, wa.subtype);
-        if (type == null) return null;
+        String type = (wa.subtype != null && !wa.subtype.isEmpty()) ? wa.subtype : wa.type;
+        if (type == null || type.isEmpty()) return null;
         String id = "alert-" + wa.id + "/" + wa.uuid;   // user_id is parsed from this
         return new SabreAlert(id, SabreResponseBuilder.SOURCE_WAZE, type,
                 wa.lat, wa.lon, wa.magvar, wa.street, wa.pubMillis / 1000L);
