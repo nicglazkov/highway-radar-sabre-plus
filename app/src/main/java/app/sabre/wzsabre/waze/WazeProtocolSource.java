@@ -49,6 +49,13 @@ public final class WazeProtocolSource {
     // worse than no Waze data.
     private static final long   CACHE_MAX_SERVE_AGE_MS = 10 * 60_000L;
 
+    // Zoom levels queried per refresh (WazeAlertFetcher default maxSteps=5) and the
+    // total wall-clock budget for the box loop (mirrors the official's per-slot
+    // withTimeout of ~10s — whatever boxes complete in time are merged, the rest
+    // wait for the next refresh).
+    private static final int  SHRINK_STEPS    = 5;
+    private static final long QUERY_BUDGET_MS = 10_000L;
+
     private final Context ctx;
     private final ExecutorService refreshExec = Executors.newSingleThreadExecutor();
     private final AtomicBoolean refreshing = new AtomicBoolean(false);
@@ -142,18 +149,23 @@ public final class WazeProtocolSource {
     }
 
     /**
-     * Prepare the session, query the area, and merge the deltas into the cache.
-     * Single box for now; {@link #shrinkingBoxes} (added with the multi-zoom fix)
-     * widens coverage.
+     * Prepare the session, then query a series of progressively smaller boxes
+     * around the driver, merging each into the cache. Mirrors the official's
+     * one-account path: getShrinkingBboxes (full radius, then halved each step),
+     * each box shrunk to 0.75 as scanBoxes does, queried big→small on one session
+     * within a total time budget. The smaller viewports defeat the server-side
+     * thinning that drops minor/near-driver alerts from a single large query.
      */
     private void queryArea(WazeSession s, double lat, double lon, double radiusMeters) throws Exception {
         s.prepareForArea(lat, lon);
-        double latDelta = radiusMeters / WazeConstants.M_PER_DEG_LAT;
-        double lonDelta = radiusMeters / WazeConstants.mPerDegLon(lat);
-        WazeProto.Batch batch = s.queryBox(new double[]{
-                lon - lonDelta, lat - latDelta, lon + lonDelta, lat + latDelta});
-        alertCache.submit(new AlertQueryResult(
-                WazeRtCodec.parseAlerts(batch), WazeRtCodec.parseRemovedAlertIds(batch)));
+        double[][] zoomBoxes = GeoBoxes.shrinkingBoxes(lon, lat, radiusMeters, SHRINK_STEPS);
+        long deadline = System.currentTimeMillis() + QUERY_BUDGET_MS;
+        for (double[] zoom : zoomBoxes) {
+            if (System.currentTimeMillis() >= deadline) break;   // best-effort, like the official
+            WazeProto.Batch batch = s.queryBox(GeoBoxes.shrink(zoom, 0.75));
+            alertCache.submit(new AlertQueryResult(
+                    WazeRtCodec.parseAlerts(batch), WazeRtCodec.parseRemovedAlertIds(batch)));
+        }
     }
 
     /** Map a cached Waze alert to a SABRE alert, or null for a type we don't carry. */
