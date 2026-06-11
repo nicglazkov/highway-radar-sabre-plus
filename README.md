@@ -94,7 +94,7 @@ If you already have wzsabre installed:
 - On Android 15: open this app first, then HR. The background service must be running before HR requests data.
 
 **CHP alerts visible but no Waze alerts**
-- Waze requires a real internet connection. On first use the plugin registers an anonymous Waze session in the background — Waze alerts can take ~10–20 seconds to appear after you start a session, then refresh continuously thereafter.
+- Waze requires a real internet connection. On the very first use the plugin registers an anonymous Waze session in the background — Waze alerts can take ~10–20 seconds to appear that first time. After that the session and a live alert cache are kept warm and pre-loaded at start, so alerts appear within a second or two on subsequent sessions.
 - Check that the app has network permission (it should request none explicitly; all network access is in the background service).
 
 **No alerts at all**
@@ -125,7 +125,7 @@ Highway Radar  ──broadcast──▶  MainBroadcastReceiver
 ```
 
 - **CHP**: fetches `https://media.chp.ca.gov/sa_xml/sa.xml`, filters by radius and incident age, applies your category settings.
-- **Waze**: emulates the Waze mobile app's binary "RT" protocol — it registers an anonymous Waze session, logs in, and queries crowd-sourced alerts over Waze's protobuf API (the older live-map/georss API is now blocked). This matches the approach in the current official wzsabre.
+- **Waze**: emulates the Waze mobile app's binary "RT" protocol — it registers an anonymous Waze session, logs in, and queries crowd-sourced alerts over Waze's protobuf API (the older live-map/georss API is now blocked). This matches the approach in the current official wzsabre. The RT feed is session-stateful (each alert is sent once, then removed when it clears), so query results are merged into a persistent alert cache rather than replacing it — this keeps alerts from disappearing as you drive. A series of progressively smaller map viewports is queried so the server doesn't thin out minor alerts near you, the session is pre-warmed at start to cut first-load latency, and Waze alert subtypes (e.g. *car stopped on shoulder*, *heavy traffic*) are passed through to Highway Radar verbatim rather than flattened.
 - **Caltrans LCS**: fetches the per-district lane-closure feeds (`https://cwwp2.dot.ca.gov/data/d<N>/lcs/lcsStatusD<NN>.xml`) for whichever districts cover your location. Only closures that are physically established (CHP code 1097 set, not picked up or canceled) are shown; shoulder-only closures are skipped. Closures longer than 2 km get a pin at each end. The ~4 MB feeds are parsed in the background and cached for 5 minutes, so they never delay a Highway Radar request.
 - **SABRE protocol**: a broadcast-intent IPC protocol defined by Highway Radar. Our plugin responds to `FETCH_REQUEST` broadcasts with a JSON payload containing `SabreFetchResponseAlert` objects.
 
@@ -139,7 +139,7 @@ Pull requests welcome. Run the test suite before submitting:
 ./gradlew test
 ```
 
-162 unit tests cover the SABRE response format, alert type mapping, CHP XML parsing, Caltrans LCS parsing and filtering, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup.
+184 unit tests cover the SABRE response format, alert type mapping, the Waze alert cache (delta merge + soft-delete), shrinking-box geometry, crowd-confirmation tracking, CHP XML parsing, Caltrans LCS parsing and filtering, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup.
 
 ---
 

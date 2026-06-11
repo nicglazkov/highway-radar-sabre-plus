@@ -73,9 +73,13 @@ app/src/main/java/app/sabre/wzsabre/
 ├── SabreAlert.java              # Internal alert model
 │
 └── waze/                        # Waze mobile "RT" protocol (replaces the 403'd georss API)
-    ├── WazeProtocolSource.java  #   public entry point: cache + async refresh + map to SabreAlert
-    ├── WazeSession.java         #   register → login → handshake → query
-    ├── WazeRtCodec.java         #   protobuf line framing, ClientInfo, commands, parseAlerts
+    ├── WazeProtocolSource.java  #   public entry point: cache + async refresh + pre-warm + map to SabreAlert
+    ├── WazeAlertCache.java      #   persistent uuid-keyed cache: merge adds + soft-delete removals
+    ├── AlertQueryResult.java    #   one query's {newAlerts, removedIds} deltas
+    ├── GeoBoxes.java            #   shrinking-box geometry so near-driver alerts aren't thinned
+    ├── WazeConfirmTracker.java  #   infers confirm_ts from thumbs-up increases (1-hour map)
+    ├── WazeSession.java         #   register → login → handshake → queryBox
+    ├── WazeRtCodec.java         #   protobuf line framing, ClientInfo, commands, parseAlerts, parseRemovedAlertIds
     ├── WazeHttpClient.java      #   OkHttp binary POST + session cookie jar + retry
     ├── DeviceIdentity.java      #   synthetic device fingerprint pool
     ├── WazeConstants.java       #   hosts, paths, protocol/app versions
@@ -104,6 +108,15 @@ with a `uid` auth header). Because an RT query long-polls (~10s), `WazeProtocolS
 a cache and refreshes it on a background thread, and persists/reuses the account so it
 registers at most once. The protobuf schema lives at `app/src/main/proto/waze.proto` and is
 compiled with `protobuf-javalite` (gradle `com.google.protobuf` plugin).
+
+The RT `/command` endpoint is session-stateful — it sends each alert once, then a
+`"RmAlert,<uuid>"` `old_command` line when it clears — so `WazeAlertCache` **merges** query
+deltas (adds upsert, removals soft-delete for 5 min) instead of replacing the cache, which is
+what stops alerts from vanishing mid-drive. Each refresh queries a series of progressively
+smaller boxes (`GeoBoxes`, the official's shrinking-bbox path) so the server doesn't thin out
+minor alerts near the driver; the session is pre-warmed at service start from the last known
+location; and Waze subtype names are passed through to HR verbatim (no remap/whitelist), since
+HR understands the full Waze vocabulary. This mirrors the official wzsabre 2.2 `WazeAlertFetcher`.
 
 ### Caltrans LCS closures
 Lane/road closures come from the per-district Caltrans Lane Closure System feeds
