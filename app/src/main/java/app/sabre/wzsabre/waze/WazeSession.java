@@ -6,6 +6,7 @@ import android.util.Log;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -44,6 +45,51 @@ final class WazeSession {
     WazeCredentials getCredentials() { return credentials; }
     DeviceIdentity  getDevice()      { return device; }
 
+    /** Server session id (0 if not logged in) — lets the caller detect a re-login. */
+    long currentServerSessionId() { return session != null ? session.serverSessionId : 0L; }
+
+    /** Drop the logged-in session but KEEP credentials, so the next call re-logs in
+     *  (with the in-memory account) instead of registering a brand-new one. */
+    void invalidateSession() { session = null; }
+
+    /**
+     * Inspect a parsed response batch for in-band errors the server returns with an
+     * HTTP 200: a {@code ServerError} element, or a {@code LoginError}. Without this,
+     * a server that invalidates the session but replies 200 looks like success and
+     * the session zombies — {@code lastRequestMs} keeps updating so it never idles
+     * out, and no alerts are ever merged again. Mirrors the official's checkErrors.
+     */
+    static void checkErrors(WazeProto.Batch batch)
+            throws WazeExceptions.AccountRejectedException,
+                   WazeExceptions.SessionExpiredException,
+                   WazeExceptions.WazeOperationException {
+        for (WazeProto.Element el : batch.getElementList()) {
+            if (el.hasError()) {
+                WazeProto.ServerError err = el.getError();
+                int code = err.getCode();
+                String desc = err.getDescription().toLowerCase(Locale.US);
+                if (desc.contains("relogin") || desc.contains("unknown userid")
+                        || desc.contains("secretkey") || desc.contains("secret key"))
+                    throw new WazeExceptions.SessionExpiredException(
+                            "server error: " + err.getDescription());
+                if (code >= 400 && code < 500)
+                    throw new WazeExceptions.AccountRejectedException(
+                            "server error " + code + ": " + err.getDescription());
+                throw new WazeExceptions.WazeOperationException(
+                        "server error " + code + ": " + err.getDescription());
+            }
+            if (el.hasLoginError()) {
+                WazeProto.LoginError.AuthErrorType t = el.getLoginError().getErrorType();
+                // Transient server-side problems must NOT nuke a good account; only
+                // genuine credential/authorization failures trigger a re-register.
+                if (t == WazeProto.LoginError.AuthErrorType.INTERNAL_ISSUES
+                        || t == WazeProto.LoginError.AuthErrorType.UNKNOWN_ERROR)
+                    throw new WazeExceptions.WazeOperationException("login error: " + t);
+                throw new WazeExceptions.AccountRejectedException("login error: " + t);
+            }
+        }
+    }
+
     private String url(String path) { return "https://" + WazeConstants.rtHost(region) + path; }
     private String nextSeq() { return String.valueOf(seqCount++); }
 
@@ -69,6 +115,7 @@ final class WazeSession {
         if (r.body.length == 0) throw new WazeExceptions.WazeOperationException("empty register response");
 
         WazeProto.Batch batch = WazeProto.Batch.parseFrom(r.body);
+        checkErrors(batch);
         for (WazeProto.Element el : batch.getElementList()) {
             if (el.hasRegisterSuccessful()) {
                 WazeProto.RegisterSuccessful rs = el.getRegisterSuccessful();
@@ -111,6 +158,7 @@ final class WazeSession {
         if (r.body.length == 0) throw new WazeExceptions.WazeOperationException("empty login response");
 
         WazeProto.Batch batch = WazeProto.Batch.parseFrom(r.body);
+        checkErrors(batch);   // in-band LoginError → specific exception, not blanket reject
         for (WazeProto.Element el : batch.getElementList()) {
             if (el.hasLoginResponse() && el.getLoginResponse().hasLoginSuccess()) {
                 WazeProto.LoginSuccess s = el.getLoginResponse().getLoginSuccess();
@@ -148,8 +196,17 @@ final class WazeSession {
         }
         if (r.code >= 500) throw new WazeExceptions.WazeOperationException("command HTTP " + r.code);
         if (r.body.length == 0) throw new WazeExceptions.WazeOperationException("empty command response");
+        WazeProto.Batch batch = WazeProto.Batch.parseFrom(r.body);
+        // Check for an in-band error BEFORE marking the session healthy, so a zombie
+        // session (HTTP 200 + "please relogin") doesn't keep refreshing lastRequestMs.
+        try {
+            checkErrors(batch);
+        } catch (WazeExceptions.SessionExpiredException e) {
+            session = null;   // force ensureReady to re-login next time
+            throw e;
+        }
         lastRequestMs = SystemClock.elapsedRealtime();
-        return WazeProto.Batch.parseFrom(r.body);
+        return batch;
     }
 
     /** Register (if no creds) and log in (if no valid session). */
