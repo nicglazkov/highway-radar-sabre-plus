@@ -103,6 +103,11 @@ public final class WazeProtocolSource {
         triggerRefreshIfStale(lat, lon, radiusMeters);
     }
 
+    /** Release the background refresh thread when the owning service is destroyed. */
+    public void shutdown() {
+        refreshExec.shutdownNow();
+    }
+
     private void triggerRefreshIfStale(double lat, double lon, double radiusMeters) {
         long now = System.currentTimeMillis();
         boolean moved = cacheTimeMs != 0 && haversineKm(lat, lon, cacheLat, cacheLon) > REFRESH_MOVE_KM;

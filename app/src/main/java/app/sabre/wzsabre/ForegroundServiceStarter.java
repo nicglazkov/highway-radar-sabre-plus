@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.RequiresApi;
 import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.OutOfQuotaPolicy;
@@ -79,7 +80,9 @@ final class ForegroundServiceStarter {
      * Schedule an immediate exact alarm that starts the foreground service.
      * An alarm-triggered FGS start carries a temporary background-start exemption,
      * so it succeeds even when a direct startForegroundService() is BFSL-denied.
+     * Only ever called from the API&nbsp;&gt;=&nbsp;31 branch of {@link #start}.
      */
+    @RequiresApi(Build.VERSION_CODES.S)
     private static boolean tryExactAlarm(Context context, Intent intent) {
         try {
             AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

@@ -134,6 +134,11 @@ public class LcsSource {
         return out;
     }
 
+    /** Release the background refresh thread when the owning service is destroyed. */
+    public void shutdown() {
+        refreshExec.shutdownNow();
+    }
+
     private void scheduleRefresh(final int district) {
         AtomicBoolean flag = refreshing.computeIfAbsent(district, d -> new AtomicBoolean(false));
         if (!flag.compareAndSet(false, true)) return;

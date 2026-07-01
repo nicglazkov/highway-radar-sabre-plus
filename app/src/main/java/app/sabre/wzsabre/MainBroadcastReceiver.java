@@ -21,9 +21,19 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
             } else if ("app.sabre.wzsabre.FETCH_REQUEST".equals(action)) {
                 ForegroundServiceStarter.start(context, "FETCH_REQUEST", intent.getStringExtra("data"));
             } else if (action != null && action.contains("SHUTDOWN")) {
-                // HR sends SHUTDOWN when ending a session but immediately starts a new one.
-                // Keep the service running so the next FETCH_REQUEST can be handled.
-                Log.d(TAG, "Shutdown received — keeping service alive for next session");
+                // HR is ending the session (it usually reopens one shortly). Forward
+                // to the service so it stops after a short grace period; a new session
+                // within the window cancels the stop. If the service isn't running
+                // there's nothing to shut down, so we don't start it just to stop it.
+                Log.d(TAG, "Shutdown received — forwarding to service");
+                if (SabreService.RUNNING) {
+                    try {
+                        context.startService(new Intent(context, SabreService.class)
+                                .putExtra("action", "SHUTDOWN"));
+                    } catch (Exception e) {
+                        Log.w(TAG, "Could not forward shutdown: " + e.getMessage());
+                    }
+                }
             } else if (BuildConfig.DEBUG && action != null && action.endsWith(".WAZE_TEST")) {
                 // Debug-only: exercise the Waze RT protocol (register -> login -> query).
                 final double lat = numberExtra(intent, "lat", 37.8044);
@@ -93,6 +103,7 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
         response.put("update_url", JSONObject.NULL);
         response.put("alternative_startup_activity", pkg + ".AltStartupActivity");
         Intent resp = new Intent(responseAction);
+        resp.setPackage(SabreResponseBuilder.HR_PACKAGE);   // deliver only to HR
         resp.putExtra("data", response.toString());
         context.sendBroadcast(resp);
         Log.d(TAG, "Handshake response sent to: " + responseAction + " data: " + response);

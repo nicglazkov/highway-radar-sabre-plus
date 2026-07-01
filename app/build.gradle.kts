@@ -19,10 +19,12 @@ android {
 
     defaultConfig {
         applicationId = "app.sabre.wzsabre"
-        minSdk = 23
+        // minSdk 24: LcsSource uses Map.computeIfAbsent (API 24). Nothing runs
+        // Highway Radar on Android 6.0 (API 23), so this drops no real users.
+        minSdk = 24
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "1.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

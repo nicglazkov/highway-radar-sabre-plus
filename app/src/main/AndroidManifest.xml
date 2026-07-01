@@ -1,18 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- specialUse (not dataSync): the service relays live alerts to Highway Radar
+         for the whole duration of a drive. dataSync is capped at ~6h/24h in the
+         background on Android 15+ (targetSdk 35), which would crash the service
+         mid-trip and lock it out until the next day; specialUse has no such cap.
+         It is also not on the Android 15 BOOT_COMPLETED-restricted type list. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Exact alarms are used to start the foreground service when a direct
          startForegroundService() is denied by Android 15/16 BFSL restrictions.
          USE_EXACT_ALARM is auto-granted (sideloaded app), so the bypass works
-         without the user toggling a setting. -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+         without the user toggling a setting. SCHEDULE_EXACT_ALARM is a normal
+         special-access permission on API 31-32; the ProtectedPermissions lint is a
+         false positive for a sideloaded (non-Play) app. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- Lets the plugin ask to be exempted from battery optimization so Android
          won't freeze/Doze the process and block service starts at FETCH time. -->
@@ -23,7 +32,7 @@
     </queries>
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="CHP + Waze SABRE"
         android:theme="@android:style/Theme.Material.Light">
@@ -77,6 +86,10 @@
             android:name=".SabreService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Relays live CHP, Waze, and Caltrans road alerts to the Highway Radar navigation app for the duration of a drive." />
+        </service>
     </application>
 </manifest>

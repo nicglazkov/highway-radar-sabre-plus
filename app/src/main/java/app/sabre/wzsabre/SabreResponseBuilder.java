@@ -28,6 +28,14 @@ public class SabreResponseBuilder {
     public static final String SOURCE_LCS  = "lcs";
 
     /**
+     * Highway Radar's package. Every reply broadcast is explicitly targeted at it
+     * (Intent.setPackage) so the alert payload — a list of alerts centered on the
+     * driver's location — is delivered only to HR and cannot be harvested by any
+     * other app that registers a receiver for the (publicly known) response action.
+     */
+    public static final String HR_PACKAGE = "com.highwayradar.app";
+
+    /**
      * heading_deg value for an alert with no known travel direction. The official
      * wzsabre sends -720.0 when an alert's magvar is unknown; HR treats this
      * out-of-range bearing as "directionless" and shows the alert regardless of

@@ -6,7 +6,9 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -24,6 +26,25 @@ public class SabreService extends Service {
     private static final String TAG = "SABREService";
     private static final String CHANNEL_ID = "SabreServiceChannel";
     private static final int NOTIFICATION_ID = 1;
+
+    /** Live while the service exists — lets MainBroadcastReceiver decide whether a
+     *  SHUTDOWN needs forwarding (no point starting the service just to stop it). */
+    static volatile boolean RUNNING = false;
+
+    // ── Lifecycle: run only while Highway Radar is using us ───────────────────
+    // HR polls (FETCH_REQUEST) every few seconds while active and sends SHUTDOWN
+    // when it closes. The service stops itself when HR goes quiet so it isn't a
+    // permanent background service (which also keeps it clear of the Android 15
+    // background-FGS runtime limits). Every non-shutdown start re-arms the idle
+    // timer; a SHUTDOWN schedules a shorter grace stop that a new session cancels.
+    private static final long IDLE_TIMEOUT_MS   = 5 * 60_000L;  // no fetch this long → HR is gone
+    private static final long SHUTDOWN_GRACE_MS = 20_000L;      // HR said bye; brief wait for a re-open
+    private final Handler lifecycleHandler = new Handler(Looper.getMainLooper());
+    private final Runnable stopRunnable = () -> {
+        Log.d(TAG, "Highway Radar idle/closed — stopping service");
+        stopForeground(STOP_FOREGROUND_REMOVE);
+        stopSelf();
+    };
 
     // Requests and source fetches run on SEPARATE executors. If they shared one
     // pool, stacked-up requests (HR retrying) could occupy every thread with
@@ -45,6 +66,7 @@ public class SabreService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        RUNNING = true;
         requestExecutor = Executors.newSingleThreadExecutor();
         fetchExecutor   = Executors.newFixedThreadPool(3);
         chpSource  = new CHPSource();
@@ -53,7 +75,16 @@ public class SabreService extends Service {
         createNotificationChannel();
         startForeground(NOTIFICATION_ID, buildForegroundNotification());
         prewarmFromLastLocation();
+        armIdleStop();   // stop if no HR activity arrives
         Log.d(TAG, "Service started");
+    }
+
+    /** (Re)arm the watchdog that stops the service after a stretch of no HR activity. */
+    private void armIdleStop() { scheduleStop(IDLE_TIMEOUT_MS); }
+
+    private void scheduleStop(long delayMs) {
+        lifecycleHandler.removeCallbacks(stopRunnable);
+        lifecycleHandler.postDelayed(stopRunnable, delayMs);
     }
 
     /** Kick off a Waze refresh for the last known location so the cache is warm
@@ -79,21 +110,54 @@ public class SabreService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent == null) return START_STICKY;
-        String action = intent.getStringExtra("action");
-        String data   = intent.getStringExtra("data");
-        if (action == null) return START_STICKY;
-        if (action.contains("FETCH_REQUEST")) handleFetchRequest(data);
+        String action = intent != null ? intent.getStringExtra("action") : null;
+
+        // HR is ending the session. Wait a short grace period in case it immediately
+        // opens a new one (its normal behaviour), then stop — a fresh FETCH/handshake
+        // within the window re-arms the idle timer and cancels this stop.
+        if (action != null && action.contains("SHUTDOWN")) {
+            Log.d(TAG, "SHUTDOWN received — stopping after grace period");
+            scheduleStop(SHUTDOWN_GRACE_MS);
+            return START_STICKY;
+        }
+
+        // Any other start (fetch, handshake pre-warm, boot, or a system restart with
+        // a null intent) means HR still wants us — cancel any pending stop and
+        // re-arm the idle watchdog.
+        armIdleStop();
+        if (action != null && action.contains("FETCH_REQUEST")) {
+            handleFetchRequest(intent.getStringExtra("data"));
+        }
         return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) { return null; }
 
+    // Android 15+ may time out a long-running foreground service. specialUse has no
+    // such cap today, but if that ever changes, stop cleanly instead of being
+    // ANR-killed. Both overloads exist across API 34 (int) and 35 (int,int).
+    @Override
+    public void onTimeout(int startId) {
+        Log.w(TAG, "FGS onTimeout — stopping cleanly");
+        lifecycleHandler.removeCallbacks(stopRunnable);
+        stopForeground(STOP_FOREGROUND_REMOVE);
+        stopSelf();
+    }
+
+    @Override
+    public void onTimeout(int startId, int fgsType) {
+        onTimeout(startId);
+    }
+
     @Override
     public void onDestroy() {
+        RUNNING = false;
+        lifecycleHandler.removeCallbacks(stopRunnable);
         if (requestExecutor != null) requestExecutor.shutdownNow();
         if (fetchExecutor   != null) fetchExecutor.shutdownNow();
+        if (wazeSource != null) wazeSource.shutdown();
+        if (lcsSource  != null) lcsSource.shutdown();
         super.onDestroy();
     }
 
@@ -195,6 +259,7 @@ public class SabreService extends Service {
         root.put("error_message", "plugin error: " + cause.getClass().getSimpleName());
         root.put("response", JSONObject.NULL);
         Intent intent = new Intent(responseAction);
+        intent.setPackage(SabreResponseBuilder.HR_PACKAGE);   // deliver only to HR
         intent.putExtra("data", root.toString());
         sendBroadcast(intent);
         Log.w(TAG, "Error response sent to: " + responseAction);
@@ -250,6 +315,7 @@ public class SabreService extends Service {
             String responseJson = SabreResponseBuilder.build(
                     requestId, alerts.subList(from, to), nBatches, i);
             Intent intent = new Intent(responseAction);
+            intent.setPackage(SabreResponseBuilder.HR_PACKAGE);   // deliver only to HR
             intent.putExtra("data", responseJson);
             sendBroadcast(intent);
             Log.d(TAG, "Response batch " + (i + 1) + "/" + nBatches + " sent to: " + responseAction);
@@ -277,7 +343,9 @@ public class SabreService extends Service {
          .setContentTitle("CHP + Waze SABRE")
          .setContentText("Providing CHP and Waze alerts to Highway Radar")
          .setVisibility(Notification.VISIBILITY_PUBLIC);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        // setForegroundServiceBehavior is API 31 (S), not Q — guarding at Q threw
+        // NoSuchMethodError on Android 10/11, killing the service on those devices.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
             b.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE);
         return b.build();
     }

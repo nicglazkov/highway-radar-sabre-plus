@@ -95,7 +95,7 @@ public class MainActivity extends Activity {
 
     private void updateServiceStatus() {
         TextView tv = findViewById(R.id.serviceStatus);
-        tv.setText("Plugin active · package: app.sabre.wzsabre");
+        tv.setText("Plugin ready · runs while Highway Radar is open");
     }
 
     // ── Category rows ─────────────────────────────────────────────────────────
