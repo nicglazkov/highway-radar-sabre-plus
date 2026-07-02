@@ -62,6 +62,9 @@ public final class WazeProtocolSource {
     // MAX_ACCOUNTS_PER_DAY this hard-caps how fast/often we mint new accounts.
     private static final long BACKOFF_BASE_MS = 30_000L;
     private static final long BACKOFF_MAX_MS  = 10 * 60_000L;
+    // Short backoff after a non-rejection failure (network flap, server 5xx, transient
+    // login INTERNAL_ISSUES) so those don't retry at HR's poll cadence (~2-5s).
+    private static final long GENERIC_FAIL_BACKOFF_MS = 15_000L;
     private static final long DAY_MS          = 24 * 3600_000L;
 
     private final Context ctx;
@@ -76,9 +79,14 @@ public final class WazeProtocolSource {
     private volatile long   cacheTimeMs = 0L;
     private volatile double cacheLat, cacheLon;
 
-    // Rejection backoff state — touched only on the single refresh thread.
-    private int  consecutiveRejections = 0;
-    private long backoffUntilMs        = 0L;
+    // Rejection backoff state. consecutiveRejections is written/read only on the
+    // refresh thread; backoffUntilMs is also READ from fetch/main threads in
+    // triggerRefreshIfStale, so it must be volatile (and a plain long can tear on 32-bit).
+    private int           consecutiveRejections = 0;
+    private volatile long backoffUntilMs        = 0L;
+    // The community last written to prefs — avoids rewriting identical credentials
+    // on every ~12s refresh.
+    private String persistedCommunity = null;
 
     public WazeProtocolSource(Context ctx) {
         this.ctx = ctx.getApplicationContext();
@@ -142,6 +150,11 @@ public final class WazeProtocolSource {
                     cacheLon = lon;
                 } catch (Exception e) {
                     Log.w(TAG, "Waze refresh failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                    // Don't retry a failure at poll cadence. A rejection already set a
+                    // longer backoff in handleAccountRejected; only add the short generic
+                    // one if we aren't already backing off, so we never shorten it.
+                    long t = SystemClock.elapsedRealtime();
+                    if (backoffUntilMs <= t) backoffUntilMs = t + GENERIC_FAIL_BACKOFF_MS;
                 } finally {
                     refreshing.set(false);
                 }
@@ -176,6 +189,10 @@ public final class WazeProtocolSource {
      */
     private void handleAccountRejected(Exception e, double lat, double lon, double radiusMeters)
             throws Exception {
+        // Once the 24h registration window rolls over, forgive the consecutive-rejection
+        // ceiling — otherwise a run of rejections could lock Waze out for the rest of
+        // the service's life even after the daily cap has reset.
+        if (regWindowRolledOver()) consecutiveRejections = 0;
         consecutiveRejections++;
         setBackoff();
         if (!canRegisterToday() || consecutiveRejections > WazeConstants.MAX_CONSECUTIVE_REJECTIONS) {
@@ -200,10 +217,14 @@ public final class WazeProtocolSource {
 
     private boolean canRegisterToday() {
         SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        long now = System.currentTimeMillis();
-        long windowStart = p.getLong("reg_window_start", 0L);
-        if (now - windowStart > DAY_MS) return true;   // 24h window rolled over
+        if (regWindowRolledOver()) return true;   // 24h window rolled over
         return p.getInt("reg_count", 0) < WazeConstants.MAX_ACCOUNTS_PER_DAY;
+    }
+
+    private boolean regWindowRolledOver() {
+        long windowStart = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .getLong("reg_window_start", 0L);
+        return System.currentTimeMillis() - windowStart > DAY_MS;
     }
 
     private void recordRegistration() {
@@ -228,19 +249,29 @@ public final class WazeProtocolSource {
         s.prepareForArea(lat, lon);
         // Credentials exist now (register/login just ran) — persist immediately so a
         // failure in the box loop below can't lose a freshly minted account and force
-        // a wasteful re-register on the next run.
-        persist();
-        if (s.currentServerSessionId() != sessionBefore) {
-            // A new server session re-sends all currently-active alerts for the area
-            // but sends no RmAlert for alerts that cleared while we were logged out.
-            // Drop the stale cache so those don't linger in Highway Radar as ghosts.
-            alertCache.clear();
+        // a wasteful re-register on the next run. Only write when they actually changed.
+        WazeCredentials creds = s.getCredentials();
+        if (creds != null && !creds.community.equals(persistedCommunity)) {
+            persist();
+            persistedCommunity = creds.community;
         }
+        // A new server session re-sends all currently-active alerts for the area but
+        // sends no RmAlert for alerts that cleared while we were logged out, so the
+        // stale cache must be dropped to avoid ghosts in Highway Radar. Defer that
+        // clear until the FIRST box query succeeds: if the box loop fails right after
+        // a re-login (cell dead zone — exactly when re-logins happen), we keep serving
+        // the old cache instead of blanking Waze for up to CACHE_MAX_SERVE_AGE_MS.
+        boolean sessionChanged = s.currentServerSessionId() != sessionBefore;
+        boolean cleared = false;
         double[][] zoomBoxes = GeoBoxes.shrinkingBoxes(lon, lat, radiusMeters, SHRINK_STEPS);
         long deadline = SystemClock.elapsedRealtime() + QUERY_BUDGET_MS;
         for (double[] zoom : zoomBoxes) {
             if (SystemClock.elapsedRealtime() >= deadline) break;   // best-effort, like the official
             WazeProto.Batch batch = s.queryBox(GeoBoxes.shrink(zoom, 0.75));
+            if (sessionChanged && !cleared) {   // first successful box → safe to reset
+                alertCache.clear();
+                cleared = true;
+            }
             alertCache.submit(new AlertQueryResult(
                     WazeRtCodec.parseAlerts(batch), WazeRtCodec.parseRemovedAlertIds(batch)));
         }

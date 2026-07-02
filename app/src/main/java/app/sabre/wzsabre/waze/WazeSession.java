@@ -69,25 +69,35 @@ final class WazeSession {
                 int code = err.getCode();
                 String desc = err.getDescription().toLowerCase(Locale.US);
                 if (desc.contains("relogin") || desc.contains("unknown userid")
-                        || desc.contains("secretkey") || desc.contains("secret key"))
+                        || desc.contains("secretkey missing") || desc.contains("secret key missing"))
                     throw new WazeExceptions.SessionExpiredException(
                             "server error: " + err.getDescription());
                 if (code >= 400 && code < 500)
                     throw new WazeExceptions.AccountRejectedException(
                             "server error " + code + ": " + err.getDescription());
-                throw new WazeExceptions.WazeOperationException(
-                        "server error " + code + ": " + err.getDescription());
+                if (code >= 500)
+                    throw new WazeExceptions.WazeOperationException(
+                            "server error " + code + ": " + err.getDescription());
+                // Informational / unknown (incl. the proto default code 0) — the
+                // official ignores these; a normal 200 batch can legitimately carry
+                // one, so do NOT fail the whole refresh over it.
+                Log.w(TAG, "Ignoring non-fatal server error " + code + ": " + err.getDescription());
             }
-            if (el.hasLoginError()) {
-                WazeProto.LoginError.AuthErrorType t = el.getLoginError().getErrorType();
-                // Transient server-side problems must NOT nuke a good account; only
-                // genuine credential/authorization failures trigger a re-register.
-                if (t == WazeProto.LoginError.AuthErrorType.INTERNAL_ISSUES
-                        || t == WazeProto.LoginError.AuthErrorType.UNKNOWN_ERROR)
-                    throw new WazeExceptions.WazeOperationException("login error: " + t);
-                throw new WazeExceptions.AccountRejectedException("login error: " + t);
-            }
+            if (el.hasLoginError()) throwForLoginError(el.getLoginError().getErrorType());
         }
+    }
+
+    /**
+     * Map a Waze auth-error type to an exception. Transient server-side problems
+     * (INTERNAL_ISSUES / UNKNOWN) are operational — they must NOT nuke a good account
+     * by triggering a re-register; only genuine credential/authorization failures do.
+     */
+    private static void throwForLoginError(WazeProto.LoginError.AuthErrorType t)
+            throws WazeExceptions.AccountRejectedException, WazeExceptions.WazeOperationException {
+        if (t == WazeProto.LoginError.AuthErrorType.INTERNAL_ISSUES
+                || t == WazeProto.LoginError.AuthErrorType.UNKNOWN_ERROR)
+            throw new WazeExceptions.WazeOperationException("login error: " + t);
+        throw new WazeExceptions.AccountRejectedException("login error: " + t);
     }
 
     private String url(String path) { return "https://" + WazeConstants.rtHost(region) + path; }
@@ -160,6 +170,12 @@ final class WazeSession {
         WazeProto.Batch batch = WazeProto.Batch.parseFrom(r.body);
         checkErrors(batch);   // in-band LoginError → specific exception, not blanket reject
         for (WazeProto.Element el : batch.getElementList()) {
+            // A login failure can arrive nested in the LoginResponse oneof (not just
+            // as a top-level LoginError element) — classify it too, so a transient
+            // INTERNAL_ISSUES doesn't fall through to the blanket AccountRejected
+            // below and needlessly re-register.
+            if (el.hasLoginResponse() && el.getLoginResponse().hasLoginError())
+                throwForLoginError(el.getLoginResponse().getLoginError().getErrorType());
             if (el.hasLoginResponse() && el.getLoginResponse().hasLoginSuccess()) {
                 WazeProto.LoginSuccess s = el.getLoginResponse().getLoginSuccess();
                 if (s.getServerSessionId() == 0) throw new WazeExceptions.WazeOperationException("zero serverSessionId");
