@@ -100,8 +100,8 @@ The 11 fields: `alert_source`, `alert_id`, `user_id`, `type`, `lat`, `lon`, `hea
 
 ### Waze mobile "RT" protocol
 Waze blocks the live-map/georss API with HTTP 403, so Waze data is fetched by emulating the
-Waze mobile app's binary "RT" protocol (package `app.sabre.wzsabre.waze`, ported from the
-official wzsabre 2.2). No backend or pre-shared credentials are needed: the plugin registers
+Waze mobile app's binary "RT" protocol (package `app.sabre.wzsabre.waze`), reimplemented from
+observed protocol behavior. No backend or pre-shared credentials are needed: the plugin registers
 its own anonymous Waze account (`POST /rtserver/distrib/static`), logs in
 (`/rtserver/distrib/login`), and queries alerts via protobuf (`/rtserver/distrib/command`,
 with a `uid` auth header). Because an RT query long-polls (~10s), `WazeProtocolSource` serves
@@ -113,10 +113,10 @@ The RT `/command` endpoint is session-stateful — it sends each alert once, the
 `"RmAlert,<uuid>"` `old_command` line when it clears — so `WazeAlertCache` **merges** query
 deltas (adds upsert, removals soft-delete for 5 min) instead of replacing the cache, which is
 what stops alerts from vanishing mid-drive. Each refresh queries a series of progressively
-smaller boxes (`GeoBoxes`, the official's shrinking-bbox path) so the server doesn't thin out
+smaller boxes (`GeoBoxes`, a shrinking-bbox scan) so the server doesn't thin out
 minor alerts near the driver; the session is pre-warmed at service start from the last known
 location; and Waze subtype names are passed through to HR verbatim (no remap/whitelist), since
-HR understands the full Waze vocabulary. This mirrors the official wzsabre 2.2 `WazeAlertFetcher`.
+HR understands the full Waze vocabulary.
 
 ### Caltrans LCS closures
 Lane/road closures come from the per-district Caltrans Lane Closure System feeds

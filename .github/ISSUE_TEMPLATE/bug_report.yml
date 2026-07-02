@@ -1,0 +1,61 @@
+name: Bug report
+description: Something isn't working (alerts not showing, crashes, plugin not detected).
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! Most issues here are specific to an Android version or Highway Radar version, so the details below really help.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you see instead?
+      placeholder: e.g. "A stopped car was in Waze but never appeared in Highway Radar."
+    validations:
+      required: true
+  - type: input
+    id: android-version
+    attributes:
+      label: Android version
+      placeholder: e.g. Android 15 (Pixel 8)
+    validations:
+      required: true
+  - type: input
+    id: hr-version
+    attributes:
+      label: Highway Radar version
+      placeholder: e.g. 3.2
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin (CHP + Waze SABRE) version
+      description: Shown on the app's settings screen and the release you installed.
+      placeholder: e.g. 1.5.1
+    validations:
+      required: true
+  - type: dropdown
+    id: plugin-active
+    attributes:
+      label: Does Highway Radar → Settings → SABRE show the plugin as selected/active?
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+  - type: checkboxes
+    id: permissions
+    attributes:
+      label: Permissions granted on first launch
+      options:
+        - label: Notifications allowed
+        - label: Battery optimization exemption allowed
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logcat (optional but very helpful)
+      description: |
+        If you can, capture logs while reproducing:
+        `adb logcat -s SABREService WazeRT CHPSource LcsSource FGSStarter`
+      render: shell

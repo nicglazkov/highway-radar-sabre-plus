@@ -1,5 +1,10 @@
 # CHP + Waze SABRE for Highway Radar
 
+[![CI](https://github.com/nicglazkov/caltrans-sabre/actions/workflows/ci.yml/badge.svg)](https://github.com/nicglazkov/caltrans-sabre/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/nicglazkov/caltrans-sabre?sort=semver)](https://github.com/nicglazkov/caltrans-sabre/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Android 7.0+](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)](#requirements)
+
 A drop-in replacement for **wzsabre** that brings CHP live incident alerts and Waze crowdsourced traffic data to [Highway Radar](https://www.highwayradar.com/) via the SABRE plugin protocol.
 
 > **Package ID: `app.sabre.wzsabre`** — same as wzsabre, so Highway Radar discovers this plugin automatically without any reconfiguration.
@@ -127,7 +132,7 @@ Highway Radar  ──broadcast──▶  MainBroadcastReceiver
 ```
 
 - **CHP**: fetches `https://media.chp.ca.gov/sa_xml/sa.xml`, filters by radius and incident age, applies your category settings.
-- **Waze**: emulates the Waze mobile app's binary "RT" protocol — it registers an anonymous Waze session, logs in, and queries crowd-sourced alerts over Waze's protobuf API (the older live-map/georss API is now blocked). This matches the approach in the current official wzsabre. The RT feed is session-stateful (each alert is sent once, then removed when it clears), so query results are merged into a persistent alert cache rather than replacing it — this keeps alerts from disappearing as you drive. A series of progressively smaller map viewports is queried so the server doesn't thin out minor alerts near you, the session is pre-warmed at start to cut first-load latency, and Waze alert subtypes (e.g. *car stopped on shoulder*, *heavy traffic*) are passed through to Highway Radar verbatim rather than flattened.
+- **Waze**: emulates the Waze mobile app's binary "RT" protocol — it registers an anonymous Waze session, logs in, and queries crowd-sourced alerts over Waze's protobuf API (the older live-map/georss API is now blocked). The RT feed is session-stateful (each alert is sent once, then removed when it clears), so query results are merged into a persistent alert cache rather than replacing it — this keeps alerts from disappearing as you drive. A series of progressively smaller map viewports is queried so the server doesn't thin out minor alerts near you, the session is pre-warmed at start to cut first-load latency, and Waze alert subtypes (e.g. *car stopped on shoulder*, *heavy traffic*) are passed through to Highway Radar verbatim rather than flattened.
 - **Caltrans LCS**: fetches the per-district lane-closure feeds (`https://cwwp2.dot.ca.gov/data/d<N>/lcs/lcsStatusD<NN>.xml`) for whichever districts cover your location. Only closures that are physically established (CHP code 1097 set, not picked up or canceled) are shown; shoulder-only closures are skipped. Closures longer than 2 km get a pin at each end. The ~4 MB feeds are parsed in the background and cached for 5 minutes, so they never delay a Highway Radar request.
 - **SABRE protocol**: a broadcast-intent IPC protocol defined by Highway Radar. Our plugin responds to `FETCH_REQUEST` broadcasts with a JSON payload containing `SabreFetchResponseAlert` objects.
 
@@ -141,7 +146,17 @@ Pull requests welcome. Run the test suite before submitting:
 ./gradlew test
 ```
 
-195 unit tests cover the SABRE response format, alert type mapping, the Waze alert cache (delta merge + soft-delete), in-band Waze error classification, shrinking-box geometry, crowd-confirmation tracking, CHP XML parsing, Caltrans LCS parsing and filtering, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup.
+195 unit tests cover the SABRE response format, alert type mapping, the Waze alert cache (delta merge + soft-delete), in-band Waze error classification, shrinking-box geometry, crowd-confirmation tracking, CHP XML parsing, Caltrans LCS parsing and filtering, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup, and [CHANGELOG.md](CHANGELOG.md) for release history.
+
+---
+
+## Disclaimer
+
+This is an independent, unofficial project. It is **not affiliated with, endorsed by, or supported by** Waze, Google, the California Highway Patrol, Caltrans, or Highway Radar.
+
+- The **Waze** integration works by emulating Waze's private, undocumented mobile protocol using an anonymous session. This may break at any time if Waze changes their protocol, and it may be contrary to Waze's Terms of Service. Use it at your own risk.
+- The **CHP** and **Caltrans** data comes from public government feeds and is provided without any guarantee of accuracy, completeness, or timeliness.
+- This app is provided for personal and educational use, **as-is and without warranty of any kind**. Do not rely on it for safety-critical decisions — always follow real-world road conditions, signage, and the law.
 
 ---
 
