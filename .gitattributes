@@ -1,0 +1,4 @@
+# Shell scripts must keep LF endings even when checked out on Windows — CRLF
+# breaks them on macOS/Linux (bash: "\r": command not found, bad shebang).
+*.sh    text eol=lf
+gradlew text eol=lf
