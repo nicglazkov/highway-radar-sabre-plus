@@ -50,7 +50,83 @@ public class MainActivity extends Activity {
         updateServiceStatus();
         buildCategoryRows();
         buildLcsSwitch();
+        buildFireSwitch();
         buildAgeSpinner();
+        buildDiagnostics();
+        checkForUpdate();
+    }
+
+    // ── Update banner ─────────────────────────────────────────────────────────
+
+    private void checkForUpdate() {
+        new Thread(() -> {
+            UpdateChecker.Result r = UpdateChecker.fetchLatest();
+            boolean newer = r != null
+                    && UpdateChecker.isNewer(r.latestVersion, BuildConfig.VERSION_NAME);
+            runOnUiThread(() -> showUpdateCard(newer ? r : null));
+        }).start();
+    }
+
+    private void showUpdateCard(UpdateChecker.Result r) {
+        View card = findViewById(R.id.updateCard);
+        if (r == null) { card.setVisibility(View.GONE); return; }
+        ((TextView) findViewById(R.id.updateText))
+                .setText("Update available: v" + r.latestVersion + " (you have v"
+                        + BuildConfig.VERSION_NAME + ")");
+        findViewById(R.id.updateButton).setOnClickListener(v -> {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(r.htmlUrl)));
+            } catch (Exception ignored) {}
+        });
+        card.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Sources refresh in the background after the service starts, so re-render the
+        // diagnostics each time the screen is shown to pick up fresh numbers.
+        buildDiagnostics();
+    }
+
+    // ── Diagnostics panel ─────────────────────────────────────────────────────
+
+    private void buildDiagnostics() {
+        LinearLayout container = findViewById(R.id.diagnosticsContainer);
+        container.removeAllViews();
+        String[][] sources = {
+                {SabreResponseBuilder.SOURCE_CHP,  "CHP incidents"},
+                {SabreResponseBuilder.SOURCE_WAZE, "Waze alerts"},
+                {SabreResponseBuilder.SOURCE_LCS,  "Caltrans closures"},
+                {SabreResponseBuilder.SOURCE_FIRE, "Wildfires"},
+        };
+        for (String[] s : sources) {
+            SourceStatus.Entry e = SourceStatus.get(s[0]);
+            TextView row = new TextView(this);
+            row.setTextSize(13f);
+            row.setPadding(0, 6, 0, 6);
+            row.setText(formatStatus(s[1], e));
+            row.setTextColor(e != null && e.lastError != null ? 0xFFD32F2F : 0xFF424242);
+            container.addView(row);
+        }
+    }
+
+    private static String formatStatus(String label, SourceStatus.Entry e) {
+        if (e == null || !e.ran) return label + ": not fetched yet";
+        StringBuilder sb = new StringBuilder(label).append(": ");
+        if (e.lastUpdateMs > 0) sb.append(e.count).append(" · ").append(ago(e.lastUpdateMs));
+        else sb.append("no data yet");
+        if (e.lastError != null) sb.append(" · error: ").append(e.lastError);
+        return sb.toString();
+    }
+
+    /** Human "N ago" for a wall-clock timestamp. */
+    private static String ago(long whenMs) {
+        long s = Math.max(0, (System.currentTimeMillis() - whenMs) / 1000L);
+        if (s < 10)   return "just now";
+        if (s < 60)   return s + "s ago";
+        if (s < 3600) return (s / 60) + "m ago";
+        return (s / 3600) + "h ago";
     }
 
     private void buildLcsSwitch() {
@@ -58,6 +134,15 @@ public class MainActivity extends Activity {
         sw.setChecked(config.lcsEnabled);
         sw.setOnCheckedChangeListener((CompoundButton btn, boolean isChecked) -> {
             config.lcsEnabled = isChecked;
+            config.save(this);
+        });
+    }
+
+    private void buildFireSwitch() {
+        Switch sw = findViewById(R.id.fireSwitch);
+        sw.setChecked(config.fireEnabled);
+        sw.setOnCheckedChangeListener((CompoundButton btn, boolean isChecked) -> {
+            config.fireEnabled = isChecked;
             config.save(this);
         });
     }

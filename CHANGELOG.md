@@ -2,6 +2,20 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.6] — 2026-07-02
+
+New data source, in-app updates, and quality-of-life.
+
+### Added
+- **Wildfires** — active California wildfires (name, size, containment) from the interagency WFIGS feed, shown as road hazards near the fire. New settings toggle (on by default).
+- **Update checking** — the settings screen shows an "update available" banner, and you get a single notification per new version (no spam). README documents an Obtainium option for hands-off auto-update.
+- **Diagnostics panel** — the settings screen shows each source's last update time, item count, and last error.
+- **Automated releases** — pushing a version tag builds a signed APK and publishes the GitHub release via CI.
+
+### Changed
+- Duplicate pins reported by more than one source (e.g. a CHP and a Waze accident at the same spot) are now merged into one.
+- CI actions updated; the debug/release build is unchanged.
+
 ## [1.5.1] — 2026-07-01
 
 Follow-up hardening from an independent post-release review of 1.5, plus repo hygiene.
@@ -63,6 +77,7 @@ Restored the plugin on Android 15/16 (foreground-service start fixes) and rewrot
 
 Initial release: CHP live incidents + Waze crowdsourced alerts for Highway Radar.
 
+[1.6]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.6
 [1.5.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.5.1
 [1.5]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.5
 [1.4]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.4

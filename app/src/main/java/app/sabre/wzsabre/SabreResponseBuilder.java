@@ -26,6 +26,7 @@ public class SabreResponseBuilder {
     public static final String SOURCE_CHP  = "chp";
     public static final String SOURCE_WAZE = "waze";
     public static final String SOURCE_LCS  = "lcs";
+    public static final String SOURCE_FIRE = "fire";
 
     /**
      * Highway Radar's package. Every reply broadcast is explicitly targeted at it

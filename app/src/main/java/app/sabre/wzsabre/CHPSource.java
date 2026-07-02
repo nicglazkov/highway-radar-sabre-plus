@@ -109,11 +109,15 @@ public class CHPSource {
                     } else {
                         cacheTimeMs = System.currentTimeMillis();   // fresh enough, unchanged
                     }
+                    SourceStatus.success(SabreResponseBuilder.SOURCE_CHP,
+                            cache == null ? 0 : cache.size());
                 } catch (Exception e) {
                     // Keep serving the last good parse — a transient failure must not
                     // blank CHP for the whole cycle.
                     Log.w(TAG, "CHP refresh failed (serving cache): "
                             + e.getClass().getSimpleName() + ": " + e.getMessage());
+                    SourceStatus.failure(SabreResponseBuilder.SOURCE_CHP,
+                            e.getClass().getSimpleName());
                 } finally {
                     refreshing.set(false);
                 }
