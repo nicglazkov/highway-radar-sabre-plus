@@ -84,7 +84,9 @@ public class SabreService extends Service {
         createNotificationChannel();
         startForeground(NOTIFICATION_ID, buildForegroundNotification());
         chpSource.prewarm();          // statewide feed — no location needed
-        fireSource.prewarm();         // statewide feed — no location needed
+        // Only warm wildfires if the source is enabled — otherwise it's a wasted
+        // network fetch on every service start for a disabled source.
+        if (ChpConfig.load(this).fireEnabled) fireSource.prewarm();
         prewarmFromLastLocation();    // Waze — needs last known location
         maybeCheckForUpdate();        // throttled; notifies once per new version
         armIdleStop();                // stop if no HR activity arrives
