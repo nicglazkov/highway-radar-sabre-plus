@@ -1,5 +1,7 @@
 # CHP + Waze SABRE for Highway Radar
 
+<img align="right" width="104" src="docs/screenshots/app-icon.png" alt="App icon">
+
 [![CI](https://github.com/nicglazkov/caltrans-sabre/actions/workflows/ci.yml/badge.svg)](https://github.com/nicglazkov/caltrans-sabre/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/nicglazkov/caltrans-sabre?sort=semver)](https://github.com/nicglazkov/caltrans-sabre/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -20,6 +22,15 @@ A drop-in replacement for **wzsabre** that brings CHP live incident alerts and W
 | **Caltrans Closures (LCS)** | Lane and road closures that are physically in place right now (CHP code 1097), from the per-district Caltrans Lane Closure System feeds | Cached, refreshed every 5 min |
 
 All sources run in parallel and feed into the standard HR crowdsourced-alerts layer — the same map overlay that wzsabre used to power.
+
+---
+
+## Screenshots
+
+| Plugin settings | Detected by Highway Radar | Alerts on the HR map |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/settings.png" width="230" alt="Plugin settings screen"> | <img src="docs/screenshots/hr_state.png" width="230" alt="Highway Radar configuration status showing the plugin installed"> | <img src="docs/screenshots/hr-map.png" width="230" alt="Highway Radar map with a plugin-fed alert pin"> |
+| Per-category toggles and "shows as" overrides. | Highway Radar auto-discovers the plugin. | CHP / Waze / Caltrans alerts on the map. |
 
 ---
 
