@@ -56,7 +56,11 @@ All sources run in parallel and feed into the standard HR crowdsourced-alerts la
 
 > **After a phone reboot:** Just open Highway Radar — the plugin starts automatically when HR sends its first request.
 
-### Option B — Build from source
+### Option B — Auto-update with Obtainium
+
+For hands-off updates, install via [Obtainium](https://github.com/ImranR98/Obtainium): add this repo's URL (`https://github.com/nicglazkov/caltrans-sabre`) as an app source and Obtainium will check GitHub Releases and install new versions for you. (The app also shows an in-app banner and a one-time notification when an update is available.)
+
+### Option C — Build from source
 
 See [BUILDING.md](BUILDING.md).
 

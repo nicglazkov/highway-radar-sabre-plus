@@ -53,6 +53,32 @@ public class MainActivity extends Activity {
         buildFireSwitch();
         buildAgeSpinner();
         buildDiagnostics();
+        checkForUpdate();
+    }
+
+    // ── Update banner ─────────────────────────────────────────────────────────
+
+    private void checkForUpdate() {
+        new Thread(() -> {
+            UpdateChecker.Result r = UpdateChecker.fetchLatest();
+            boolean newer = r != null
+                    && UpdateChecker.isNewer(r.latestVersion, BuildConfig.VERSION_NAME);
+            runOnUiThread(() -> showUpdateCard(newer ? r : null));
+        }).start();
+    }
+
+    private void showUpdateCard(UpdateChecker.Result r) {
+        View card = findViewById(R.id.updateCard);
+        if (r == null) { card.setVisibility(View.GONE); return; }
+        ((TextView) findViewById(R.id.updateText))
+                .setText("Update available: v" + r.latestVersion + " (you have v"
+                        + BuildConfig.VERSION_NAME + ")");
+        findViewById(R.id.updateButton).setOnClickListener(v -> {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(r.htmlUrl)));
+            } catch (Exception ignored) {}
+        });
+        card.setVisibility(View.VISIBLE);
     }
 
     @Override

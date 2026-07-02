@@ -3,6 +3,7 @@ package app.sabre.wzsabre;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
@@ -25,6 +26,12 @@ public class SabreService extends Service {
     private static final String TAG = "SABREService";
     private static final String CHANNEL_ID = "SabreServiceChannel";
     private static final int NOTIFICATION_ID = 1;
+
+    // Update-check (sideloaded app, no Play auto-update): at most once/day, and a
+    // notification at most once per new version — deliberately not spammy.
+    private static final String UPDATE_CHANNEL_ID = "SabreUpdateChannel";
+    private static final int    UPDATE_NOTIFICATION_ID = 2;
+    private static final long   UPDATE_CHECK_INTERVAL_MS = 24 * 3600_000L;
 
     /** Live while the service exists — lets MainBroadcastReceiver decide whether a
      *  SHUTDOWN needs forwarding (no point starting the service just to stop it). */
@@ -79,6 +86,7 @@ public class SabreService extends Service {
         chpSource.prewarm();          // statewide feed — no location needed
         fireSource.prewarm();         // statewide feed — no location needed
         prewarmFromLastLocation();    // Waze — needs last known location
+        maybeCheckForUpdate();        // throttled; notifies once per new version
         armIdleStop();                // stop if no HR activity arrives
         Log.d(TAG, "Service started");
     }
@@ -110,6 +118,47 @@ public class SabreService extends Service {
                 .putLong("last_lon", Double.doubleToRawLongBits(lon))
                 .putLong("last_radius", Double.doubleToRawLongBits(radius))
                 .apply();
+    }
+
+    /** At most once per day, check GitHub for a newer release and, if there is one we
+     *  haven't already flagged, post a single low-importance notification. */
+    private void maybeCheckForUpdate() {
+        android.content.SharedPreferences p = getSharedPreferences(STATE_PREFS, MODE_PRIVATE);
+        if (System.currentTimeMillis() - p.getLong("update_check_ms", 0) < UPDATE_CHECK_INTERVAL_MS) return;
+        new Thread(() -> {
+            UpdateChecker.Result r = UpdateChecker.fetchLatest();
+            android.content.SharedPreferences pp = getSharedPreferences(STATE_PREFS, MODE_PRIVATE);
+            pp.edit().putLong("update_check_ms", System.currentTimeMillis()).apply();
+            if (r == null) return;
+            if (!UpdateChecker.isNewer(r.latestVersion, BuildConfig.VERSION_NAME)) return;
+            if (r.latestVersion.equals(pp.getString("update_notified_version", null))) return;
+            postUpdateNotification(r);
+            pp.edit().putString("update_notified_version", r.latestVersion).apply();
+        }).start();
+    }
+
+    private void postUpdateNotification(UpdateChecker.Result r) {
+        NotificationManager nm = getSystemService(NotificationManager.class);
+        if (nm == null) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel ch = new NotificationChannel(UPDATE_CHANNEL_ID,
+                    "Plugin updates", NotificationManager.IMPORTANCE_LOW);
+            ch.setSound(null, null);
+            ch.enableVibration(false);
+            nm.createNotificationChannel(ch);
+        }
+        PendingIntent pi = PendingIntent.getActivity(this, 0,
+                new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(r.htmlUrl)),
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification.Builder b = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                ? new Notification.Builder(this, UPDATE_CHANNEL_ID)
+                : new Notification.Builder(this);
+        b.setSmallIcon(android.R.drawable.stat_sys_download_done)
+         .setContentTitle("CHP + Waze SABRE update available")
+         .setContentText("Version " + r.latestVersion + " — tap to download")
+         .setAutoCancel(true)
+         .setContentIntent(pi);
+        nm.notify(UPDATE_NOTIFICATION_ID, b.build());
     }
 
     @Override
