@@ -32,4 +32,10 @@ google-services.json
 /_*.png
 /_*.xml
 
+# Test-drive capture logs (from tools/sabre-drive.sh) + crash dumps
+*.log
+/drive-logs/
+/sabre-drive-logs/
+last_crash.txt
+
 .claude/
