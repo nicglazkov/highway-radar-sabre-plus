@@ -80,18 +80,34 @@ jobs:
       - name: Stage APK asset
         run: cp app/build/outputs/apk/release/app-release.apk "CHP-Waze-SABRE-${GITHUB_REF_NAME}.apk"
 
+      - name: Prepare release notes from CHANGELOG
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          # Extract the CHANGELOG section for this version (the curated notes).
+          # Prefix-match on the literal header to avoid regex-bracket pitfalls.
+          awk -v hdr="## [$VER]" '
+            index($0, hdr) == 1 { flag=1; next }
+            flag && index($0, "## [") == 1 { exit }
+            flag { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "See [CHANGELOG.md](https://github.com/nicglazkov/caltrans-sabre/blob/main/CHANGELOG.md)." > RELEASE_NOTES.md
+          fi
+          echo "--- release notes ---"; cat RELEASE_NOTES.md
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           APK="CHP-Waze-SABRE-${GITHUB_REF_NAME}.apk"
           # Idempotent: if a release for this tag already exists (re-run or re-pushed
-          # tag), attach/replace the APK instead of failing on "already exists".
+          # tag), attach/replace the APK and refresh the notes instead of failing.
           if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
             gh release upload "${GITHUB_REF_NAME}" "$APK" --clobber
+            gh release edit "${GITHUB_REF_NAME}" --notes-file RELEASE_NOTES.md
           else
             gh release create "${GITHUB_REF_NAME}" "$APK" \
-              --title "${GITHUB_REF_NAME}" --generate-notes
+              --title "${GITHUB_REF_NAME}" --notes-file RELEASE_NOTES.md
           fi
 
       - name: Clean up secrets
