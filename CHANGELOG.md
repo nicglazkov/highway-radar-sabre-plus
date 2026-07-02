@@ -1,0 +1,72 @@
+# Changelog
+
+All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
+
+## [1.5.1] — 2026-07-01
+
+Follow-up hardening from an independent post-release review of 1.5, plus repo hygiene.
+
+### Fixed
+- **Waze in-band errors** — a benign informational error attached to a normal response no longer fails every refresh; only real server errors (HTTP 500-class) or session/credential errors trigger recovery.
+- **Waze rejection backoff** — the backoff timer is now visible across threads (it wasn't, so the throttle could be skipped); non-rejection failures back off briefly instead of retrying at poll cadence; a bad account recovers after the 24-hour registration window rolls over.
+- **Waze ghost prevention** — the cache is only reset once a new session's first query succeeds, so a re-login followed by a dropped query no longer blanks Waze.
+- **CHP conditional fetch** — cache validators are committed only after a successful download+parse, so a mid-download failure can't leave the cache empty.
+- **Service lifecycle** — a stopping service can't be resurrected by a late shutdown; the full alert payload is no longer logged in release builds; the exported startup activity only accepts callbacks to Highway Radar; two rapid requests can't clobber each other's start alarm.
+
+### Added
+- GitHub Actions CI (unit tests + lint + debug APK on every push/PR).
+- App icon (road + radar beacon).
+
+### Changed
+- Pinned the Gradle wrapper distribution checksum; `assembleRelease` without a keystore now produces an unsigned APK with a clear warning instead of a cryptic failure.
+
+## [1.5] — 2026-07-01
+
+Data-reliability release: keeps Waze and CHP alerts accurate and always flowing.
+
+### Fixed
+- **Waze can no longer lock itself out** — a run of connection rejections used to mint a new anonymous account every couple of seconds; now bounded by exponential backoff and a per-day cap.
+- **Waze recovers instead of going silent** when the server invalidates a session mid-drive (in-band error detection).
+- **No more stale "ghost" alerts** lingering after they clear (cache cleared on session change).
+- **CHP alerts stop flapping** — served from a background last-good cache with conditional GETs; a slow CHP feed can no longer delay Waze/closure alerts.
+- A bad heading can't blank a whole update; correct behavior on non-English device locales; Caltrans auxiliary-lane closures are now shown; LCS closures never emit a 1970 timestamp.
+
+## [1.4] — 2026-07-01
+
+Lifecycle, crashes, and privacy.
+
+### Fixed
+- **No more daily crash on Android 15/16** — the background service ran into Android 15's ~6-hour data-sync limit; it now runs as a `specialUse` service with no such cap.
+- **Fixed a crash on Android 10 and 11** that stopped the plugin from working at all on those versions.
+- **Closed a privacy leak** — alert replies are delivered only to Highway Radar (previously any app on the device could listen in).
+- Waze credentials are no longer included in device backups.
+
+### Added
+- **Stops when Highway Radar closes** — the plugin now runs only while Highway Radar is open and shuts down cleanly afterward.
+
+### Changed
+- Minimum Android version is now 7.0.
+
+## [1.3] — 2026-06-10
+
+Waze RT faithful-port: delta-merge cache, shrinking-box queries, session pre-warm, `-720` directionless heading, raw subtype passthrough, crowd-confirmation fields, and 200-alert response batching.
+
+## [1.2] — 2026-06-09
+
+Added Caltrans lane/road closures (LCS) as a data source, plus reliability fixes.
+
+## [1.1] — 2026-06-09
+
+Restored the plugin on Android 15/16 (foreground-service start fixes) and rewrote the Waze integration onto the mobile RT protocol after the georss API was blocked.
+
+## [1.0] — 2026-03-26
+
+Initial release: CHP live incidents + Waze crowdsourced alerts for Highway Radar.
+
+[1.5.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.5.1
+[1.5]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.5
+[1.4]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.4
+[1.3]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.3
+[1.2]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.2
+[1.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.1
+[1.0]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.0

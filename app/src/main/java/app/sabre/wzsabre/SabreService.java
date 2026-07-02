@@ -41,6 +41,7 @@ public class SabreService extends Service {
     private final Handler lifecycleHandler = new Handler(Looper.getMainLooper());
     private final Runnable stopRunnable = () -> {
         Log.d(TAG, "Highway Radar idle/closed — stopping service");
+        RUNNING = false;   // stop accepting SHUTDOWN forwards that would resurrect us
         stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
     };
@@ -140,6 +141,7 @@ public class SabreService extends Service {
     @Override
     public void onTimeout(int startId) {
         Log.w(TAG, "FGS onTimeout — stopping cleanly");
+        RUNNING = false;
         lifecycleHandler.removeCallbacks(stopRunnable);
         stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
@@ -323,7 +325,9 @@ public class SabreService extends Service {
             intent.putExtra("data", responseJson);
             sendBroadcast(intent);
             Log.d(TAG, "Response batch " + (i + 1) + "/" + nBatches + " sent to: " + responseAction);
-            Log.d(TAG, "Response JSON: " + responseJson);
+            // The full payload (driver-centered alert list) is only logged in debug
+            // builds — it's noise and a minor privacy leak into bugreports otherwise.
+            if (BuildConfig.DEBUG) Log.d(TAG, "Response JSON: " + responseJson);
         }
     }
 

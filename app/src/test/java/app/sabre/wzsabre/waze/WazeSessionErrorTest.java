@@ -91,6 +91,16 @@ public class WazeSessionErrorTest {
     }
 
     @Test
+    public void informationalServerError_isIgnored() throws Exception {
+        // A non-relogin ServerError with an informational code (incl. the proto
+        // default 0) must NOT fail the whole refresh — the official ignores these,
+        // and a normal 200 batch can legitimately carry one.
+        WazeSession.checkErrors(serverError(0, "advisory: scheduled maintenance"));
+        WazeSession.checkErrors(serverError(204, "no content"));
+        // no exception = pass
+    }
+
+    @Test
     public void cleanBatch_doesNotThrow() throws Exception {
         WazeSession.checkErrors(WazeProto.Batch.newBuilder()
                 .addElement(WazeProto.Element.newBuilder().setOldCommand("SomeCmd,x"))

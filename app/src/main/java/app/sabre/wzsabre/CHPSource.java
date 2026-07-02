@@ -128,12 +128,16 @@ public class CHPSource {
         conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
         conn.setReadTimeout(READ_TIMEOUT_MS);
         conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14)");
-        if (etag != null)         conn.setRequestProperty("If-None-Match", etag);
-        if (lastModified != null) conn.setRequestProperty("If-Modified-Since", lastModified);
+        // Only send validators when we actually hold a cached parse — otherwise a 304
+        // would leave us with nothing to serve.
+        if (cache != null) {
+            if (etag != null)         conn.setRequestProperty("If-None-Match", etag);
+            if (lastModified != null) conn.setRequestProperty("If-Modified-Since", lastModified);
+        }
         try {
             if (conn.getResponseCode() == HttpsURLConnection.HTTP_NOT_MODIFIED) return null;
-            etag         = conn.getHeaderField("ETag");
-            lastModified = conn.getHeaderField("Last-Modified");
+            String newEtag = conn.getHeaderField("ETag");
+            String newLastModified = conn.getHeaderField("Last-Modified");
             StringBuilder sb = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
@@ -141,7 +145,14 @@ public class CHPSource {
                 int n;
                 while ((n = reader.read(buf)) != -1) sb.append(buf, 0, n);
             }
-            return parseAll(sb.toString());
+            List<Incident> parsed = parseAll(sb.toString());
+            // Commit the validators only after a successful read+parse — if the body
+            // read throws mid-stream, the old cache and its (still-matching) validators
+            // stay in sync, so the next request re-fetches rather than 304-ing onto a
+            // cache that was never updated.
+            etag = newEtag;
+            lastModified = newLastModified;
+            return parsed;
         } finally {
             conn.disconnect();
         }

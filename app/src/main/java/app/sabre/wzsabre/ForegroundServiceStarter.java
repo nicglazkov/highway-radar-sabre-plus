@@ -91,8 +91,13 @@ final class ForegroundServiceStarter {
                 Log.w(TAG, "Cannot schedule exact alarms — permission not granted");
                 return false;
             }
+            // Vary the request code by the payload too: two FETCH_REQUESTs in quick
+            // succession share an action, so a code derived only from the action would
+            // let FLAG_UPDATE_CURRENT overwrite the first alarm's data before it fired,
+            // dropping that request.
             String action = intent.getStringExtra("action");
-            int requestCode = action != null ? action.hashCode() : 0;
+            String data   = intent.getStringExtra("data");
+            int requestCode = java.util.Objects.hash(action, data);
             PendingIntent pi = PendingIntent.getForegroundService(
                     context, requestCode, intent,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

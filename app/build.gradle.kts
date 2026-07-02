@@ -23,14 +23,16 @@ android {
         // Highway Radar on Android 6.0 (API 23), so this drops no real users.
         minSdk = 24
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.5"
+        versionCode = 7
+        versionName = "1.5.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
         create("release") {
             if (keystorePropsFile.exists()) {
+                // storeFile in keystore.properties is resolved relative to the app/
+                // module (that is where caltrans-sabre.keystore lives).
                 storeFile = file("${keystoreProps["storeFile"]}")
                 storePassword = keystoreProps["storePassword"] as String
                 keyAlias = keystoreProps["keyAlias"] as String
@@ -42,7 +44,17 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            // Only wire up release signing when a keystore is actually present.
+            // Without this guard a first-time cloner running `assembleRelease` hits
+            // a cryptic "Keystore file not set" failure; instead they get an unsigned
+            // release APK plus the warning below. Maintainers keep a keystore.properties
+            // at the repo root (storeFile/storePassword/keyAlias/keyPassword) — see BUILDING.md.
+            if (keystorePropsFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                logger.warn("keystore.properties not found — building an UNSIGNED release APK. " +
+                        "Add keystore.properties at the repo root to sign (see BUILDING.md).")
+            }
         }
     }
 

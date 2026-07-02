@@ -32,14 +32,20 @@ public class AltStartupActivity extends Activity {
         ForegroundServiceStarter.start(this, null, null);
 
         // If HR told us how to return to it, do so (matches official 2.2 behaviour).
+        // This activity is exported, so restrict the callback target to Highway Radar
+        // — otherwise any app could make us launch an arbitrary component (confused
+        // deputy) with us as the attributed source.
         try {
             String cbApp  = getIntent().getStringExtra("callback_app");
             String cbComp = getIntent().getStringExtra("callback_component");
-            if (cbApp != null && cbComp != null) {
+            if (cbApp != null && cbComp != null
+                    && SabreResponseBuilder.HR_PACKAGE.equals(cbApp)) {
                 Intent back = new Intent();
                 back.setComponent(new ComponentName(cbApp, cbComp));
                 back.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(back);
+            } else if (cbApp != null) {
+                Log.w(TAG, "Ignoring callback to non-HR package: " + cbApp);
             }
         } catch (Exception e) {
             Log.w(TAG, "callback relaunch failed: " + e.getMessage());
