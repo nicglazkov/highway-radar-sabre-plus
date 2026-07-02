@@ -9,15 +9,19 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+
+import java.util.function.Consumer;
 
 /**
  * Settings screen for the CHP alert feed.
@@ -51,9 +55,67 @@ public class MainActivity extends Activity {
         buildCategoryRows();
         buildLcsSwitch();
         buildFireSwitch();
+        buildFireSizeSpinner();
+        buildChainsSwitch();
+        buildWazeFilters();
+        buildUpdateNotifySwitch();
         buildAgeSpinner();
         buildDiagnostics();
         checkForUpdate();
+    }
+
+    private void buildFireSizeSpinner() {
+        Spinner sp = findViewById(R.id.fireSizeSpinner);
+        ArrayAdapter<String> ad = new ArrayAdapter<>(
+                this, android.R.layout.simple_spinner_item, ChpConfig.FIRE_SIZE_LABELS);
+        ad.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sp.setAdapter(ad);
+        sp.setSelection(ChpConfig.fireSizeToSpinnerIndex(config.fireMinAcres));
+        sp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
+                config.fireMinAcres = ChpConfig.FIRE_SIZE_VALUES[pos];
+                config.save(MainActivity.this);
+            }
+            @Override public void onNothingSelected(AdapterView<?> p) {}
+        });
+    }
+
+    private void buildUpdateNotifySwitch() {
+        Switch sw = findViewById(R.id.updateNotifySwitch);
+        sw.setChecked(config.updateNotifyEnabled);
+        sw.setOnCheckedChangeListener((CompoundButton b, boolean isChecked) -> {
+            config.updateNotifyEnabled = isChecked;
+            config.save(this);
+        });
+    }
+
+    // ── Waze category filters ───────────────────────────────────────────────────
+
+    private void buildWazeFilters() {
+        LinearLayout c = findViewById(R.id.wazeFilterContainer);
+        addWazeToggle(c, "Police & cameras", config.wazePolice, v -> config.wazePolice = v);
+        addWazeToggle(c, "Accidents",        config.wazeAccidents, v -> config.wazeAccidents = v);
+        addWazeToggle(c, "Hazards",          config.wazeHazards, v -> config.wazeHazards = v);
+        addWazeToggle(c, "Traffic jams",     config.wazeJams, v -> config.wazeJams = v);
+        addWazeToggle(c, "Road closures",    config.wazeClosures, v -> config.wazeClosures = v);
+    }
+
+    private void addWazeToggle(LinearLayout container, String label, boolean checked,
+                               Consumer<Boolean> setter) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(0, 12, 0, 12);
+        TextView tv = new TextView(this);
+        tv.setText(label);
+        tv.setTextSize(14f);
+        tv.setTextColor(0xFF212121);
+        row.addView(tv, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        Switch sw = new Switch(this);
+        sw.setChecked(checked);
+        sw.setOnCheckedChangeListener((b, isChecked) -> { setter.accept(isChecked); config.save(this); });
+        row.addView(sw);
+        container.addView(row);
     }
 
     // ── Update banner ─────────────────────────────────────────────────────────
@@ -117,6 +179,7 @@ public class MainActivity extends Activity {
                 {SabreResponseBuilder.SOURCE_WAZE, "Waze alerts"},
                 {SabreResponseBuilder.SOURCE_LCS,  "Caltrans closures"},
                 {SabreResponseBuilder.SOURCE_FIRE, "Wildfires"},
+                {SabreResponseBuilder.SOURCE_CHAINS, "Chain controls"},
         };
         for (String[] s : sources) {
             SourceStatus.Entry e = SourceStatus.get(s[0]);
@@ -127,6 +190,29 @@ public class MainActivity extends Activity {
             row.setTextColor(e != null && e.lastError != null ? 0xFFD32F2F : 0xFF424242);
             container.addView(row);
         }
+
+        // Last crash (if any) — tap to clear.
+        String[] crash = CrashLog.readSummary(this);
+        if (crash != null) {
+            TextView cr = new TextView(this);
+            cr.setTextSize(13f);
+            cr.setPadding(0, 6, 0, 6);
+            cr.setTextColor(0xFFD32F2F);
+            long whenMs = 0L;
+            try { whenMs = Long.parseLong(crash[0]); } catch (NumberFormatException ignored) {}
+            cr.setText("Last crash: " + (whenMs > 0 ? ago(whenMs) : "?") + " — " + crash[1] + "  (tap to clear)");
+            cr.setOnClickListener(v -> { CrashLog.clear(this); buildDiagnostics(); });
+            container.addView(cr);
+        }
+
+        // Refresh: poke the service (prewarms/refreshes stale sources) and re-render.
+        Button refresh = new Button(this);
+        refresh.setText("Refresh");
+        refresh.setOnClickListener(v -> {
+            ForegroundServiceStarter.start(this, null, null);
+            v.postDelayed(this::buildDiagnostics, 1500);
+        });
+        container.addView(refresh);
     }
 
     private static String formatStatus(String label, SourceStatus.Entry e) {
@@ -161,6 +247,15 @@ public class MainActivity extends Activity {
         sw.setChecked(config.fireEnabled);
         sw.setOnCheckedChangeListener((CompoundButton btn, boolean isChecked) -> {
             config.fireEnabled = isChecked;
+            config.save(this);
+        });
+    }
+
+    private void buildChainsSwitch() {
+        Switch sw = findViewById(R.id.chainsSwitch);
+        sw.setChecked(config.chainsEnabled);
+        sw.setOnCheckedChangeListener((CompoundButton btn, boolean isChecked) -> {
+            config.chainsEnabled = isChecked;
             config.save(this);
         });
     }

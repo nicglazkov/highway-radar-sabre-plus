@@ -2,6 +2,17 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.7] — 2026-07-02
+
+New source and quality-of-life controls.
+
+### Added
+- **Chain controls** — Caltrans winter chain requirements (R-1/R-2/R-3) on mountain routes, shown as slippery-road hazards. Settings toggle (on by default); off-season it shows nothing.
+- **Waze filters** — coarse per-category toggles (police & cameras / accidents / hazards / traffic jams / road closures) to cut noise.
+- **Wildfire size threshold** — optionally hide small fires (All / 10+ / 100+ / 1000+ acres).
+- **Update-notification toggle** — silence the update notification while keeping the in-app banner.
+- **Diagnostics: Refresh button + last-crash line** — poke a refresh and see the most recent crash (on-device only), which makes bug reports far more useful.
+
 ## [1.6.1] — 2026-07-02
 
 Hardening from a post-release review of v1.6.
@@ -88,6 +99,7 @@ Restored the plugin on Android 15/16 (foreground-service start fixes) and rewrot
 
 Initial release: CHP live incidents + Waze crowdsourced alerts for Highway Radar.
 
+[1.7]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.7
 [1.6.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.6.1
 [1.6]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.6
 [1.5.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.5.1

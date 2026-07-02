@@ -92,6 +92,21 @@ public class AlertMapper {
         return "HAZARD_ON_ROAD_DEBRIS";
     }
 
+    /**
+     * Coarse category for a Waze passthrough type (the raw Waze type/subtype name),
+     * used by the settings Waze filters: police / accidents / jams / closures /
+     * hazards (the catch-all, incl. SOS, weather, construction, etc.).
+     */
+    public static String wazeCategory(String type) {
+        if (type == null) return "hazards";
+        String t = type.toUpperCase(Locale.US);
+        if (t.startsWith("POLICE") || t.contains("CAMERA")) return "police";
+        if (t.startsWith("ACCIDENT"))                       return "accidents";
+        if (t.startsWith("JAM") || t.contains("CONGESTION")) return "jams";
+        if (t.contains("CLOS") || t.contains("LANE_CLOSURE")) return "closures";
+        return "hazards";
+    }
+
     // ── Waze ─────────────────────────────────────────────────────────────────
 
     public static String fromWazeType(String type, String subtype) {

@@ -64,13 +64,14 @@ Current test suites:
 
 | Suite | Tests | What it covers |
 |-------|-------|----------------|
-| `AlertMapperTest` | 47 | Every CHP log type and Waze type maps to the correct SABRE type (incl. injury-collision codes, locale independence) |
+| `AlertMapperTest` | 55 | CHP/Waze type → SABRE type (injury codes, locale independence, Waze coarse categories) |
 | `ChpConfigTest` | 42 | Category toggles, type overrides, age filter, LogTime parsing (both CHP feed formats) |
 | `SabreProtocolTest` | 38 | HR JSON schema — all 11 required alert fields, type whitelist, nullability, drop-bad-alert semantics |
 | `LcsSourceTest` | 27 | Caltrans LCS parsing, 1097/1098/1022 state filtering, shoulder/aux skip, span pins, district selection |
 | `CHPSourceTest` | 18 | XML parsing (incl. entity refs + real feed shape), radius filter, coordinate parsing, haversine |
-| `WildfireSourceTest` | 5 | WFIGS ArcGIS JSON parse + SABRE mapping |
-| `AlertDeduperTest` | 5 | Cross-source pin de-duplication (family + proximity, confirm-fold) |
+| `WildfireSourceTest` | 7 | WFIGS ArcGIS JSON parse (incl. error body + RX filter), SABRE mapping |
+| `WinterSourceTest` | 7 | Chain-control parse, R-0…R-3 active filtering, SABRE mapping |
+| `AlertDeduperTest` | 7 | Cross-source-only pin de-duplication (family + proximity, confirm-fold) |
 | `UpdateCheckerTest` | 4 | Version-comparison logic for the update check |
 | Waze suites | 23 | RT cache delta-merge/soft-delete, in-band error classification, shrinking-box geometry, confirm-ts, RmAlert parsing |
 

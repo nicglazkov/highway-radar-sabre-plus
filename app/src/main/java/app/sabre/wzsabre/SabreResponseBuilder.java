@@ -23,10 +23,11 @@ public class SabreResponseBuilder {
      * HR may use these IDs to look up source metadata (icon, color, etc.)
      * and crash with NPE/IOOB if the value is unknown.
      */
-    public static final String SOURCE_CHP  = "chp";
-    public static final String SOURCE_WAZE = "waze";
-    public static final String SOURCE_LCS  = "lcs";
-    public static final String SOURCE_FIRE = "fire";
+    public static final String SOURCE_CHP    = "chp";
+    public static final String SOURCE_WAZE   = "waze";
+    public static final String SOURCE_LCS    = "lcs";
+    public static final String SOURCE_FIRE   = "fire";
+    public static final String SOURCE_CHAINS = "chains";
 
     /**
      * Highway Radar's package. Every reply broadcast is explicitly targeted at it

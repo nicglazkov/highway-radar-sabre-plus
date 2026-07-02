@@ -77,8 +77,12 @@ public class WildfireSource {
     private final AtomicBoolean refreshing = new AtomicBoolean(false);
     private volatile Snapshot cache = null;
 
-    /** Active wildfires within the radius, served from the cache. Never blocks. */
-    public List<SabreAlert> fetchAlerts(double lat, double lon, double radiusMeters) {
+    /**
+     * Active wildfires within the radius, served from the cache. Never blocks.
+     * Fires with a known size below {@code minAcres} are hidden (0 = show all;
+     * unknown-size fires are always shown).
+     */
+    public List<SabreAlert> fetchAlerts(double lat, double lon, double radiusMeters, int minAcres) {
         triggerRefreshIfStale();
         Snapshot snap = cache;
         if (snap == null || (System.currentTimeMillis() - snap.timeMs) > CACHE_MAX_SERVE_MS) {
@@ -86,6 +90,7 @@ public class WildfireSource {
         }
         List<SabreAlert> out = new ArrayList<>();
         for (Fire f : snap.fires) {
+            if (minAcres > 0 && f.sizeAcres >= 0 && f.sizeAcres < minAcres) continue;
             if (CHPSource.haversineMeters(lat, lon, f.lat, f.lon) > radiusMeters) continue;
             out.add(toAlert(f));
         }

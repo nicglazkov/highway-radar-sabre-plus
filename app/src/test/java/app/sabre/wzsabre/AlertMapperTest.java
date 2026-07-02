@@ -49,6 +49,17 @@ public class AlertMapperTest {
     @Test public void waze_unknown_returnsNull() { assertNull(AlertMapper.fromWazeType("WEATHERHAZARD", "")); }
     @Test public void waze_null_returnsNull()    { assertNull(AlertMapper.fromWazeType(null, "")); }
 
+    // ── Waze coarse category (settings filters) ─────────────────────────────────
+
+    @Test public void wazeCategory_police()    { assertEquals("police",    AlertMapper.wazeCategory("POLICE_HIDING")); }
+    @Test public void wazeCategory_camera()    { assertEquals("police",    AlertMapper.wazeCategory("DEFAULT_CAMERA")); }
+    @Test public void wazeCategory_accident()  { assertEquals("accidents", AlertMapper.wazeCategory("ACCIDENT_MAJOR")); }
+    @Test public void wazeCategory_jam()       { assertEquals("jams",      AlertMapper.wazeCategory("JAM_HEAVY_TRAFFIC")); }
+    @Test public void wazeCategory_closure()   { assertEquals("closures",  AlertMapper.wazeCategory("ROAD_CLOSED")); }
+    @Test public void wazeCategory_hazardDefault() { assertEquals("hazards", AlertMapper.wazeCategory("HAZARD_ON_ROAD_CAR_STOPPED")); }
+    @Test public void wazeCategory_sosIsHazard()   { assertEquals("hazards", AlertMapper.wazeCategory("SOS_MEDICAL_HELP")); }
+    @Test public void wazeCategory_null()      { assertEquals("hazards",   AlertMapper.wazeCategory(null)); }
+
     // ── locale independence ───────────────────────────────────────────────────
 
     @Test
