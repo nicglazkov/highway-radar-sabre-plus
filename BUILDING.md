@@ -39,17 +39,40 @@ JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew assembleDebug
 ./gradlew test
 ```
 
-All tests are JVM unit tests (no emulator required). Results land in `app/build/reports/tests/`.
+All tests are JVM unit tests (no emulator required). Results land in `app/build/reports/tests/`. CI (`.github/workflows/ci.yml`) runs `test` + `lintDebug` and builds a debug APK on every push and PR.
+
+## Cutting a release (maintainer)
+
+Releases are automated. Push a version tag and `.github/workflows/release.yml` builds a signed APK and publishes the GitHub release with it attached:
+
+```bash
+git tag v1.6 && git push origin v1.6
+```
+
+This requires four repository secrets (**Settings → Secrets and variables → Actions**), set once:
+
+| Secret | Value |
+|--------|-------|
+| `KEYSTORE_BASE64` | `base64 -w0 app/caltrans-sabre.keystore` |
+| `KEYSTORE_PASSWORD` | keystore store password |
+| `KEY_ALIAS` | key alias |
+| `KEY_PASSWORD` | key password |
+
+To build a signed APK **locally** instead, put a `keystore.properties` at the repo root (`storeFile`/`storePassword`/`keyAlias`/`keyPassword`; `storeFile` resolves under `app/`) and run `./gradlew assembleRelease`. Without it, `assembleRelease` produces an unsigned APK and warns.
 
 Current test suites:
 
 | Suite | Tests | What it covers |
 |-------|-------|----------------|
-| `AlertMapperTest` | 46 | Every CHP log type and Waze type maps to the correct SABRE type (incl. injury-collision codes) |
+| `AlertMapperTest` | 47 | Every CHP log type and Waze type maps to the correct SABRE type (incl. injury-collision codes, locale independence) |
 | `ChpConfigTest` | 42 | Category toggles, type overrides, age filter, LogTime parsing (both CHP feed formats) |
-| `SabreProtocolTest` | 32 | HR JSON schema — all 11 required alert fields, type whitelist, nullability, drop-bad-alert semantics |
-| `LcsSourceTest` | 25 | Caltrans LCS parsing, 1097/1098/1022 state filtering, shoulder skip, span pins, district selection |
-| `CHPSourceTest` | 17 | XML parsing (incl. entity refs + real feed shape), radius filter, coordinate parsing, haversine |
+| `SabreProtocolTest` | 38 | HR JSON schema — all 11 required alert fields, type whitelist, nullability, drop-bad-alert semantics |
+| `LcsSourceTest` | 27 | Caltrans LCS parsing, 1097/1098/1022 state filtering, shoulder/aux skip, span pins, district selection |
+| `CHPSourceTest` | 18 | XML parsing (incl. entity refs + real feed shape), radius filter, coordinate parsing, haversine |
+| `WildfireSourceTest` | 5 | WFIGS ArcGIS JSON parse + SABRE mapping |
+| `AlertDeduperTest` | 5 | Cross-source pin de-duplication (family + proximity, confirm-fold) |
+| `UpdateCheckerTest` | 4 | Version-comparison logic for the update check |
+| Waze suites | 23 | RT cache delta-merge/soft-delete, in-band error classification, shrinking-box geometry, confirm-ts, RmAlert parsing |
 
 ## Project structure
 
