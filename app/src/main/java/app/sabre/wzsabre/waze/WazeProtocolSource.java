@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import app.sabre.wzsabre.SabreAlert;
 import app.sabre.wzsabre.SabreResponseBuilder;
+import app.sabre.wzsabre.SourceStatus;
 
 /**
  * Waze data source backed by the Waze mobile "RT" protocol (replaces the georss
@@ -150,6 +151,7 @@ public final class WazeProtocolSource {
                     cacheLon = lon;
                 } catch (Exception e) {
                     Log.w(TAG, "Waze refresh failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                    SourceStatus.failure(SabreResponseBuilder.SOURCE_WAZE, e.getClass().getSimpleName());
                     // Don't retry a failure at poll cadence. A rejection already set a
                     // longer backoff in handleAccountRejected; only add the short generic
                     // one if we aren't already backing off, so we never shorten it.
@@ -176,6 +178,7 @@ public final class WazeProtocolSource {
         // Reached only on a fully successful refresh — clear any rejection backoff.
         consecutiveRejections = 0;
         backoffUntilMs = 0L;
+        SourceStatus.success(SabreResponseBuilder.SOURCE_WAZE, alertCache.size());
         Log.d(TAG, "Waze cache: " + alertCache.size() + " alerts near "
                 + String.format(Locale.US, "%.4f,%.4f", lat, lon));
     }

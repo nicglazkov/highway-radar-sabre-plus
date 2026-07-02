@@ -100,10 +100,12 @@ public class WildfireSource {
                     cache = parsed;
                     cacheTimeMs = System.currentTimeMillis();
                     Log.d(TAG, "Wildfires refreshed: " + parsed.size() + " active in CA");
+                    SourceStatus.success(SabreResponseBuilder.SOURCE_FIRE, parsed.size());
                 } catch (Exception e) {
                     // Keep serving the last good parse on a transient failure.
                     Log.w(TAG, "Wildfire refresh failed (serving cache): "
                             + e.getClass().getSimpleName() + ": " + e.getMessage());
+                    SourceStatus.failure(SabreResponseBuilder.SOURCE_FIRE, e.getClass().getSimpleName());
                 } finally {
                     refreshing.set(false);
                 }

@@ -201,6 +201,28 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <!-- ── Diagnostics ────────────────────────────────────────────────── -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="DIAGNOSTICS"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#757575"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="6dp" />
+
+        <LinearLayout
+            android:id="@+id/diagnosticsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:elevation="1dp"
+            android:padding="16dp" />
+
         <!-- ── About ─────────────────────────────────────────────────────── -->
         <TextView
             android:layout_width="match_parent"
