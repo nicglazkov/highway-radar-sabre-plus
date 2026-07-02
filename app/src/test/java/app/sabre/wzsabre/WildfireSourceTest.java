@@ -55,6 +55,26 @@ public class WildfireSourceTest {
         assertEquals(0, WildfireSource.parse("{}").size());
     }
 
+    @Test(expected = Exception.class)
+    public void parse_arcgisErrorBody_throws() throws Exception {
+        // ArcGIS returns HTTP 200 with an error body on a bad query — must NOT be
+        // treated as "0 fires" (which would hide the outage in diagnostics).
+        WildfireSource.parse("{\"error\":{\"code\":400,\"message\":\"Invalid field\"}}");
+    }
+
+    @Test
+    public void parse_skipsNonWildfireType() throws Exception {
+        String json = "{\"features\":[" +
+            "{\"attributes\":{\"IncidentName\":\"PRESCRIBED\",\"IncidentTypeCategory\":\"RX\"," +
+            "\"UniqueFireIdentifier\":\"2026-CA-RX1\"},\"geometry\":{\"x\":-121.0,\"y\":38.0}}," +
+            "{\"attributes\":{\"IncidentName\":\"REAL FIRE\",\"IncidentTypeCategory\":\"WF\"," +
+            "\"UniqueFireIdentifier\":\"2026-CA-WF1\"},\"geometry\":{\"x\":-121.0,\"y\":38.0}}" +
+            "]}";
+        List<WildfireSource.Fire> fires = WildfireSource.parse(json);
+        assertEquals("prescribed burn (RX) dropped client-side", 1, fires.size());
+        assertEquals("REAL FIRE", fires.get(0).name);
+    }
+
     @Test
     public void toAlert_producesValidSabreAlert() throws Exception {
         WildfireSource.Fire a = WildfireSource.parse(JSON).get(0);

@@ -42,7 +42,7 @@ public class WildfireSource {
             + "?where=" + "POOState%3D%27US-CA%27%20AND%20IncidentTypeCategory%3D%27WF%27"
             + "%20AND%20ActiveFireCandidate%3D1"
             + "&outFields=IncidentName%2CIncidentSize%2CPercentContained%2C"
-            + "FireDiscoveryDateTime%2CUniqueFireIdentifier"
+            + "FireDiscoveryDateTime%2CUniqueFireIdentifier%2CIncidentTypeCategory"
             + "&returnGeometry=true&outSR=4326&f=json";
 
     private static final long CACHE_TTL_MS       = 5 * 60_000L;   // fires update slowly
@@ -65,20 +65,27 @@ public class WildfireSource {
         }
     }
 
+    /** Immutable {list, timestamp} pair so a reader never sees a fresh list with a
+     *  stale time (which would wrongly treat a just-refreshed cache as expired). */
+    private static final class Snapshot {
+        final List<Fire> fires;
+        final long timeMs;
+        Snapshot(List<Fire> fires, long timeMs) { this.fires = fires; this.timeMs = timeMs; }
+    }
+
     private final ExecutorService refreshExec = Executors.newSingleThreadExecutor();
     private final AtomicBoolean refreshing = new AtomicBoolean(false);
-    private volatile List<Fire> cache = null;
-    private volatile long cacheTimeMs = 0L;
+    private volatile Snapshot cache = null;
 
     /** Active wildfires within the radius, served from the cache. Never blocks. */
     public List<SabreAlert> fetchAlerts(double lat, double lon, double radiusMeters) {
         triggerRefreshIfStale();
-        List<Fire> snap = cache;
-        if (snap == null || (System.currentTimeMillis() - cacheTimeMs) > CACHE_MAX_SERVE_MS) {
+        Snapshot snap = cache;
+        if (snap == null || (System.currentTimeMillis() - snap.timeMs) > CACHE_MAX_SERVE_MS) {
             return new ArrayList<>();
         }
         List<SabreAlert> out = new ArrayList<>();
-        for (Fire f : snap) {
+        for (Fire f : snap.fires) {
             if (CHPSource.haversineMeters(lat, lon, f.lat, f.lon) > radiusMeters) continue;
             out.add(toAlert(f));
         }
@@ -92,13 +99,13 @@ public class WildfireSource {
     public void shutdown() { refreshExec.shutdownNow(); }
 
     private void triggerRefreshIfStale() {
-        boolean stale = cache == null || (System.currentTimeMillis() - cacheTimeMs) > CACHE_TTL_MS;
+        Snapshot snap = cache;
+        boolean stale = snap == null || (System.currentTimeMillis() - snap.timeMs) > CACHE_TTL_MS;
         if (stale && refreshing.compareAndSet(false, true)) {
             refreshExec.submit(() -> {
                 try {
                     List<Fire> parsed = fetchAndParse();
-                    cache = parsed;
-                    cacheTimeMs = System.currentTimeMillis();
+                    cache = new Snapshot(parsed, System.currentTimeMillis());
                     Log.d(TAG, "Wildfires refreshed: " + parsed.size() + " active in CA");
                     SourceStatus.success(SabreResponseBuilder.SOURCE_FIRE, parsed.size());
                 } catch (Exception e) {
@@ -138,6 +145,17 @@ public class WildfireSource {
     static List<Fire> parse(String json) throws Exception {
         List<Fire> out = new ArrayList<>();
         JSONObject root = new JSONObject(json);
+        // ArcGIS reports query failures as HTTP 200 with an {"error":...} body (e.g.
+        // a renamed field). Treat that as a failure so it surfaces in diagnostics
+        // instead of looking like "0 active fires".
+        if (root.has("error")) {
+            throw new Exception("WFIGS query error: " + root.optJSONObject("error"));
+        }
+        if (root.optBoolean("exceededTransferLimit", false)) {
+            // Server capped the result set — we'd be silently dropping fires. Very
+            // unlikely for active CA wildfires, but log it rather than hide it.
+            Log.w(TAG, "WFIGS response hit the record cap — some fires may be omitted");
+        }
         JSONArray features = root.optJSONArray("features");
         if (features == null) return out;
         long nowSec = System.currentTimeMillis() / 1000L;
@@ -147,6 +165,9 @@ public class WildfireSource {
             JSONObject geom = feat.optJSONObject("geometry");
             JSONObject attr = feat.optJSONObject("attributes");
             if (geom == null || attr == null) continue;
+            // Defense-in-depth: only real wildfires (WF), never prescribed burns (RX),
+            // even if the server-side type filter ever stops applying.
+            if (!"WF".equals(attr.optString("IncidentTypeCategory", "WF"))) continue;
             // ArcGIS omits geometry keys when absent; require both.
             if (!geom.has("x") || !geom.has("y")) continue;
             double lon = geom.optDouble("x", Double.NaN);
