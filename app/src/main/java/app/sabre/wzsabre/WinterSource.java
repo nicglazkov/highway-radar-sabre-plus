@@ -5,6 +5,7 @@ import android.util.Log;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -124,8 +125,18 @@ public class WinterSource {
         conn.setConnectTimeout(TIMEOUT_MS);
         conn.setReadTimeout(TIMEOUT_MS);
         conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14)");
-        try (InputStream in = conn.getInputStream()) {
-            return parse(in);
+        try {
+            int code = conn.getResponseCode();
+            // Flatland districts (e.g. D4 Bay Area, D5 Central Coast) publish no
+            // chain-control feed and return 404 — that's "no chain controls here",
+            // not an error. Return empty so it's cached like a normal result: no red
+            // diagnostics, and no re-request every ~15s (previously we never cached a
+            // failure, so a permanent 404 hammered the feed all drive).
+            if (code == HttpsURLConnection.HTTP_NOT_FOUND) return new ArrayList<>();
+            if (code != HttpsURLConnection.HTTP_OK) throw new IOException("HTTP " + code);
+            try (InputStream in = conn.getInputStream()) {
+                return parse(in);
+            }
         } finally {
             conn.disconnect();
         }

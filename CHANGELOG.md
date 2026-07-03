@@ -2,6 +2,13 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.7.1] — 2026-07-02
+
+Fix found from a real test drive.
+
+### Fixed
+- **Chain controls stop hammering feeds that don't exist.** In regions with no mountain routes (e.g. the Bay Area), Caltrans returns "not found" for the chain-control feed. The plugin was re-requesting those every few seconds all drive and showing a false error in Diagnostics; it now treats "not found" as "no chain controls here" and caches it like any other result.
+
 ## [1.7] — 2026-07-02
 
 New source and quality-of-life controls.
@@ -99,6 +106,7 @@ Restored the plugin on Android 15/16 (foreground-service start fixes) and rewrot
 
 Initial release: CHP live incidents + Waze crowdsourced alerts for Highway Radar.
 
+[1.7.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.7.1
 [1.7]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.7
 [1.6.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.6.1
 [1.6]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.6
