@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Android 7.0+](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)](#requirements)
 
-A drop-in replacement for **wzsabre** that brings CHP live incident alerts and Waze crowdsourced traffic data to [Highway Radar](https://www.highwayradar.com/) via the SABRE plugin protocol.
+An open-source **Highway Radar SABRE plugin** for California, and a drop-in **wzsabre** replacement: it brings live CHP incidents, Waze crowdsourced alerts, Caltrans lane closures, active wildfires, and winter chain controls to [Highway Radar](https://www.highwayradar.com/) via the SABRE plugin protocol.
 
 > **Package ID: `app.sabre.wzsabre`** — same as wzsabre, so Highway Radar discovers this plugin automatically without any reconfiguration.
 
