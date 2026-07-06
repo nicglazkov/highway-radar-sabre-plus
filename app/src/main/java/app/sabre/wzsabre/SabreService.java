@@ -162,7 +162,7 @@ public class SabreService extends Service {
                 : new Notification.Builder(this);
         b.setSmallIcon(android.R.drawable.stat_sys_download_done)
          .setContentTitle("CHP + Waze SABRE update available")
-         .setContentText("Version " + r.latestVersion + " — tap to download")
+         .setContentText("Version " + r.latestVersion + " available. Tap to download.")
          .setAutoCancel(true)
          .setContentIntent(pi);
         nm.notify(UPDATE_NOTIFICATION_ID, b.build());

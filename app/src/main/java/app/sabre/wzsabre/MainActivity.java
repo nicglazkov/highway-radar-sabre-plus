@@ -224,7 +224,7 @@ public class MainActivity extends Activity {
             cr.setTextColor(0xFFD32F2F);
             long whenMs = 0L;
             try { whenMs = Long.parseLong(crash[0]); } catch (NumberFormatException ignored) {}
-            cr.setText("Last crash: " + (whenMs > 0 ? ago(whenMs) : "?") + " — " + crash[1] + "  (tap to clear)");
+            cr.setText("Last crash: " + (whenMs > 0 ? ago(whenMs) : "?") + ", " + crash[1] + "  (tap to clear)");
             cr.setOnClickListener(v -> { CrashLog.clear(this); buildDiagnostics(); });
             container.addView(cr);
         }
