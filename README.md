@@ -2,9 +2,9 @@
 
 <img align="right" width="104" src="docs/screenshots/app-icon.png" alt="App icon">
 
-[![CI](https://github.com/nicglazkov/caltrans-sabre/actions/workflows/ci.yml/badge.svg)](https://github.com/nicglazkov/caltrans-sabre/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/nicglazkov/caltrans-sabre?sort=semver)](https://github.com/nicglazkov/caltrans-sabre/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/nicglazkov/caltrans-sabre/total)](https://github.com/nicglazkov/caltrans-sabre/releases)
+[![CI](https://github.com/nicglazkov/highway-radar-sabre-plus/actions/workflows/ci.yml/badge.svg)](https://github.com/nicglazkov/highway-radar-sabre-plus/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/nicglazkov/highway-radar-sabre-plus?sort=semver)](https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/nicglazkov/highway-radar-sabre-plus/total)](https://github.com/nicglazkov/highway-radar-sabre-plus/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Android 7.0+](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)](#requirements)
 
@@ -61,7 +61,7 @@ All sources run in parallel and feed into the standard HR crowdsourced-alerts la
 
 ### Option B: Auto-update with Obtainium
 
-For hands-off updates, install via [Obtainium](https://github.com/ImranR98/Obtainium): add this repo's URL (`https://github.com/nicglazkov/caltrans-sabre`) as an app source and Obtainium will check GitHub Releases and install new versions for you. (The app also shows an in-app banner and a one-time notification when an update is available.)
+For hands-off updates, install via [Obtainium](https://github.com/ImranR98/Obtainium): add this repo's URL (`https://github.com/nicglazkov/highway-radar-sabre-plus`) as an app source and Obtainium will check GitHub Releases and install new versions for you. (The app also shows an in-app banner and a one-time notification when an update is available.)
 
 ### Option C: Build from source
 

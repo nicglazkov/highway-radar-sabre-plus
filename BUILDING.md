@@ -13,8 +13,8 @@ No NDK or additional toolchains needed. The Waze protobuf classes are generated 
 ## Clone and build
 
 ```bash
-git clone https://github.com/nicglazkov/caltrans-sabre.git
-cd caltrans-sabre
+git clone https://github.com/nicglazkov/highway-radar-sabre-plus.git
+cd highway-radar-sabre-plus
 ```
 
 **Debug APK** (for sideloading during development):

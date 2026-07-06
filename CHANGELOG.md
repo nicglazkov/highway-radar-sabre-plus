@@ -2,6 +2,11 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.8] - 2026-07-06
+
+### Changed
+- Renamed the project to **highway-radar-sabre-plus**. The app, package ID, and settings are unchanged; the in-app update check and "report a bug" links now point at the new repository.
+
 ## [1.7.3] - 2026-07-06
 
 ### Changed
@@ -116,16 +121,17 @@ Restored the plugin on Android 15/16 (foreground-service start fixes) and rewrot
 
 Initial release: CHP live incidents + Waze crowdsourced alerts for Highway Radar.
 
-[1.7.3]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.7.3
-[1.7.2]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.7.2
-[1.7.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.7.1
-[1.7]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.7
-[1.6.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.6.1
-[1.6]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.6
-[1.5.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.5.1
-[1.5]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.5
-[1.4]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.4
-[1.3]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.3
-[1.2]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.2
-[1.1]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.1
-[1.0]: https://github.com/nicglazkov/caltrans-sabre/releases/tag/v1.0
+[1.8]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8
+[1.7.3]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.7.3
+[1.7.2]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.7.2
+[1.7.1]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.7.1
+[1.7]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.7
+[1.6.1]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.6.1
+[1.6]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.6
+[1.5.1]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.5.1
+[1.5]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.5
+[1.4]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.4
+[1.3]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.3
+[1.2]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.2
+[1.1]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.1
+[1.0]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.0

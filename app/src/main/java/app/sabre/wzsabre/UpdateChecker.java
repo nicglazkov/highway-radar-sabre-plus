@@ -18,9 +18,9 @@ public final class UpdateChecker {
     private UpdateChecker() {}
 
     static final String RELEASES_API =
-            "https://api.github.com/repos/nicglazkov/caltrans-sabre/releases/latest";
+            "https://api.github.com/repos/nicglazkov/highway-radar-sabre-plus/releases/latest";
     public static final String RELEASES_PAGE =
-            "https://github.com/nicglazkov/caltrans-sabre/releases/latest";
+            "https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest";
 
     public static final class Result {
         public final String latestVersion;   // normalized, e.g. "1.6"
@@ -39,7 +39,7 @@ public final class UpdateChecker {
             conn.setConnectTimeout(6000);
             conn.setReadTimeout(6000);
             conn.setRequestProperty("Accept", "application/vnd.github+json");
-            conn.setRequestProperty("User-Agent", "caltrans-sabre-app");
+            conn.setRequestProperty("User-Agent", "highway-radar-sabre-plus-app");
             if (conn.getResponseCode() != 200) return null;
             StringBuilder sb = new StringBuilder();
             try (BufferedReader r = new BufferedReader(

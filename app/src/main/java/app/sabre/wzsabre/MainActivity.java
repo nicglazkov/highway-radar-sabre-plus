@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
      */
     private void buildReportButton() {
         findViewById(R.id.reportButton).setOnClickListener(v -> {
-            String url = "https://github.com/nicglazkov/caltrans-sabre/issues/new"
+            String url = "https://github.com/nicglazkov/highway-radar-sabre-plus/issues/new"
                     + "?template=bug_report.yml"
                     + "&plugin-version=" + Uri.encode(BuildConfig.VERSION_NAME)
                     + "&android-version=" + Uri.encode(
@@ -82,7 +82,7 @@ public class MainActivity extends Activity {
                 // No browser / template unavailable — fall back to the issues list.
                 try {
                     startActivity(new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("https://github.com/nicglazkov/caltrans-sabre/issues")));
+                            Uri.parse("https://github.com/nicglazkov/highway-radar-sabre-plus/issues")));
                 } catch (Exception ignored) {}
             }
         });

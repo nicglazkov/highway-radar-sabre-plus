@@ -91,7 +91,7 @@ jobs:
             flag { print }
           ' CHANGELOG.md > RELEASE_NOTES.md
           if [ ! -s RELEASE_NOTES.md ]; then
-            echo "See [CHANGELOG.md](https://github.com/nicglazkov/caltrans-sabre/blob/main/CHANGELOG.md)." > RELEASE_NOTES.md
+            echo "See [CHANGELOG.md](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md)." > RELEASE_NOTES.md
           fi
           echo "--- release notes ---"; cat RELEASE_NOTES.md
 
