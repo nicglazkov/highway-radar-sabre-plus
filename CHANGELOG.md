@@ -2,6 +2,11 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.8.3] - 2026-07-06
+
+### Fixed
+- Chain controls no longer show a false error in regions with no chain-control program (such as the Bay Area). Caltrans changed the "no feed here" response for those districts from 404 to 500; the plugin now treats any non-200 as "no chain controls here" (shown as 0) instead of an error.
+
 ## [1.8.2] - 2026-07-06
 
 ### Changed
@@ -131,6 +136,7 @@ Restored the plugin on Android 15/16 (foreground-service start fixes) and rewrot
 
 Initial release: CHP live incidents + Waze crowdsourced alerts for Highway Radar.
 
+[1.8.3]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.3
 [1.8.2]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.2
 [1.8.1]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.1
 [1.8]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8

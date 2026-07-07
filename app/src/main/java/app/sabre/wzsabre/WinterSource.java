@@ -5,7 +5,6 @@ import android.util.Log;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -127,13 +126,18 @@ public class WinterSource {
         conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14)");
         try {
             int code = conn.getResponseCode();
-            // Flatland districts (e.g. D4 Bay Area, D5 Central Coast) publish no
-            // chain-control feed and return 404 — that's "no chain controls here",
-            // not an error. Return empty so it's cached like a normal result: no red
-            // diagnostics, and no re-request every ~15s (previously we never cached a
-            // failure, so a permanent 404 hammered the feed all drive).
-            if (code == HttpsURLConnection.HTTP_NOT_FOUND) return new ArrayList<>();
-            if (code != HttpsURLConnection.HTTP_OK) throw new IOException("HTTP " + code);
+            // Districts with no chain-control program (D4 Bay Area, D5 Central Coast,
+            // D12 Orange County) return a non-200 for their cc feed. It used to be 404;
+            // as of 2026 Caltrans returns 500. Treat ANY non-200 as "no chain controls
+            // from this district": an empty, cached result, not an error. So it shows 0
+            // instead of a red diagnostics error, and does not re-request every ~15s. A
+            // real chain district with a transient 5xx just shows no controls until it
+            // recovers, same as an empty feed. Genuine connectivity failures still throw
+            // from getResponseCode() above and surface as an error.
+            if (code != HttpsURLConnection.HTTP_OK) {
+                Log.d(TAG, "D" + district + " chain-control feed HTTP " + code + "; treating as no data");
+                return new ArrayList<>();
+            }
             try (InputStream in = conn.getInputStream()) {
                 return parse(in);
             }
