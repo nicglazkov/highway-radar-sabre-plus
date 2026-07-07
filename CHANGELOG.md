@@ -2,6 +2,11 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.8.2] - 2026-07-06
+
+### Changed
+- The published APK download is now named `SABRE-Plus-vX.apk` to match the app name.
+
 ## [1.8.1] - 2026-07-06
 
 ### Changed
@@ -126,6 +131,7 @@ Restored the plugin on Android 15/16 (foreground-service start fixes) and rewrot
 
 Initial release: CHP live incidents + Waze crowdsourced alerts for Highway Radar.
 
+[1.8.2]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.2
 [1.8.1]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.1
 [1.8]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8
 [1.7.3]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.7.3

@@ -78,7 +78,7 @@ jobs:
         run: ./gradlew assembleRelease --no-daemon
 
       - name: Stage APK asset
-        run: cp app/build/outputs/apk/release/app-release.apk "CHP-Waze-SABRE-${GITHUB_REF_NAME}.apk"
+        run: cp app/build/outputs/apk/release/app-release.apk "SABRE-Plus-${GITHUB_REF_NAME}.apk"
 
       - name: Prepare release notes from CHANGELOG
         run: |
@@ -99,7 +99,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          APK="CHP-Waze-SABRE-${GITHUB_REF_NAME}.apk"
+          APK="SABRE-Plus-${GITHUB_REF_NAME}.apk"
           # Idempotent: if a release for this tag already exists (re-run or re-pushed
           # tag), attach/replace the APK and refresh the notes instead of failing.
           if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
