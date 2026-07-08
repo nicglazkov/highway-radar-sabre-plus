@@ -47,6 +47,8 @@ All sources run in parallel and feed into the standard HR crowdsourced-alerts la
 
 ## Installation
 
+> **Already have the official wzsabre (from wzsabre.rocks) installed? Uninstall it first.** SABRE Plus is a replacement for wzsabre, and Highway Radar only recognizes one specific plugin ID, so both apps must share it and cannot be installed at the same time. If you try to install SABRE Plus while wzsabre is still on the device, Android blocks it with "App not installed" because the two are signed by different developers. Uninstall the official wzsabre first (long-press its icon, then App info, then Uninstall), then install SABRE Plus. Your Highway Radar setup is unaffected and it will rediscover the plugin automatically.
+
 ### Option A: Download the APK (recommended for most users)
 
 1. Go to the [Releases](../../releases) page and download the latest APK.
@@ -112,6 +114,9 @@ If you already have wzsabre installed:
 ---
 
 ## Troubleshooting
+
+**"App not installed", "package conflicts with an existing package", or "signatures do not match"**
+- You have the official wzsabre (from wzsabre.rocks) installed. SABRE Plus replaces wzsabre and must use the same plugin ID that Highway Radar looks for, so the two cannot be installed at once, and they are signed by different developers. Uninstall the official wzsabre (long-press its icon, then App info, then Uninstall), then install SABRE Plus. Highway Radar rediscovers the plugin automatically, and your settings are unaffected.
 
 **"Crowd-Sourced Alert Problems" banner in HR**
 - Open the SABRE Plus app and check that the service status shows *"Plugin active"*.
