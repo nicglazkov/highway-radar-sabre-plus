@@ -89,10 +89,17 @@ jobs:
             index($0, hdr) == 1 { flag=1; next }
             flag && index($0, "## [") == 1 { exit }
             flag { print }
-          ' CHANGELOG.md > RELEASE_NOTES.md
-          if [ ! -s RELEASE_NOTES.md ]; then
-            echo "See [CHANGELOG.md](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md)." > RELEASE_NOTES.md
+          ' CHANGELOG.md > BODY.md
+          if [ ! -s BODY.md ]; then
+            echo "See [CHANGELOG.md](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md)." > BODY.md
           fi
+          # Every release leads with a friendly, unmissable note for wzsabre users.
+          printf '%s\n' \
+            "> **👋 Coming from the original wzsabre? Uninstall it first.**" \
+            ">" \
+            "> SABRE Plus replaces wzsabre and shares the plugin ID that Highway Radar looks for, so Android only allows one of them at a time. Uninstall the old **wzsabre** app (long-press its icon, then App info, then Uninstall), then install SABRE Plus below. Your Highway Radar setup stays exactly as it is. Never had wzsabre? Just install, you are all set. 🙂" \
+            "" > RELEASE_NOTES.md
+          cat BODY.md >> RELEASE_NOTES.md
           echo "--- release notes ---"; cat RELEASE_NOTES.md
 
       - name: Publish GitHub release

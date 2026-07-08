@@ -12,6 +12,15 @@ An open-source **Highway Radar SABRE plugin** for California, and a drop-in **wz
 
 > **Package ID: `app.sabre.wzsabre`** (the same as wzsabre), so Highway Radar discovers this plugin automatically without any reconfiguration.
 
+> ### 👋 Switching from wzsabre? One quick step first
+>
+> SABRE Plus is the new home for what wzsabre used to do, and Android only lets **one of them** be installed at a time (they share the plugin ID that Highway Radar looks for). So if the old **wzsabre** app is on your phone:
+>
+> 1. **Uninstall wzsabre** (long-press its icon, then App info, then Uninstall)
+> 2. **Install SABRE Plus** (see [Installation](#installation) below)
+>
+> Your Highway Radar settings stay exactly as they are, and it finds the plugin automatically. Never had wzsabre? You are all set, just install below. 🙂
+
 ---
 
 ## What it does
