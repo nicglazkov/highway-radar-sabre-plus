@@ -11,21 +11,24 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 /**
- * Validates that SabreResponseBuilder produces JSON that exactly matches
- * HR's kotlinx.serialization schema (compatible with the wzsabre SABRE protocol).
+ * Validates that SabreResponseBuilder produces JSON that exactly matches Highway
+ * Radar's kotlinx.serialization schema. HR parses strictly (never sets
+ * ignoreUnknownKeys), so the alert object must contain EXACTLY these nine fields
+ * and no others, or HR rejects the whole batch and shows no data.
  *
- * SabreFetchResponseAlert requires ALL 11 fields (bitmask 2047 = 0b11111111111):
+ * HR 3.2's SabreFetchResponseAlert (verified by decompiling HR):
  *   0  alert_source   String  non-null
  *   1  alert_id       String  non-null
- *   2  user_id        String  non-null   ← was missing before; caused MissingFieldException crash
- *   3  type           String  non-null
- *   4  lat            Double
- *   5  lon            Double
- *   6  heading_deg    Double
- *   7  street_name    String? nullable
- *   8  report_ts      Int     (not Long)
- *   9  confirm_ts     Int?    nullable
- *  10  confirm_count  Int
+ *   2  type           String  non-null
+ *   3  lat            Double
+ *   4  lon            Double
+ *   5  heading_deg    Double
+ *   6  street_name    String? nullable
+ *   7  report_ts      Int     (not Long)
+ *   8  confirm_ts     Int?    nullable
+ *
+ * The old wzsabre 2.2 model also had user_id and confirm_count; HR dropped both,
+ * so sending them now breaks HR (this was the "plugin detected but no data" bug).
  */
 public class SabreProtocolTest {
 
@@ -115,19 +118,27 @@ public class SabreProtocolTest {
         assertEquals(0, arr.length());
     }
 
-    // ── alert: all 11 fields present ─────────────────────────────────────────
+    // ── alert: exactly HR's nine fields, no extras ───────────────────────────
 
     @Test
-    public void alert_hasAll11RequiredFields() throws Exception {
+    public void alert_hasExactly9HrFields() throws Exception {
         JSONObject a = firstAlert(parseResponse(Collections.singletonList(chpAlert())));
         String[] required = {
-            "alert_source", "alert_id", "user_id", "type",
-            "lat", "lon", "heading_deg", "street_name",
-            "report_ts", "confirm_ts", "confirm_count"
+            "alert_source", "alert_id", "type", "lat", "lon",
+            "heading_deg", "street_name", "report_ts", "confirm_ts"
         };
         for (String field : required) {
             assertTrue("Missing required field: " + field, a.has(field));
         }
+        // HR parses the response strictly (never sets ignoreUnknownKeys), so ANY
+        // extra key makes it reject the whole batch and show no data. HR 3.2's
+        // SabreFetchResponseAlert model is exactly these nine fields: user_id and
+        // confirm_count (present in the old wzsabre 2.2 model) were dropped. Lock
+        // the field set to exactly nine so a regression can't silently break HR.
+        assertEquals("alert must have exactly HR's 9 fields (no user_id/confirm_count)",
+                9, a.length());
+        assertFalse("user_id must NOT be sent (HR rejects unknown keys)", a.has("user_id"));
+        assertFalse("confirm_count must NOT be sent (HR rejects unknown keys)", a.has("confirm_count"));
     }
 
     // ── alert_source must match handshake source IDs ──────────────────────────
@@ -154,43 +165,6 @@ public class SabreProtocolTest {
                 a.getString("alert_source"));
         assertNotEquals("'Waze' would not match declared source id 'waze'", "Waze",
                 a.getString("alert_source"));
-    }
-
-    // ── user_id: required non-null String ────────────────────────────────────
-
-    @Test
-    public void alert_userIdPresentAndNonNull() throws Exception {
-        for (SabreAlert alert : Arrays.asList(chpAlert(), wazeAlert(), wazeAlertNullStreet())) {
-            JSONObject a = firstAlert(parseResponse(Collections.singletonList(alert)));
-            assertTrue("user_id must be present", a.has("user_id"));
-            assertFalse("user_id must not be JSON null", a.isNull("user_id"));
-            assertNotNull("user_id must not be null", a.getString("user_id"));
-        }
-    }
-
-    @Test
-    public void alert_userIdExtractedFromWazeId() throws Exception {
-        JSONObject a = firstAlert(parseResponse(Collections.singletonList(wazeAlert())));
-        assertEquals("user_id should be extracted from 'alert-9876543210/abcdef123'",
-                "9876543210", a.getString("user_id"));
-    }
-
-    @Test
-    public void alert_userIdFallsBackToZeroForChp() throws Exception {
-        JSONObject a = firstAlert(parseResponse(Collections.singletonList(chpAlert())));
-        assertEquals("CHP alerts have no user_id, should be '0'",
-                "0", a.getString("user_id"));
-    }
-
-    @Test
-    public void alert_userIdFallsBackToZeroForAnonymousWaze() throws Exception {
-        // Waze UUID format (no "alert-<digits>/" prefix)
-        SabreAlert anon = new SabreAlert(
-                "waze_some-uuid-without-digits",
-                SabreResponseBuilder.SOURCE_WAZE,
-                "HAZARD_ON_ROAD_CONGESTION", 34.0, -118.0, 0.0, null, NOW_SECONDS);
-        JSONObject a = firstAlert(parseResponse(Collections.singletonList(anon)));
-        assertEquals("0", a.getString("user_id"));
     }
 
     // ── report_ts must fit in Int ─────────────────────────────────────────────
@@ -293,7 +267,6 @@ public class SabreProtocolTest {
                 "POLICE_VISIBLE", 38.0, -122.0, 0.0, "US-101", NOW_SECONDS,
                 NOW_SECONDS, 4);
         JSONObject a = firstAlert(parseResponse(Collections.singletonList(confirmed)));
-        assertEquals(4, a.getInt("confirm_count"));
         assertFalse("confirm_ts must be present and non-null when set", a.isNull("confirm_ts"));
         assertEquals((int) NOW_SECONDS, a.getInt("confirm_ts"));
     }
@@ -306,7 +279,6 @@ public class SabreProtocolTest {
                 ((long) Integer.MAX_VALUE) + 100L, 2);
         JSONObject obj = firstAlert(parseResponse(Collections.singletonList(a)));
         assertTrue("oversized confirm_ts must be null", obj.isNull("confirm_ts"));
-        assertEquals(2, obj.getInt("confirm_count"));
     }
 
     // ── batching ──────────────────────────────────────────────────────────────
@@ -369,14 +341,6 @@ public class SabreProtocolTest {
         SabreResponseBuilder.buildAlert(bad);
     }
 
-    // ── confirm_count is 0 ────────────────────────────────────────────────────
-
-    @Test
-    public void alert_confirmCountIsZero() throws Exception {
-        JSONObject a = firstAlert(parseResponse(Collections.singletonList(chpAlert())));
-        assertEquals(0, a.getInt("confirm_count"));
-    }
-
     // ── multiple alerts ───────────────────────────────────────────────────────
 
     @Test
@@ -387,11 +351,10 @@ public class SabreProtocolTest {
     }
 
     @Test
-    public void multipleAlerts_eachHasAll11Fields() throws Exception {
+    public void multipleAlerts_eachHasExactly9Fields() throws Exception {
         String[] fields = {
-            "alert_source", "alert_id", "user_id", "type",
-            "lat", "lon", "heading_deg", "street_name",
-            "report_ts", "confirm_ts", "confirm_count"
+            "alert_source", "alert_id", "type", "lat", "lon",
+            "heading_deg", "street_name", "report_ts", "confirm_ts"
         };
         JSONArray arr = parseResponse(Arrays.asList(chpAlert(), wazeAlert()))
                 .getJSONObject("response").getJSONArray("alerts");
@@ -400,33 +363,7 @@ public class SabreProtocolTest {
             for (String f : fields) {
                 assertTrue("Alert[" + i + "] missing field: " + f, a.has(f));
             }
+            assertEquals("Alert[" + i + "] must have exactly 9 fields", 9, a.length());
         }
-    }
-
-    // ── user_id extraction edge cases ─────────────────────────────────────────
-
-    @Test
-    public void extractUserId_fromWazeNativeId() {
-        assertEquals("1234567890",
-                SabreResponseBuilder.extractUserId("alert-1234567890/somehash"));
-    }
-
-    @Test
-    public void extractUserId_fromWazePrefixedId() {
-        assertEquals("9876543210",
-                SabreResponseBuilder.extractUserId("waze_alert-9876543210/abc"));
-    }
-
-    @Test
-    public void extractUserId_emptyDigitsReturnsZero() {
-        assertEquals("0",
-                SabreResponseBuilder.extractUserId("alert-/nohash"));
-    }
-
-    @Test
-    public void extractUserId_noMatchReturnsZero() {
-        assertEquals("0", SabreResponseBuilder.extractUserId("chp_12345"));
-        assertEquals("0", SabreResponseBuilder.extractUserId(null));
-        assertEquals("0", SabreResponseBuilder.extractUserId(""));
     }
 }

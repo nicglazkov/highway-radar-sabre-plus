@@ -2,6 +2,11 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.8.4] - 2026-07-09
+
+### Fixed
+- **Highway Radar receives alert data again on the latest HR.** Highway Radar 3.2 tightened its plugin data format and removed two fields our alerts still sent (`user_id` and `confirm_count`). HR reads plugin responses strictly, so those extra fields made it silently reject every response: the plugin looked connected but no alerts appeared. Our alert and discovery payloads now match HR 3.2's format exactly.
+
 ## [1.8.3] - 2026-07-06
 
 ### Fixed
@@ -136,6 +141,7 @@ Restored the plugin on Android 15/16 (foreground-service start fixes) and rewrot
 
 Initial release: CHP live incidents + Waze crowdsourced alerts for Highway Radar.
 
+[1.8.4]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.4
 [1.8.3]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.3
 [1.8.2]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.2
 [1.8.1]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.1
