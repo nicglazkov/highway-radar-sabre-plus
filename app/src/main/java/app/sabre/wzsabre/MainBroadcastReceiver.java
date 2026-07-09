@@ -99,10 +99,11 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
         response.put("confirm_action",  "app.sabre.wzsabre.CONFIRM_REPORT");
         response.put("discard_action",  "app.sabre.wzsabre.DISCARD_REPORT");
         response.put("shutdown_action", "app.sabre.wzsabre.SHUTDOWN");
-        // Fields added in the wzsabre 2.x discovery format (both nullable).
         // alternative_startup_activity lets HR launch us to the foreground so the
-        // service can start without hitting Android 15/16 BFSL restrictions.
-        response.put("update_url", JSONObject.NULL);
+        // service can start without hitting Android 15/16 BFSL restrictions. This is
+        // the last field of HR 3.2's SabreDiscoveryResponse model. Do NOT re-add the
+        // old wzsabre 2.x "update_url" field: HR 3.2 dropped it and parses the
+        // discovery response strictly, so an extra key breaks discovery.
         response.put("alternative_startup_activity", pkg + ".AltStartupActivity");
         Intent resp = new Intent(responseAction);
         resp.setPackage(SabreResponseBuilder.HR_PACKAGE);   // deliver only to HR

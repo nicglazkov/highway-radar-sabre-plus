@@ -5,8 +5,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Builds the SABRE fetch-response JSON that Highway Radar deserializes into
@@ -49,9 +47,6 @@ public class SabreResponseBuilder {
 
     /** Max alerts per response batch — matches the official wzsabre (200). */
     public static final int MAX_ALERTS_PER_BATCH = 200;
-
-    // USER_ID_REGEX matches Waze alert IDs of the form "alert-<digits>/..."
-    private static final Pattern USER_ID_PATTERN = Pattern.compile("alert-(\\d*)/.*");
 
     /**
      * Alert type strings HR's renderer accepts. This is the union of (a) the
@@ -125,19 +120,17 @@ public class SabreResponseBuilder {
      *     "n_batches": Int,           // required
      *     "batch_id":  Int,           // required
      *     "alerts": [                 // required list (may be empty)
-     *       {
+     *       {                            // EXACTLY HR 3.2's SabreFetchResponseAlert (9 fields)
      *         "alert_source":  String,   // required; must be SOURCE_CHP or SOURCE_WAZE
      *         "alert_id":      String,   // required
-     *         "user_id":       String,   // required, non-null (digits or "0")
      *         "type":          String,   // required SABRE type constant
      *         "lat":           Double,   // required
      *         "lon":           Double,   // required
      *         "heading_deg":   Double,   // required
      *         "street_name":   String?,  // nullable String — present (may be null)
      *         "report_ts":     Int,      // required; must fit in Int (not Long)
-     *         "confirm_ts":    null,     // nullable Int — present but null
-     *         "confirm_count": Int       // required; 0
-     *       }
+     *         "confirm_ts":    Int?      // nullable Int — present (may be null)
+     *       }                            // NB: no user_id / confirm_count (HR dropped them; strict parser rejects extras)
      *     ]
      *   }
      * }
@@ -200,10 +193,16 @@ public class SabreResponseBuilder {
             throw new IllegalArgumentException("heading_deg is NaN/Infinite for alert " + a.alertId);
         }
 
+        // These nine fields, in this order, are EXACTLY Highway Radar's current
+        // SabreFetchResponseAlert model (verified by decompiling HR 3.2). HR parses
+        // the response with kotlinx.serialization in strict mode (it never sets
+        // ignoreUnknownKeys), so ANY extra key makes it reject the whole batch and
+        // show no data. The older wzsabre 2.2 model also carried "user_id" and
+        // "confirm_count"; HR dropped both, so we must NOT send them. Do not add
+        // fields here without confirming HR's model still has them.
         JSONObject obj = new JSONObject();
         obj.put("alert_source",  a.alertSource);           // must be SOURCE_CHP or SOURCE_WAZE
         obj.put("alert_id",      a.alertId);
-        obj.put("user_id",       extractUserId(a.alertId)); // required non-null String
         obj.put("type",          a.type);
         obj.put("lat",           a.lat);
         obj.put("lon",           a.lon);
@@ -215,24 +214,7 @@ public class SabreResponseBuilder {
         boolean confirmTsFits = a.confirmTs != null
                 && a.confirmTs >= 0 && a.confirmTs <= Integer.MAX_VALUE;
         obj.put("confirm_ts",    confirmTsFits ? (int) (long) a.confirmTs : JSONObject.NULL);
-        obj.put("confirm_count", Math.max(0, a.confirmCount));
         return obj;
     }
 
-    /**
-     * Extracts a numeric user_id from a Waze alert ID.
-     * Waze IDs look like "alert-1234567890/abcdef" → user_id = "1234567890".
-     * Our alertId prefix is "waze_", stripped before matching.
-     * Returns "0" if no numeric user ID found (CHP alerts, anonymous Waze alerts).
-     */
-    public static String extractUserId(String alertId) {
-        if (alertId == null) return "0";
-        String id = alertId.startsWith("waze_") ? alertId.substring(5) : alertId;
-        Matcher m = USER_ID_PATTERN.matcher(id);
-        if (m.find()) {
-            String uid = m.group(1);
-            return (uid != null && !uid.isEmpty()) ? uid : "0";
-        }
-        return "0";
-    }
 }
