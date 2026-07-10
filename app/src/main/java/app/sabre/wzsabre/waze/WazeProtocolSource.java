@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import app.sabre.wzsabre.SabreAlert;
+import app.sabre.wzsabre.AlertMapper;
 import app.sabre.wzsabre.SabreResponseBuilder;
 import app.sabre.wzsabre.SourceStatus;
 
@@ -281,14 +282,20 @@ public final class WazeProtocolSource {
     }
 
     /**
-     * Map a cached Waze alert to a SABRE alert. Mirrors the official's request():
-     * the SABRE type is the raw Waze subtype name, or the type name when the
-     * subtype is empty — HR natively understands the full Waze vocabulary, so no
-     * remap/whitelist is applied (the old remap silently dropped whole categories
-     * like SOS/stopped-vehicle and flattened "car stopped" into generic debris).
+     * Map a cached Waze alert to a SABRE alert. The SABRE type is the raw Waze
+     * subtype (or type when the subtype is empty), which keeps the most specific
+     * category for HR's icon.
+     *
+     * HR 3.2 only draws a crowd alert whose type starts with POLICE, HAZARD, or
+     * ACCIDENT (verified in HR's decompiled renderer) and silently drops the rest,
+     * including the very common JAM_* (traffic) and ROAD_CLOSED. So when the raw
+     * subtype does not start with one of those, we remap it via
+     * {@link AlertMapper#fromWazeType} (jams/closures become HAZARD_ON_ROAD_CONGESTION)
+     * so the alert renders instead of vanishing. Renderable subtypes are passed
+     * through unchanged so HR still gets the precise icon.
      */
     private SabreAlert toSabreAlert(WazeAlert wa) {
-        String type = (wa.subtype != null && !wa.subtype.isEmpty()) ? wa.subtype : wa.type;
+        String type = AlertMapper.wazeRenderableType(wa.type, wa.subtype);
         if (type == null || type.isEmpty()) return null;
         String id = "alert-" + wa.id + "/" + wa.uuid;   // user_id is parsed from this
         int confirmCount = wa.nThumbsUp != null ? wa.nThumbsUp : 0;

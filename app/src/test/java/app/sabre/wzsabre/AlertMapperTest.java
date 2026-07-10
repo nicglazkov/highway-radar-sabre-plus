@@ -147,4 +147,45 @@ public class AlertMapperTest {
             }
         }
     }
+
+    // ── wazeRenderableType: HR 3.2 only draws POLICE*/HAZARD*/ACCIDENT* ───────────
+
+    @Test
+    public void waze_renderableSubtypesPassThrough() {
+        // Already-renderable subtypes keep their specific value (best HR icon).
+        assertEquals("HAZARD_ON_ROAD_OBJECT", AlertMapper.wazeRenderableType("HAZARD", "HAZARD_ON_ROAD_OBJECT"));
+        assertEquals("ACCIDENT_MAJOR",        AlertMapper.wazeRenderableType("ACCIDENT", "ACCIDENT_MAJOR"));
+        assertEquals("POLICE_VISIBLE",        AlertMapper.wazeRenderableType("POLICE", "POLICE_VISIBLE"));
+    }
+
+    @Test
+    public void waze_droppableSubtypesAreRemappedSoTheyRender() {
+        // JAM_* and ROAD_CLOSED would be silently dropped by HR (don't start with
+        // POLICE/HAZARD/ACCIDENT); they must be remapped to a rendered hazard.
+        assertEquals("HAZARD_ON_ROAD_CONGESTION", AlertMapper.wazeRenderableType("JAM", "JAM_HEAVY_TRAFFIC"));
+        assertEquals("HAZARD_ON_ROAD_CONGESTION", AlertMapper.wazeRenderableType("ROAD_CLOSED", ""));
+        assertEquals("HAZARD_ON_ROAD_CONGESTION", AlertMapper.wazeRenderableType("JAM", null));
+    }
+
+    @Test
+    public void waze_everyMappableCategoryRendersInHr() {
+        // The invariant HR requires: the emitted type starts with POLICE/HAZARD/ACCIDENT.
+        String[][] cases = {
+            {"POLICE", "POLICE_HIDING"}, {"CAMERA", ""}, {"ACCIDENT", "ACCIDENT_MINOR"},
+            {"HAZARD", "HAZARD_ON_SHOULDER_CAR_STOPPED"}, {"JAM", "JAM_STAND_STILL_TRAFFIC"},
+            {"ROAD_CLOSED", "ROAD_CLOSED"}, {"HAZARD", ""}
+        };
+        for (String[] c : cases) {
+            String out = AlertMapper.wazeRenderableType(c[0], c[1]);
+            assertNotNull("null for " + c[0] + "/" + c[1], out);
+            assertTrue("HR would DROP '" + out + "' (from " + c[0] + "/" + c[1] + ")",
+                    out.startsWith("POLICE") || out.startsWith("HAZARD") || out.startsWith("ACCIDENT"));
+        }
+    }
+
+    @Test
+    public void waze_emptyTypeReturnsNull() {
+        assertNull(AlertMapper.wazeRenderableType(null, null));
+        assertNull(AlertMapper.wazeRenderableType("", ""));
+    }
 }

@@ -151,4 +151,23 @@ public class AlertMapper {
                 return null; // Waze types we don't care about (e.g., WEATHERHAZARD duplicates)
         }
     }
+
+    /**
+     * The SABRE {@code type} to send for a Waze alert so it actually renders in
+     * Highway Radar. HR 3.2 only draws a crowd alert whose type starts with POLICE,
+     * HAZARD, or ACCIDENT and silently drops the rest, including the very common
+     * JAM_* (traffic) and ROAD_CLOSED. So the raw Waze subtype is passed through when
+     * it already starts with one of those (keeps the most specific HR icon); otherwise
+     * it is remapped via {@link #fromWazeType} so jams/closures become
+     * HAZARD_ON_ROAD_CONGESTION instead of vanishing. Returns null if there is no
+     * usable type.
+     */
+    public static String wazeRenderableType(String type, String subtype) {
+        String raw = (subtype != null && !subtype.isEmpty()) ? subtype : type;
+        if (raw == null || raw.isEmpty()) return null;
+        String u = raw.toUpperCase(Locale.US);
+        if (u.startsWith("POLICE") || u.startsWith("HAZARD") || u.startsWith("ACCIDENT")) return raw;
+        String mapped = fromWazeType(type, subtype);
+        return mapped != null ? mapped : raw;
+    }
 }
