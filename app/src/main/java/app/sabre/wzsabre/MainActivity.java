@@ -2,6 +2,7 @@ package app.sabre.wzsabre;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -62,6 +63,7 @@ public class MainActivity extends Activity {
         buildAgeSpinner();
         buildDiagnostics();
         buildReportButton();
+        buildShareDiagnostics();
         checkForUpdate();
     }
 
@@ -85,6 +87,36 @@ public class MainActivity extends Activity {
                             Uri.parse("https://github.com/nicglazkov/highway-radar-sabre-plus/issues")));
                 } catch (Exception ignored) {}
             }
+        });
+    }
+
+    /**
+     * "Share diagnostics" opens a popup where the user chooses which of the four
+     * categories to include, then shares a plain-text report via the Android share
+     * sheet. Every category is already free of location and personal data (see
+     * {@link DiagnosticsReport}); the checkboxes just give the user final say over
+     * what leaves the device. Uses ACTION_SEND, so no new permission is needed.
+     */
+    private void buildShareDiagnostics() {
+        findViewById(R.id.shareDiagnosticsButton).setOnClickListener(v -> {
+            final boolean[] include = {true, true, true, true};
+            new AlertDialog.Builder(this)
+                .setTitle("Share diagnostics")
+                .setMultiChoiceItems(DiagnosticsReport.SECTION_LABELS, include,
+                        (d, which, checked) -> include[which] = checked)
+                .setPositiveButton("Share", (d, w) -> {
+                    String report = DiagnosticsReport.build(
+                            this, include[0], include[1], include[2], include[3]);
+                    Intent send = new Intent(Intent.ACTION_SEND);
+                    send.setType("text/plain");
+                    send.putExtra(Intent.EXTRA_SUBJECT, "SABRE Plus diagnostics");
+                    send.putExtra(Intent.EXTRA_TEXT, report);
+                    try {
+                        startActivity(Intent.createChooser(send, "Share diagnostics"));
+                    } catch (Exception ignored) {}
+                })
+                .setNeutralButton("Cancel", null)
+                .show();
         });
     }
 

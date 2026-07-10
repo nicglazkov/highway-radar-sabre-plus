@@ -76,6 +76,7 @@ public class SabreService extends Service {
     public void onCreate() {
         super.onCreate();
         RUNNING = true;
+        DebugLog.event("service started");
         requestExecutor = Executors.newSingleThreadExecutor();
         fetchExecutor   = Executors.newFixedThreadPool(5);
         chpSource  = new CHPSource();
@@ -214,6 +215,7 @@ public class SabreService extends Service {
     @Override
     public void onDestroy() {
         RUNNING = false;
+        DebugLog.event("service stopped");
         lifecycleHandler.removeCallbacks(stopRunnable);
         if (requestExecutor != null) requestExecutor.shutdownNow();
         if (fetchExecutor   != null) fetchExecutor.shutdownNow();
@@ -230,6 +232,7 @@ public class SabreService extends Service {
     private static final long RESPONSE_BUDGET_MS = 8_000;
 
     private void handleFetchRequest(String data) {
+        DebugLog.fetchReceived();
         requestExecutor.submit(() -> {
             // Parsed up front so the catch block can still answer HR with an error
             // response — an unanswered request makes HR show "plugin not responding".
@@ -344,6 +347,7 @@ public class SabreService extends Service {
                 // the same spot) before sending.
                 int rawCount = allAlerts.size();
                 List<SabreAlert> finalAlerts = AlertDeduper.dedupe(allAlerts);
+                DebugLog.recordFetch(finalAlerts, rawCount);
                 Log.d(TAG, "Sending " + finalAlerts.size() + " alerts (" + rawCount + " before dedupe)");
                 sendFetchResponse(responseAction, requestId, finalAlerts);
             } catch (Exception e) {
