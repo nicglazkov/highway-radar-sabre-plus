@@ -2,6 +2,11 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.8.5] - 2026-07-10
+
+### Fixed
+- **More alerts now show up on the Highway Radar map.** Highway Radar 3.2 only draws crowd alerts categorized as police, hazard, or accident and silently drops the rest, so common Waze traffic jams and road closures were never appearing. They now show as congestion hazards instead of being dropped. (CHP, Caltrans, wildfire, and chain alerts already used categories HR draws.)
+
 ## [1.8.4] - 2026-07-09
 
 ### Fixed
@@ -141,6 +146,7 @@ Restored the plugin on Android 15/16 (foreground-service start fixes) and rewrot
 
 Initial release: CHP live incidents + Waze crowdsourced alerts for Highway Radar.
 
+[1.8.5]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.5
 [1.8.4]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.4
 [1.8.3]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.3
 [1.8.2]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.2
