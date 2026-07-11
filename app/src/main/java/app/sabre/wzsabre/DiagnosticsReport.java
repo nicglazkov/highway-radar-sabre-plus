@@ -117,6 +117,17 @@ public final class DiagnosticsReport {
           .append(interval <= 0 ? "n/a" : (interval / 1000) + "s").append('\n');
         String fa = DebugLog.lastFetchAction();
         sb.append("Fetch action HR uses: ").append(fa == null ? "none received" : fa).append('\n');
+        sb.append("Handshakes (discovery) this session: ").append(DebugLog.handshakeCount()).append('\n');
+        sb.append("HR registration: ");
+        if (DebugLog.sessionFetchCount() == 0 && DebugLog.handshakeCount() == 0) {
+            sb.append("HR has not contacted the plugin yet this session\n");
+        } else if (DebugLog.handshakeCount() > 0) {
+            sb.append("HR re-detected SABRE Plus (registration is current)\n");
+        } else {
+            sb.append("HR is using a cached registration from a previously-installed plugin "
+                    + "(it may still display an old name like \"WzSabre\"). Data still flows; "
+                    + "fully restart Highway Radar to refresh the name.\n");
+        }
         sb.append("We advertise to HR: id=app.sabre.wzsabre, version=").append(BuildConfig.VERSION_NAME)
           .append(", request_action=app.sabre.wzsabre.REQUEST, sources=[chp,waze,lcs,fire,chains]\n");
     }

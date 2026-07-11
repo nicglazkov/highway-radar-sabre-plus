@@ -34,6 +34,8 @@ public final class DebugLog {
     private static volatile long lastFetchReceivedMs = 0;
     private static volatile long lastFetchIntervalMs = 0;
     private static volatile int  fetchCount = 0;
+    private static volatile long lastHandshakeMs = 0;
+    private static volatile int  handshakeCount = 0;
     private static volatile String lastFetchAction = null;
     private static volatile String lastFetchSummary = null;
     private static final Map<String, Integer> lastFetchTypes = new LinkedHashMap<>();
@@ -43,6 +45,19 @@ public final class DebugLog {
         EVENTS.addLast(new Ev(System.currentTimeMillis(), msg));
         while (EVENTS.size() > MAX_EVENTS) EVENTS.removeFirst();
     }
+
+    /**
+     * Note that HR sent us a discovery handshake. A handshake this session means HR
+     * re-detected us (registration is current); fetches WITHOUT a handshake mean HR
+     * is running off a cached registration from a previously-installed plugin.
+     */
+    public static synchronized void handshakeReceived() {
+        lastHandshakeMs = System.currentTimeMillis();
+        handshakeCount++;
+        event("handshake from HR (discovery)");
+    }
+
+    public static synchronized int handshakeCount() { return handshakeCount; }
 
     /** Note that Highway Radar asked us for data (drives "HR last requested Ns ago"). */
     public static synchronized void fetchReceived() {
@@ -116,6 +131,8 @@ public final class DebugLog {
         lastFetchReceivedMs = 0;
         lastFetchIntervalMs = 0;
         fetchCount = 0;
+        lastHandshakeMs = 0;
+        handshakeCount = 0;
         lastFetchAction = null;
         lastFetchSummary = null;
         lastFetchTypes.clear();

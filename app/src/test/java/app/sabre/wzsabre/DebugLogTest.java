@@ -72,4 +72,15 @@ public class DebugLogTest {
         DebugLog.fetchReceived();
         assertTrue(DebugLog.lastFetchAgeMs() >= 0);
     }
+
+    @Test
+    public void handshakeReceived_countsAndLogsDiscovery() {
+        assertEquals(0, DebugLog.handshakeCount());
+        DebugLog.handshakeReceived();
+        DebugLog.handshakeReceived();
+        assertEquals("counts each discovery handshake", 2, DebugLog.handshakeCount());
+        // a handshake also drops a curated event so the timeline shows re-discovery
+        String events = DebugLog.recentEvents().toString();
+        assertTrue("logs a discovery event", events.contains("handshake from HR"));
+    }
 }

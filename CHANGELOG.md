@@ -2,6 +2,11 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.9.3] - 2026-07-10
+
+### Changed
+- If Highway Radar still shows the old "WzSabre" name after you switch to SABRE Plus, fully closing and reopening Highway Radar now makes it re-detect the plugin and show "SABRE Plus" instead. The Share diagnostics report also explains this: it reports whether Highway Radar has re-detected SABRE Plus, or is still running off the older cached setup (in which case alerts still flow, and a full restart of Highway Radar refreshes the name).
+
 ## [1.9.2] - 2026-07-10
 
 ### Fixed

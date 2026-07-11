@@ -70,7 +70,7 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
 
     private void handleHandshake(Context context, Intent intent) throws Exception {
         Log.d(TAG, "Handling handshake");
-        DebugLog.event("handshake from HR (discovery)");
+        DebugLog.handshakeReceived();
         String rawData = intent.getStringExtra("data");
         String responseAction = null;
         if (rawData != null) {
