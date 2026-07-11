@@ -115,9 +115,10 @@ public final class DiagnosticsReport {
         long interval = DebugLog.lastFetchIntervalMs();
         sb.append("Recent request interval: ")
           .append(interval <= 0 ? "n/a" : (interval / 1000) + "s").append('\n');
+        String fa = DebugLog.lastFetchAction();
+        sb.append("Fetch action HR uses: ").append(fa == null ? "none received" : fa).append('\n');
         sb.append("We advertise to HR: id=app.sabre.wzsabre, version=").append(BuildConfig.VERSION_NAME)
-          .append(", sources=[chp,waze,lcs,fire,chains]\n");
-        sb.append("Request action: app.sabre.wzsabre.FETCH_REQUEST\n");
+          .append(", request_action=app.sabre.wzsabre.REQUEST, sources=[chp,waze,lcs,fire,chains]\n");
     }
 
     private static void sourcesSection(StringBuilder sb) {

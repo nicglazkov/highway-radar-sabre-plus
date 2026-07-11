@@ -18,7 +18,13 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
         try {
             if ("app.sabre.HANDSHAKE".equals(action) || "app.sabre.wzsabre.HANDSHAKE".equals(action)) {
                 handleHandshake(context, intent);
-            } else if ("app.sabre.wzsabre.FETCH_REQUEST".equals(action)) {
+            } else if (action != null && action.endsWith("REQUEST")) {
+                // Accept BOTH our own FETCH_REQUEST and the official wzsabre's REQUEST.
+                // Highway Radar caches a plugin registration by package id: a user who
+                // had the official wzsabre first leaves HR firing app.sabre.wzsabre.REQUEST
+                // at us forever (it never re-discovers the same package), so we must
+                // listen for it or that user gets zero data.
+                DebugLog.noteFetchAction(action);
                 ForegroundServiceStarter.start(context, "FETCH_REQUEST", intent.getStringExtra("data"));
             } else if (action != null && action.contains("SHUTDOWN")) {
                 // HR is ending the session (it usually reopens one shortly). Forward
@@ -64,6 +70,7 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
 
     private void handleHandshake(Context context, Intent intent) throws Exception {
         Log.d(TAG, "Handling handshake");
+        DebugLog.event("handshake from HR (discovery)");
         String rawData = intent.getStringExtra("data");
         String responseAction = null;
         if (rawData != null) {
@@ -94,10 +101,14 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
         JSONObject s4 = new JSONObject(); s4.put("id", "fire"); s4.put("name", "Wildfires");          sources.put(s4);
         JSONObject s5 = new JSONObject(); s5.put("id", "chains"); s5.put("name", "Chain Controls");   sources.put(s5);
         response.put("supported_sources", sources);
-        response.put("request_action",  "app.sabre.wzsabre.FETCH_REQUEST");
-        response.put("report_action",   "app.sabre.wzsabre.SUBMIT_REPORT");
-        response.put("confirm_action",  "app.sabre.wzsabre.CONFIRM_REPORT");
-        response.put("discard_action",  "app.sabre.wzsabre.DISCARD_REPORT");
+        // Advertise the SAME action names the official wzsabre uses, so every HR
+        // (whether it re-discovers us or keeps a cached wzsabre registration) fires
+        // the identical actions we listen for. We also still listen for our older
+        // FETCH_REQUEST/SUBMIT_REPORT names for any HR that cached those.
+        response.put("request_action",  "app.sabre.wzsabre.REQUEST");
+        response.put("report_action",   "app.sabre.wzsabre.REPORT");
+        response.put("confirm_action",  "app.sabre.wzsabre.CONFIRM");
+        response.put("discard_action",  "app.sabre.wzsabre.DISCARD");
         response.put("shutdown_action", "app.sabre.wzsabre.SHUTDOWN");
         // alternative_startup_activity lets HR launch us to the foreground so the
         // service can start without hitting Android 15/16 BFSL restrictions. This is

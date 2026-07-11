@@ -75,6 +75,13 @@
             <intent-filter>
                 <action android:name="app.sabre.HANDSHAKE" />
                 <action android:name="app.sabre.wzsabre.HANDSHAKE" />
+                <!-- Official wzsabre action names: HR may have cached a wzsabre
+                     registration (same package id) and fires these at us. -->
+                <action android:name="app.sabre.wzsabre.REQUEST" />
+                <action android:name="app.sabre.wzsabre.REPORT" />
+                <action android:name="app.sabre.wzsabre.CONFIRM" />
+                <action android:name="app.sabre.wzsabre.DISCARD" />
+                <!-- Our older action names, kept for any HR that cached them. -->
                 <action android:name="app.sabre.wzsabre.FETCH_REQUEST" />
                 <action android:name="app.sabre.wzsabre.SUBMIT_REPORT" />
                 <action android:name="app.sabre.wzsabre.CONFIRM_REPORT" />

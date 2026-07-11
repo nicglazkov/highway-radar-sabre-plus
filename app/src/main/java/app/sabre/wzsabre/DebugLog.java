@@ -34,6 +34,7 @@ public final class DebugLog {
     private static volatile long lastFetchReceivedMs = 0;
     private static volatile long lastFetchIntervalMs = 0;
     private static volatile int  fetchCount = 0;
+    private static volatile String lastFetchAction = null;
     private static volatile String lastFetchSummary = null;
     private static final Map<String, Integer> lastFetchTypes = new LinkedHashMap<>();
 
@@ -88,6 +89,10 @@ public final class DebugLog {
     public static synchronized int  sessionFetchCount()   { return fetchCount; }
     public static synchronized long lastFetchIntervalMs() { return lastFetchIntervalMs; }
 
+    /** The action HR fired the last fetch on (our FETCH_REQUEST vs official REQUEST). */
+    public static synchronized void   noteFetchAction(String action) { lastFetchAction = action; }
+    public static synchronized String lastFetchAction() { return lastFetchAction; }
+
     public static synchronized String lastFetchSummary() { return lastFetchSummary; }
 
     public static synchronized Map<String, Integer> lastFetchTypes() {
@@ -111,6 +116,7 @@ public final class DebugLog {
         lastFetchReceivedMs = 0;
         lastFetchIntervalMs = 0;
         fetchCount = 0;
+        lastFetchAction = null;
         lastFetchSummary = null;
         lastFetchTypes.clear();
     }

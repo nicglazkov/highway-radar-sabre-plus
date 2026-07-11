@@ -2,6 +2,11 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.9.2] - 2026-07-10
+
+### Fixed
+- **Fixes "plugin installed but no alerts" for anyone who used the original wzsabre first.** Highway Radar remembers a plugin by its ID and keeps the original wzsabre's cached setup even after you switch to SABRE Plus, so it kept asking for data using wzsabre's request name, which SABRE Plus did not answer (Highway Radar showed "Crowd-sourced alerts problems" and never sent a request). SABRE Plus now also answers the original wzsabre's request names, so Highway Radar starts receiving alerts immediately, with no need to re-detect the plugin.
+
 ## [1.9.1] - 2026-07-10
 
 ### Changed
@@ -156,6 +161,7 @@ Restored the plugin on Android 15/16 (foreground-service start fixes) and rewrot
 
 Initial release: CHP live incidents + Waze crowdsourced alerts for Highway Radar.
 
+[1.9.2]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.9.2
 [1.9.1]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.9.1
 [1.9]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.9
 [1.8.5]: https://github.com/nicglazkov/highway-radar-sabre-plus/releases/tag/v1.8.5
