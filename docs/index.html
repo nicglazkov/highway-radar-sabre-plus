@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SABRE Plus: CHP, Waze and Caltrans alerts for Highway Radar</title>
+<meta name="description" content="A free, open-source Highway Radar SABRE plugin for California. Adds live CHP incidents, Waze crowd alerts, Caltrans lane closures, active wildfires and winter chain controls to your Highway Radar map. Drop-in wzsabre replacement, Android 7.0+.">
+<link rel="canonical" href="https://nicglazkov.github.io/highway-radar-sabre-plus/">
+<meta name="theme-color" content="#E6E7E4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nicglazkov.github.io/highway-radar-sabre-plus/">
+<meta property="og:title" content="SABRE Plus: CHP, Waze and Caltrans alerts for Highway Radar">
+<meta property="og:description" content="Five California road feeds on your Highway Radar map. Free, open source, no account, no ads. A drop-in wzsabre replacement.">
+<meta property="og:image" content="https://nicglazkov.github.io/highway-radar-sabre-plus/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SABRE Plus for Highway Radar">
+<meta name="twitter:description" content="Five California road feeds on your Highway Radar map. Free and open source.">
+<meta name="twitter:image" content="https://nicglazkov.github.io/highway-radar-sabre-plus/social-preview.png">
+<link rel="icon" href="screenshots/app-icon.png">
+<link rel="apple-touch-icon" href="screenshots/app-icon.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "SABRE Plus",
+  "alternateName": "Highway Radar SABRE Plus",
+  "applicationCategory": "TravelApplication",
+  "operatingSystem": "Android 7.0+",
+  "url": "https://nicglazkov.github.io/highway-radar-sabre-plus/",
+  "downloadUrl": "https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest",
+  "license": "https://opensource.org/licenses/MIT",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "An open-source Highway Radar SABRE plugin for California. Adds live CHP incidents, Waze crowd-sourced alerts, Caltrans lane closures, active wildfires and winter chain controls to the Highway Radar map. A drop-in replacement for wzsabre.",
+  "author": { "@type": "Person", "name": "Nic Glazkov" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"Is SABRE Plus a replacement for wzsabre?",
+     "acceptedAnswer":{"@type":"Answer","text":"Yes. It uses the same plugin ID Highway Radar looks for, so Highway Radar finds it automatically. Because Android allows only one app per ID, uninstall wzsabre first, then install SABRE Plus. Your Highway Radar settings are unaffected."}},
+    {"@type":"Question","name":"Does SABRE Plus cost anything?",
+     "acceptedAnswer":{"@type":"Answer","text":"No. It is free and open source under the MIT license, with no account, no ads and no in-app purchases."}},
+    {"@type":"Question","name":"What data does SABRE Plus collect?",
+     "acceptedAnswer":{"@type":"Answer","text":"None. There are no servers, no accounts and no analytics. Everything runs on your device. Only the Waze feature sends your approximate location, over an anonymous session, so it can return alerts near you."}},
+    {"@type":"Question","name":"Which areas does it cover?",
+     "acceptedAnswer":{"@type":"Answer","text":"California. CHP incidents and Caltrans closures are statewide, chain controls cover the mountain routes, and Waze alerts work anywhere Waze has coverage."}},
+    {"@type":"Question","name":"Why is it not on Google Play?",
+     "acceptedAnswer":{"@type":"Answer","text":"It has to use the exact package ID that Highway Radar's plugin discovery looks for, which is already taken on Google Play. You install the APK directly from GitHub Releases, or let Obtainium keep it updated for you."}}
+  ]
+}
+</script>
+
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   SABRE Plus landing page.
+   Palette and type come from California highway hardware: a Caltrans
+   changeable message sign (amber LED on night asphalt) mounted over a
+   concrete-grey page. No webfonts and no third-party requests, which keeps
+   the page consistent with an app that ships no trackers.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --asphalt:   #0B0C0E;   /* inside of the sign housing */
+  --amber:     #FFB000;   /* Caltrans CMS amber LED */
+  --amber-dim: #6E4B00;   /* unlit element */
+  --spade:     #0B6E4F;   /* California route shield green */
+  --concrete:  #E6E7E4;   /* page surface, K-rail grey */
+  --panel:     #F2F3F0;
+  --ink:       #1B1D20;
+  --ink-soft:  #55595E;
+  --rule:      #C9CBC6;
+  --stripe:    #F2C14E;   /* lane paint */
+
+  --display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+             "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Mono",
+          "Roboto Mono", Menlo, Consolas, monospace;
+
+  --measure: 68rem;
+  --gap: clamp(3.5rem, 8vw, 6.5rem);
+}
+
+/* Night driving. The sign is the constant; the road around it goes dark. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --concrete: #111316;
+    --panel:    #191C20;
+    --ink:      #E9EAE7;
+    --ink-soft: #9AA0A6;
+    --rule:     #2C3036;
+    --spade:    #3FA37B;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--concrete);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+:where(a, button, summary):focus-visible {
+  outline: 3px solid var(--spade);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+img { max-width: 100%; height: auto; display: block; }
+
+.wrap { width: min(100% - 2.5rem, var(--measure)); margin-inline: auto; }
+
+/* ── Eyebrow / section labels: the data face, used like a spec sheet ────── */
+.label {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 0.75rem;
+}
+
+h1, h2, h3 { line-height: 1.08; letter-spacing: -0.025em; margin: 0; }
+h1 { font-size: clamp(2.1rem, 1.2rem + 4.2vw, 4rem); font-weight: 800; }
+h2 { font-size: clamp(1.6rem, 1.1rem + 2.2vw, 2.5rem); font-weight: 800; }
+h3 { font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; }
+
+/* ── Masthead ──────────────────────────────────────────────────────────── */
+.masthead {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--concrete) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.masthead .wrap {
+  display: flex; align-items: center; gap: 0.75rem;
+  min-height: 3.5rem;
+}
+.mark { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; font-weight: 800; letter-spacing: -0.02em; }
+.mark img { width: 26px; height: 26px; border-radius: 6px; }
+.masthead nav { margin-left: auto; display: flex; align-items: center; gap: 1.25rem; }
+.masthead nav a { font-family: var(--mono); font-size: 0.8125rem; text-decoration: none; color: var(--ink-soft); }
+.masthead nav a:hover { color: var(--ink); }
+.masthead .btn { color: var(--asphalt); }
+@media (max-width: 34rem) { .nav-hide { display: none; } }
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font-family: var(--mono); font-size: 0.875rem; font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.7rem 1.15rem;
+  background: var(--amber); color: var(--asphalt);
+  text-decoration: none; border: 1px solid transparent; border-radius: 3px;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn--ghost {
+  background: transparent; color: var(--ink);
+  border-color: var(--rule);
+}
+.btn--ghost:hover { border-color: var(--ink); filter: none; }
+.btn--lg { font-size: 0.9375rem; padding: 0.95rem 1.5rem; }
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+.hero { padding: clamp(3rem, 7vw, 5.5rem) 0 var(--gap); }
+.hero p.lede {
+  font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.25rem);
+  color: var(--ink-soft);
+  max-width: 44ch;
+  margin: 1.25rem 0 0;
+}
+.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
+.hero .terms {
+  font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-soft);
+  margin: 1rem 0 0;
+}
+
+/* ── THE SIGN: the one bold element on the page ────────────────────────── */
+.gantry { margin-top: clamp(2.5rem, 6vw, 4rem); }
+
+.sign {
+  position: relative;
+  background: var(--asphalt);
+  border: 3px solid #3A3D42;
+  border-radius: 5px;
+  padding: clamp(1.1rem, 3.5vw, 2rem) clamp(1rem, 3vw, 2rem);
+  box-shadow: 0 18px 40px -22px rgba(0,0,0,0.85), inset 0 0 0 2px #17191C;
+  overflow: hidden;
+}
+/* The LED grid. Sits over the text so the type reads as lit elements. */
+.sign::after {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(to right,  rgba(0,0,0,0.42) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(to bottom, rgba(0,0,0,0.42) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+.sign__head {
+  font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--amber-dim);
+  display: flex; justify-content: space-between; gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+.sign__msg {
+  font-family: var(--mono);
+  font-size: clamp(0.9rem, 0.5rem + 2.1vw, 1.6rem);
+  font-weight: 700; line-height: 1.5; letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--amber);
+  text-shadow: 0 0 14px rgba(255,176,0,0.45);
+  min-height: 3em;
+  margin: 0;
+}
+.sign__msg span { display: block; }
+.sign__src {
+  font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--amber-dim);
+  margin: 0.9rem 0 0;
+}
+/* The gantry legs, so the sign reads as mounted over the road. */
+.gantry__legs { display: flex; justify-content: space-between; padding: 0 12%; }
+.gantry__legs i {
+  display: block; width: 7px; height: clamp(18px, 3vw, 30px);
+  background: linear-gradient(to bottom, #3A3D42, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sign__msg { transition: opacity 0.35s ease; }
+  .sign__msg.is-swapping { opacity: 0.15; }
+}
+
+/* ── Lane-line divider: the road's own way of separating lanes ─────────── */
+.lane {
+  height: 6px; border: 0; margin: 0;
+  background: repeating-linear-gradient(
+    to right, var(--stripe) 0 42px, transparent 42px 76px);
+  opacity: 0.75;
+}
+
+/* ── Sections ──────────────────────────────────────────────────────────── */
+.band { padding: var(--gap) 0; }
+.band > .wrap > h2 + p { color: var(--ink-soft); max-width: 56ch; margin: 1rem 0 0; }
+
+/* ── Source strips: small signs, echoing the hero ──────────────────────── */
+.sources { display: grid; gap: 0.75rem; margin-top: 2.5rem; }
+.source {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr);
+  gap: 0 1.15rem;
+  align-items: start;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--amber);
+  border-radius: 3px;
+  padding: 1.15rem 1.25rem;
+}
+.source__tag {
+  font-family: var(--mono); font-size: 0.6875rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--asphalt); color: var(--amber);
+  padding: 0.3rem 0.5rem; border-radius: 2px; white-space: nowrap;
+  grid-row: span 2;
+}
+.source p { margin: 0.35rem 0 0; color: var(--ink-soft); font-size: 0.9375rem; }
+.source__cadence {
+  font-family: var(--mono); font-size: 0.75rem; color: var(--ink-soft);
+  margin-top: 0.5rem;
+}
+@media (max-width: 34rem) {
+  .source { grid-template-columns: minmax(0,1fr); gap: 0.6rem; }
+  .source__tag { grid-row: auto; justify-self: start; }
+}
+
+/* ── Screens ───────────────────────────────────────────────────────────── */
+.screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 2.5rem; }
+.screens figure { margin: 0; }
+.screens img { border: 1px solid var(--rule); border-radius: 6px; background: var(--panel); }
+.screens figcaption {
+  font-family: var(--mono); font-size: 0.75rem; color: var(--ink-soft);
+  margin-top: 0.65rem; line-height: 1.45;
+}
+@media (max-width: 44rem) { .screens { grid-template-columns: 1fr; max-width: 22rem; } }
+
+/* ── Install: numbered because it genuinely is a sequence ──────────────── */
+.warn {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--stripe);
+  border-radius: 3px;
+  padding: 1.15rem 1.25rem;
+  margin-top: 2.25rem;
+}
+.warn h3 { margin-bottom: 0.4rem; }
+.warn p { margin: 0; color: var(--ink-soft); font-size: 0.9375rem; }
+
+.steps { list-style: none; counter-reset: step; padding: 0; margin: 2.25rem 0 0; }
+.steps li {
+  counter-increment: step;
+  display: grid; grid-template-columns: auto minmax(0,1fr); gap: 1.15rem;
+  padding: 1.15rem 0; border-top: 1px solid var(--rule);
+}
+.steps li:last-child { border-bottom: 1px solid var(--rule); }
+.steps li::before {
+  content: counter(step, decimal-leading-zero);
+  font-family: var(--mono); font-size: 0.875rem; font-weight: 700;
+  color: var(--amber-dim);
+}
+@media (prefers-color-scheme: dark) { .steps li::before { color: var(--amber); } }
+.steps p { margin: 0.35rem 0 0; color: var(--ink-soft); font-size: 0.9375rem; }
+
+/* ── Privacy ledger ────────────────────────────────────────────────────── */
+.ledger { margin-top: 2.5rem; border-top: 1px solid var(--rule); }
+.ledger div {
+  display: flex; align-items: baseline; gap: 1rem;
+  padding: 0.85rem 0; border-bottom: 1px solid var(--rule);
+  font-family: var(--mono); font-size: 0.875rem;
+}
+.ledger dt { flex: 1; margin: 0; color: var(--ink); }
+.ledger dd { margin: 0; color: var(--spade); font-weight: 600; letter-spacing: 0.04em; text-align: right; }
+.ledger dd.is-note { color: var(--ink-soft); font-weight: 400; }
+
+/* ── FAQ ───────────────────────────────────────────────────────────────── */
+.faq { margin-top: 2.5rem; border-top: 1px solid var(--rule); }
+.faq details { border-bottom: 1px solid var(--rule); }
+.faq summary {
+  cursor: pointer; list-style: none;
+  padding: 1.15rem 2rem 1.15rem 0; position: relative;
+  font-weight: 700; letter-spacing: -0.01em;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+"; position: absolute; right: 0.25rem; top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--mono); font-weight: 400; color: var(--ink-soft);
+}
+.faq details[open] summary::after { content: "\2013"; }
+.faq p { margin: 0 0 1.25rem; color: var(--ink-soft); max-width: 62ch; font-size: 0.9375rem; }
+
+/* ── Closing call to action ────────────────────────────────────────────── */
+.closer { padding: var(--gap) 0; text-align: center; }
+.closer .actions { justify-content: center; }
+.closer p { color: var(--ink-soft); max-width: 46ch; margin: 1rem auto 0; }
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+footer { border-top: 1px solid var(--rule); padding: 2.5rem 0 3.5rem; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; align-items: center; }
+footer a { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-soft); text-decoration: none; }
+footer a:hover { color: var(--ink); text-decoration: underline; }
+footer .disclaim {
+  font-size: 0.8125rem; color: var(--ink-soft); margin: 1.5rem 0 0;
+  max-width: 70ch; line-height: 1.55;
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="mark" href="./">
+      <img src="screenshots/app-icon.png" alt="">
+      SABRE Plus
+    </a>
+    <nav>
+      <a class="nav-hide" href="#sources">Sources</a>
+      <a class="nav-hide" href="#install">Install</a>
+      <a class="nav-hide" href="#faq">FAQ</a>
+      <a class="btn" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="wrap">
+      <p class="label">Highway Radar plugin &middot; California &middot; Free and open source</p>
+      <h1>CHP, Waze and Caltrans alerts on your Highway&nbsp;Radar map.</h1>
+      <p class="lede">
+        Highway Radar can pull crowd-sourced alerts from a plugin. SABRE Plus is that
+        plugin, wired to five live California feeds instead of one.
+      </p>
+
+      <div class="actions">
+        <a class="btn btn--lg" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">
+          Download the APK
+        </a>
+        <a class="btn btn--ghost btn--lg" href="#install">Read the install steps</a>
+      </div>
+      <p class="terms">Android 7.0+ &nbsp;·&nbsp; no account &nbsp;·&nbsp; no ads &nbsp;·&nbsp; no tracking &nbsp;·&nbsp; MIT licensed</p>
+
+      <!-- The signature element: a Caltrans-style changeable message sign
+           cycling the kind of alert each source actually produces. -->
+      <div class="gantry">
+        <div class="sign">
+          <div class="sign__head">
+            <span>Live alert feed</span>
+            <span aria-hidden="true">CA · SABRE</span>
+          </div>
+          <p class="sign__msg" id="signMsg" aria-live="off">
+            <span>Traffic collision, no injury</span>
+            <span>I-80 E at Truckee</span>
+          </p>
+          <p class="sign__src" id="signSrc">Source: CHP live feed</p>
+        </div>
+        <div class="gantry__legs" aria-hidden="true"><i></i><i></i></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="lane">
+
+  <section class="band" id="sources">
+    <div class="wrap">
+      <p class="label">What it adds</p>
+      <h2>Five feeds, one map layer.</h2>
+      <p>
+        Every source is fetched in parallel, filtered to the area Highway Radar asked
+        about, de-duplicated across sources, and handed over as standard crowd alerts.
+        Turn any of them off in the app.
+      </p>
+
+      <div class="sources">
+        <article class="source">
+          <span class="source__tag">CHP</span>
+          <h3>California Highway Patrol incidents</h3>
+          <p>
+            Collisions, closures, debris, officers on the road and weather hazards,
+            straight from the CHP statewide dispatch feed. Per-category toggles, a
+            maximum incident age, and control over which icon each category uses.
+          </p>
+          <p class="source__cadence">Refreshed every map update</p>
+        </article>
+
+        <article class="source">
+          <span class="source__tag">Waze</span>
+          <h3>Waze crowd reports</h3>
+          <p>
+            Police, accidents, hazards, jams and closures reported by drivers nearby,
+            kept in a rolling cache so alerts do not blink out as you drive past them.
+          </p>
+          <p class="source__cadence">Refreshed every map update</p>
+        </article>
+
+        <article class="source">
+          <span class="source__tag">Caltrans</span>
+          <h3>Lane and road closures</h3>
+          <p>
+            Closures that are physically in place right now, from the Caltrans Lane
+            Closure System. Shoulder work is skipped, and a long closure gets a pin at
+            each end so you see where it starts and stops.
+          </p>
+          <p class="source__cadence">Cached, refreshed every 15 min</p>
+        </article>
+
+        <article class="source">
+          <span class="source__tag">Fire</span>
+          <h3>Active wildfires</h3>
+          <p>
+            Active California wildfires from the interagency WFIGS feed, with name,
+            size and containment. Contained and stale records are filtered out, and you
+            can hide anything under a size you choose.
+          </p>
+          <p class="source__cadence">Cached, refreshed every 5 min</p>
+        </article>
+
+        <article class="source">
+          <span class="source__tag">Chains</span>
+          <h3>Winter chain controls</h3>
+          <p>
+            R-1, R-2 and R-3 chain requirements on the mountain routes, at the
+            checkpoint where they are enforced. I-80, US-50, SR-88, SR-89 and US-395.
+          </p>
+          <p class="source__cadence">Cached, refreshed every 5 min</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <hr class="lane">
+
+  <section class="band">
+    <div class="wrap">
+      <p class="label">On your phone</p>
+      <h2>Settings you control, alerts where you already look.</h2>
+
+      <div class="screens">
+        <figure>
+          <img src="screenshots/settings.png" width="1080" height="2400" loading="lazy"
+               alt="The SABRE Plus settings screen, showing per-category toggles and shows-as overrides.">
+          <figcaption>Toggle any category, and pick the icon Highway Radar draws for it.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/hr_state.png" width="1080" height="2400" loading="lazy"
+               alt="Highway Radar's plugin settings showing SABRE Plus detected and selected.">
+          <figcaption>Highway Radar finds the plugin on its own. Nothing to configure.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/hr-map.png" width="1080" height="2400" loading="lazy"
+               alt="The Highway Radar map with an alert pin fed by the plugin.">
+          <figcaption>Alerts land on the map layer you already watch while driving.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <hr class="lane">
+
+  <section class="band" id="install">
+    <div class="wrap">
+      <p class="label">Install</p>
+      <h2>Three steps, about two minutes.</h2>
+
+      <div class="warn">
+        <h3>Already running wzsabre? Uninstall it first.</h3>
+        <p>
+          SABRE Plus replaces wzsabre and has to use the same plugin ID that Highway
+          Radar looks for, so Android will not keep both. Uninstall wzsabre, then
+          install SABRE Plus. Your Highway Radar settings stay exactly as they are.
+        </p>
+      </div>
+
+      <ol class="steps">
+        <li>
+          <div>
+            <h3>Download the APK</h3>
+            <p>
+              Grab the latest build from GitHub Releases. Your browser will ask for
+              permission to install unknown apps, and Play Protect may warn that it does
+              not recognize the app: choose More details, then Install anyway.
+            </p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Open SABRE Plus once</h3>
+            <p>
+              Allow notifications and the battery-optimization exemption when asked.
+              Without them Android can freeze the plugin in the background and alerts
+              stop arriving.
+            </p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Pick it in Highway Radar</h3>
+            <p>
+              Open Highway Radar, then Settings, then SABRE, and choose SABRE Plus.
+              Alerts start on the next map refresh.
+            </p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="actions">
+        <a class="btn btn--lg" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download the APK</a>
+        <a class="btn btn--ghost btn--lg" href="https://github.com/ImranR98/Obtainium">Auto-update with Obtainium</a>
+      </div>
+    </div>
+  </section>
+
+  <hr class="lane">
+
+  <section class="band">
+    <div class="wrap">
+      <p class="label">Privacy</p>
+      <h2>What it does not do.</h2>
+      <p>
+        There is no backend to speak of, because there is no backend. The app talks to
+        public road feeds and to Waze, and that is the whole list.
+      </p>
+
+      <dl class="ledger">
+        <div><dt>Accounts</dt><dd>None</dd></div>
+        <div><dt>Analytics or telemetry</dt><dd>None</dd></div>
+        <div><dt>Ads and trackers</dt><dd>None</dd></div>
+        <div><dt>Servers run by this project</dt><dd>None</dd></div>
+        <div><dt>Data leaving your device</dt><dd class="is-note">Approximate location, to Waze only</dd></div>
+        <div><dt>Source code</dt><dd class="is-note">Public, MIT licensed</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <hr class="lane">
+
+  <section class="band" id="faq">
+    <div class="wrap">
+      <p class="label">Questions</p>
+      <h2>Before you install.</h2>
+
+      <div class="faq">
+        <details open>
+          <summary>Is this a replacement for wzsabre?</summary>
+          <p>
+            Yes. It uses the same plugin ID that Highway Radar's discovery looks for, so
+            Highway Radar picks it up automatically. Android only allows one app to hold
+            that ID, so uninstall wzsabre before installing SABRE Plus.
+          </p>
+        </details>
+        <details>
+          <summary>Does it cost anything?</summary>
+          <p>
+            No. It is free and open source under the MIT license. No account, no ads, no
+            in-app purchases, no premium tier.
+          </p>
+        </details>
+        <details>
+          <summary>Why is it not on Google Play?</summary>
+          <p>
+            The plugin has to use the exact package ID Highway Radar looks for, and that
+            ID is already taken on Play. You install the APK from GitHub Releases
+            instead, or point Obtainium at the repository and let it handle updates.
+          </p>
+        </details>
+        <details>
+          <summary>Does it drain my battery or my data plan?</summary>
+          <p>
+            The plugin runs only while Highway Radar is open and stops itself shortly
+            after you close it. The large Caltrans feeds are cached, refreshed on a long
+            interval, and skipped entirely when Caltrans reports nothing has changed.
+          </p>
+        </details>
+        <details>
+          <summary>Which areas are covered?</summary>
+          <p>
+            California. CHP incidents and Caltrans closures are statewide, chain
+            controls cover the mountain passes, wildfires cover the state, and Waze
+            reports work anywhere Waze does.
+          </p>
+        </details>
+        <details>
+          <summary>Is it affiliated with Highway Radar, Waze, CHP or Caltrans?</summary>
+          <p>
+            No. It is an independent project, not affiliated with, endorsed by or
+            supported by any of them. Do not rely on it for safety-critical decisions.
+          </p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="closer">
+    <div class="wrap">
+      <h2>Put the whole state on your map.</h2>
+      <p>Free, open source, and about two minutes to set up.</p>
+      <div class="actions">
+        <a class="btn btn--lg" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download the APK</a>
+        <a class="btn btn--ghost btn--lg" href="https://github.com/nicglazkov/highway-radar-sabre-plus">View the source</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus">GitHub</a>
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases">Releases</a>
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/PRIVACY.md">Privacy policy</a>
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/issues">Report a problem</a>
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/LICENSE">MIT license</a>
+  </div>
+  <div class="wrap">
+    <p class="disclaim">
+      SABRE Plus is an independent, unofficial project. It is not affiliated with,
+      endorsed by or supported by Waze, Google, the California Highway Patrol, Caltrans
+      or Highway Radar. Road data comes from public feeds and is provided without any
+      guarantee of accuracy or timeliness. Always follow real-world conditions, signage
+      and the law.
+    </p>
+  </div>
+</footer>
+
+<script>
+// Cycle the sign through one representative alert per source. The first message
+// is in the HTML, so the page still says something useful without JavaScript.
+(function () {
+  var msg = document.getElementById('signMsg');
+  var src = document.getElementById('signSrc');
+  if (!msg || !src) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var feed = [
+    { lines: ['Traffic collision, no injury', 'I-80 E at Truckee'],       src: 'CHP live feed' },
+    { lines: ['Chains required R-2', 'US-50 at Echo Summit'],             src: 'Caltrans chain control' },
+    { lines: ['Right 2 lanes closed', 'SR-99 N at Elk Grove'],            src: 'Caltrans lane closures' },
+    { lines: ['Wildfire, 12,400 ac, 40% contained', 'SR-32 near Forest Ranch'], src: 'WFIGS active fires' },
+    { lines: ['Police reported ahead', 'I-5 N near Stockton'],            src: 'Waze crowd reports' }
+  ];
+
+  var i = 0;
+  setInterval(function () {
+    i = (i + 1) % feed.length;
+    var next = feed[i];
+    msg.classList.add('is-swapping');
+    setTimeout(function () {
+      msg.innerHTML = '';
+      next.lines.forEach(function (line) {
+        var el = document.createElement('span');
+        el.textContent = line;
+        msg.appendChild(el);
+      });
+      src.textContent = 'Source: ' + next.src;
+      msg.classList.remove('is-swapping');
+    }, 350);
+  }, 3600);
+})();
+</script>
+
+</body>
+</html>
