@@ -47,6 +47,16 @@ public class WildfireSource {
 
     private static final long CACHE_TTL_MS       = 5 * 60_000L;   // fires update slowly
     private static final long CACHE_MAX_SERVE_MS = 60 * 60_000L;  // never serve staler than this
+
+    // ── Liveness thresholds (see isLiveHazard) ────────────────────────────────
+    /** Past this age, a record with no meaningful size is feed residue, not a fire. */
+    private static final long   STALE_RECORD_MS = 30L * 24 * 60 * 60 * 1000L;
+    /** Below this, an old record is a spot fire that was out the same day. */
+    private static final double MIN_LIVE_ACRES  = 10.0;
+    /** Name markers for feed entries that are not wildfires. */
+    private static final String[] NON_INCIDENT_MARKERS = {
+        "TRAINING", "FALSE ALARM", "DRILL", "PRESCRIBED"
+    };
     private static final int  CONNECT_TIMEOUT_MS = 8_000;
     private static final int  READ_TIMEOUT_MS    = 8_000;
 
@@ -88,13 +98,56 @@ public class WildfireSource {
         if (snap == null || (System.currentTimeMillis() - snap.timeMs) > CACHE_MAX_SERVE_MS) {
             return new ArrayList<>();
         }
+        return selectAlerts(snap.fires, lat, lon, radiusMeters, minAcres,
+                System.currentTimeMillis());
+    }
+
+    /** Which cached fires become alerts for this request. Package-private for tests. */
+    static List<SabreAlert> selectAlerts(List<Fire> fires, double lat, double lon,
+                                         double radiusMeters, int minAcres, long nowMs) {
         List<SabreAlert> out = new ArrayList<>();
-        for (Fire f : snap.fires) {
+        for (Fire f : fires) {
+            if (!isLiveHazard(f, nowMs)) continue;
             if (minAcres > 0 && f.sizeAcres >= 0 && f.sizeAcres < minAcres) continue;
             if (CHPSource.haversineMeters(lat, lon, f.lat, f.lon) > radiusMeters) continue;
             out.add(toAlert(f));
         }
         return out;
+    }
+
+    /**
+     * Whether a parsed record is still a live hazard worth drawing.
+     *
+     * <p>WFIGS leaves {@code ActiveFireCandidate=1} set long after a fire is out, so
+     * the "active" query also returns fully contained fires, months-old leftovers, and
+     * non-incident records. Observed live on 2026-08-04: 9 of 91 "active" California
+     * records were noise, including a 69,352-acre fire 100% contained 16 days earlier.
+     *
+     * <p>The rules stay deliberately conservative — a fire that is still burning must
+     * never be dropped. Age alone is not disqualifying, because large fires legitimately
+     * burn for months (the 2024 Park Fire took 64 days to reach containment).
+     */
+    static boolean isLiveHazard(Fire f, long nowMs) {
+        // Contained means the perimeter is fully held: no longer a spreading hazard.
+        // A negative value is "unknown", which must not be read as contained.
+        if (f.pctContained >= 100.0) return false;
+        if (isNonIncident(f.name)) return false;
+        // Stale *and* inconsequential: sub-acre or never-sized records that the feed
+        // simply never retired. A real fire this old would still be reporting a size.
+        long ageMs = nowMs - f.reportTs * 1000L;
+        if (ageMs > STALE_RECORD_MS && (f.sizeAcres < 0 || f.sizeAcres < MIN_LIVE_ACRES)) {
+            return false;
+        }
+        return true;
+    }
+
+    /** Feed housekeeping entries that are not wildfires at all. */
+    private static boolean isNonIncident(String name) {
+        String n = name.toUpperCase(Locale.US);
+        for (String marker : NON_INCIDENT_MARKERS) {
+            if (n.contains(marker)) return true;
+        }
+        return false;
     }
 
     /** Warm the cache at service start. */

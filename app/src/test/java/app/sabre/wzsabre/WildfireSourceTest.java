@@ -96,4 +96,95 @@ public class WildfireSourceTest {
         // Unknown size/containment → name only
         assertEquals("Wildfire: RIDGE FIRE", WildfireSource.describe(fires.get(1)));
     }
+
+    // ── Selection: which parsed fires actually get drawn ──────────────────────
+    //
+    // WFIGS leaves ActiveFireCandidate=1 on records long after the fire is out, so
+    // the raw feed carries fully contained fires, months-old leftovers, and
+    // non-incident records (training exercises, false alarms). Drawing those as live
+    // road hazards is the bug these cover. Observed live on 2026-08-04: 9 of 91
+    // "active" CA records were noise, including a 69,352-acre fire 100% contained
+    // 16 days earlier.
+
+    private static final double LAT = 39.0, LON = -121.0;   // request centre
+    private static final long NOW_MS = 1_785_000_000_000L;
+    private static final long DAY_MS = 86_400_000L;
+
+    /** Fire at the request centre, so radius never decides these cases. */
+    private static WildfireSource.Fire fire(
+            String name, double acres, double pctContained, long ageDays) {
+        return new WildfireSource.Fire("id-" + name, name, LAT, LON, acres, pctContained,
+                (NOW_MS - ageDays * DAY_MS) / 1000L);
+    }
+
+    private static List<SabreAlert> select(WildfireSource.Fire... fires) {
+        return WildfireSource.selectAlerts(
+                java.util.Arrays.asList(fires), LAT, LON, 50_000, 0, NOW_MS);
+    }
+
+    @Test
+    public void select_dropsFullyContainedFire() {
+        assertEquals("a 100% contained fire is not a live road hazard",
+                0, select(fire("BISCAR", 69352, 100, 16)).size());
+    }
+
+    @Test
+    public void select_keepsNearlyContainedFire() {
+        assertEquals("99% contained is still burning",
+                1, select(fire("LOOMIS", 656, 99, 23)).size());
+    }
+
+    @Test
+    public void select_keepsFireWithUnknownContainment() {
+        assertEquals("unknown containment must not be read as contained",
+                1, select(fire("GREEN", 10, -1, 1)).size());
+    }
+
+    @Test
+    public void select_dropsNonIncidentRecords() {
+        assertEquals("training exercises and false alarms are not fires", 0,
+                select(fire("WILDFIRE TRAINING", 0.01, -1, 208),
+                       fire("FALSE ALARM", 0.1, -1, 3)).size());
+    }
+
+    @Test
+    public void select_dropsStaleTinyRecord() {
+        assertEquals("a months-old sub-acre leftover is not a live hazard",
+                0, select(fire("GRADE", 0.1, -1, 60)).size());
+    }
+
+    @Test
+    public void select_keepsLongBurningLargeFire() {
+        // Big fires legitimately burn for months (2024 Park Fire: 64 days to
+        // containment). Age alone must never drop one.
+        assertEquals("large uncontained fire survives regardless of age",
+                1, select(fire("PARK", 429603, 65, 60)).size());
+    }
+
+    @Test
+    public void select_keepsFreshUnknownSizeRecord() {
+        // Most WFIGS records report no size for the first day or two.
+        assertEquals("a new fire with no size yet is still shown",
+                1, select(fire("LAC-272069", -1, -1, 1)).size());
+    }
+
+    @Test
+    public void select_appliesMinAcresButKeepsUnknownSize() {
+        List<SabreAlert> out = WildfireSource.selectAlerts(
+                java.util.Arrays.asList(
+                        fire("SMALL", 5, -1, 1),
+                        fire("BIG", 5000, -1, 1),
+                        fire("UNSIZED", -1, -1, 1)),
+                LAT, LON, 50_000, 100, NOW_MS);
+        assertEquals("below-threshold dropped, unknown-size kept", 2, out.size());
+    }
+
+    @Test
+    public void select_appliesRadius() {
+        WildfireSource.Fire far = new WildfireSource.Fire(
+                "far", "FAR", LAT + 2.0, LON, 500, 10, NOW_MS / 1000L);
+        assertEquals("fire outside the radius is dropped",
+                0, WildfireSource.selectAlerts(
+                        java.util.Arrays.asList(far), LAT, LON, 50_000, 0, NOW_MS).size());
+    }
 }

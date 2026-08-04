@@ -29,8 +29,8 @@ An open-source **Highway Radar SABRE plugin** for California, and a drop-in **wz
 |--------|------|----------------|
 | **CHP Live Feed** | Accidents, road closures, debris, officer on road, weather hazards, directly from the California Highway Patrol statewide XML feed | Every HR map refresh |
 | **Waze** | Crowdsourced police, accidents, hazards, road closures | Every HR map refresh |
-| **Caltrans Closures (LCS)** | Lane and road closures that are physically in place right now (CHP code 1097), from the per-district Caltrans Lane Closure System feeds | Cached, refreshed every 5 min |
-| **Wildfires** | Active California wildfires (name, size, containment) from the interagency WFIGS feed, shown as road hazards near the fire | Cached, refreshed every 5 min |
+| **Caltrans Closures (LCS)** | Lane and road closures that are physically in place right now (CHP code 1097), from the per-district Caltrans Lane Closure System feeds | Cached, refreshed every 15 min |
+| **Wildfires** | Active California wildfires (name, size, containment) from the interagency WFIGS feed, shown as road hazards near the fire. Contained and stale records are filtered out | Cached, refreshed every 5 min |
 | **Chain Controls** | Caltrans winter chain requirements (R-1/R-2/R-3) on mountain routes, shown as slippery-road hazards | Cached, refreshed every 5 min |
 
 All sources run in parallel and feed into the standard HR crowdsourced-alerts layer, the same map overlay that wzsabre used to power.
@@ -175,8 +175,8 @@ flowchart TD
         direction LR
         CHP["🚔 CHP Live Feed<br/>sa.xml statewide<br/>radius + age + category filter"]
         WAZE["🚗 Waze<br/>mobile RT protobuf<br/>register, login, query<br/>delta-merged cache"]
-        LCS["🚧 Caltrans LCS<br/>per-district closure XML<br/>code 1097 only · cached 5 min"]
-        FIRE["🔥 Wildfires<br/>WFIGS active CA fires<br/>size filter · cached 5 min"]
+        LCS["🚧 Caltrans LCS<br/>per-district closure XML<br/>code 1097 only · cached 15 min<br/>conditional GET"]
+        FIRE["🔥 Wildfires<br/>WFIGS active CA fires<br/>contained/stale filtered<br/>size filter · cached 5 min"]
         CHAINS["❄️ Chain controls<br/>per-district CC XML<br/>R-1/R-2/R-3 · cached 5 min"]
     end
 
@@ -210,8 +210,8 @@ flowchart TD
 
 - **CHP**: fetches `https://media.chp.ca.gov/sa_xml/sa.xml`, filters by radius and incident age, applies your category settings.
 - **Waze**: emulates the Waze mobile app's binary "RT" protocol. It registers an anonymous Waze session, logs in, and queries crowd-sourced alerts over Waze's protobuf API (the older live-map/georss API is now blocked). The RT feed is session-stateful (each alert is sent once, then removed when it clears), so query results are merged into a persistent alert cache rather than replacing it, this keeps alerts from disappearing as you drive. A series of progressively smaller map viewports is queried so the server doesn't thin out minor alerts near you, the session is pre-warmed at start to cut first-load latency, and Waze alert subtypes (e.g. *car stopped on shoulder*, *heavy traffic*) are passed through to Highway Radar verbatim rather than flattened.
-- **Caltrans LCS**: fetches the per-district lane-closure feeds (`https://cwwp2.dot.ca.gov/data/d<N>/lcs/lcsStatusD<NN>.xml`) for whichever districts cover your location. Only closures that are physically established (CHP code 1097 set, not picked up or canceled) are shown; shoulder-only closures are skipped. Closures longer than 2 km get a pin at each end. The ~4 MB feeds are parsed in the background and cached for 5 minutes, so they never delay a Highway Radar request.
-- **Wildfires**: active California wildfires from the interagency WFIGS "Current Wildland Fire Incident Locations" feed (NIFC-hosted ArcGIS), filtered to active wildfires in California. Each is shown as a road hazard at the fire's location with its name, size, and containment. Background-cached like the other sources. Optional minimum-size filter in settings.
+- **Caltrans LCS**: fetches the per-district lane-closure feeds (`https://cwwp2.dot.ca.gov/data/d<N>/lcs/lcsStatusD<NN>.xml`) for whichever districts cover your location. Only closures that are physically established (CHP code 1097 set, not picked up or canceled) are shown; shoulder-only closures are skipped. Closures longer than 2 km get a pin at each end. The feeds are large (1 MB to 16 MB per district, uncompressed by Caltrans), so they are parsed in the background and never delay a Highway Radar request. They are refreshed every 15 minutes using a conditional request, so an unchanged feed downloads nothing at all: this keeps mobile data use down, which matters most in districts with very large feeds.
+- **Wildfires**: active California wildfires from the interagency WFIGS "Current Wildland Fire Incident Locations" feed (NIFC-hosted ArcGIS), filtered to active wildfires in California. Each is shown as a road hazard at the fire's location with its name, size, and containment. Fires the feed still flags as active but that are fully contained, along with stale leftovers and non-incident records such as training exercises, are filtered out. Background-cached like the other sources. Optional minimum-size filter in settings.
 - **Chain controls**: Caltrans winter chain-control status from the per-district CWWP feeds (`https://cwwp2.dot.ca.gov/data/d<N>/cc/ccStatusD<NN>.xml`). Records at level R-1/R-2/R-3 (in service) are shown as slippery-road hazards; off-season the feed is all R-0 so nothing shows.
 - **SABRE protocol**: a broadcast-intent IPC protocol defined by Highway Radar. Our plugin responds to `FETCH_REQUEST` broadcasts with a JSON payload containing `SabreFetchResponseAlert` objects.
 
@@ -225,7 +225,7 @@ Pull requests welcome. Run the test suite before submitting:
 ./gradlew test
 ```
 
-228 unit tests cover the SABRE response format, alert type mapping (incl. Waze category filters), the Waze alert cache (delta merge + soft-delete), in-band Waze error classification, shrinking-box geometry, crowd-confirmation tracking, CHP XML parsing, Caltrans LCS and chain-control parsing and filtering, wildfire (WFIGS) parsing, cross-source de-duplication, the update-check version compare, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup, and [CHANGELOG.md](CHANGELOG.md) for release history.
+242 unit tests cover the SABRE response format, alert type mapping (incl. Waze category filters), the Waze alert cache (delta merge + soft-delete), in-band Waze error classification, shrinking-box geometry, crowd-confirmation tracking, CHP XML parsing, Caltrans LCS and chain-control parsing and filtering, wildfire (WFIGS) parsing, cross-source de-duplication, the update-check version compare, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup, and [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ---
 
