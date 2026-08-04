@@ -36,8 +36,14 @@ import javax.net.ssl.HttpsURLConnection;
 public class LcsSource {
     private static final String TAG = "LcsSource";
 
-    private static final long CACHE_TTL_MS       = 5 * 60_000L;   // refresh cadence
-    private static final long CACHE_MAX_SERVE_MS = 30 * 60_000L;  // never serve staler than this
+    // Refresh cadence. These feeds are the app's largest network cost by far — the
+    // district XML is multi-megabyte (D7 measured at 15.7 MB on 2026-08-04) and CWWP
+    // does not gzip it, so at the old 5-minute cadence a driver near several district
+    // boundaries could pull well over 100 MB of cellular data per hour. An established
+    // 1097 closure lasts hours, so 15 minutes loses nothing a driver would notice, and
+    // the conditional GET makes an unchanged feed free on top of that.
+    private static final long CACHE_TTL_MS       = 15 * 60_000L;  // refresh cadence
+    private static final long CACHE_MAX_SERVE_MS = 60 * 60_000L;  // never serve staler than this
     private static final int  TIMEOUT_MS         = 25_000;
     /** Closures whose schedule ended more than this long ago are treated as ghosts. */
     private static final long END_OVERRUN_GRACE_SEC = 4 * 3600L;
@@ -106,6 +112,7 @@ public class LcsSource {
 
     private final Map<Integer, CacheEntry> cache = new ConcurrentHashMap<>();
     private final Map<Integer, AtomicBoolean> refreshing = new ConcurrentHashMap<>();
+    private final Map<Integer, ConditionalGet> validators = new ConcurrentHashMap<>();
     private final ExecutorService refreshExec = Executors.newSingleThreadExecutor();
 
     /**
@@ -145,9 +152,22 @@ public class LcsSource {
         refreshExec.submit(() -> {
             try {
                 List<Closure> parsed = fetchDistrict(district);
-                cache.put(district, new CacheEntry(parsed, System.currentTimeMillis()));
-                Log.d(TAG, "D" + district + " refreshed: " + parsed.size() + " closure records");
-                DebugLog.event("lcs D" + district + ": " + parsed.size() + " closures");
+                if (parsed == null) {
+                    // 304 Not Modified: the feed we already hold is still current, so
+                    // just mark it fresh. This is the whole point of the conditional
+                    // GET — an unchanged multi-megabyte feed costs zero bytes.
+                    CacheEntry held = cache.get(district);
+                    if (held != null) {
+                        cache.put(district, new CacheEntry(held.closures, System.currentTimeMillis()));
+                        Log.d(TAG, "D" + district + " unchanged (304): " + held.closures.size()
+                                + " closure records kept");
+                        DebugLog.event("lcs D" + district + ": unchanged (304)");
+                    }
+                } else {
+                    cache.put(district, new CacheEntry(parsed, System.currentTimeMillis()));
+                    Log.d(TAG, "D" + district + " refreshed: " + parsed.size() + " closure records");
+                    DebugLog.event("lcs D" + district + ": " + parsed.size() + " closures");
+                }
                 int total = 0;
                 for (CacheEntry ce : cache.values()) total += ce.closures.size();
                 SourceStatus.success(SabreResponseBuilder.SOURCE_LCS, total);
@@ -163,14 +183,30 @@ public class LcsSource {
         });
     }
 
+    /** @return parsed closures, or {@code null} when the server replies 304 Not Modified. */
     private List<Closure> fetchDistrict(int district) throws Exception {
         URL url = new URL(feedUrl(district));
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setConnectTimeout(TIMEOUT_MS);
         conn.setReadTimeout(TIMEOUT_MS);
         conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14)");
-        try (InputStream in = conn.getInputStream()) {
-            return parse(in);
+        ConditionalGet cg = validators.computeIfAbsent(district, d -> new ConditionalGet());
+        for (Map.Entry<String, String> h
+                : cg.requestHeaders(cache.get(district) != null).entrySet()) {
+            conn.setRequestProperty(h.getKey(), h.getValue());
+        }
+        try {
+            if (conn.getResponseCode() == HttpsURLConnection.HTTP_NOT_MODIFIED) return null;
+            String etag = conn.getHeaderField("ETag");
+            String lastModified = conn.getHeaderField("Last-Modified");
+            List<Closure> parsed;
+            try (InputStream in = conn.getInputStream()) {
+                parsed = parse(in);
+            }
+            // Commit only after the body parsed, so a mid-stream failure can't leave
+            // validators matching content this cache never received.
+            cg.commit(etag, lastModified);
+            return parsed;
         } finally {
             conn.disconnect();
         }

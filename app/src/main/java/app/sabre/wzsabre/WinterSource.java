@@ -70,6 +70,7 @@ public class WinterSource {
 
     private final Map<Integer, CacheEntry> cache = new ConcurrentHashMap<>();
     private final Map<Integer, AtomicBoolean> refreshing = new ConcurrentHashMap<>();
+    private final Map<Integer, ConditionalGet> validators = new ConcurrentHashMap<>();
     private final ExecutorService refreshExec = Executors.newSingleThreadExecutor();
 
     /** Active chain controls within the radius, served from the district caches. */
@@ -102,12 +103,23 @@ public class WinterSource {
         refreshExec.submit(() -> {
             try {
                 List<ChainControl> parsed = fetchDistrict(district);
-                cache.put(district, new CacheEntry(parsed, System.currentTimeMillis()));
+                if (parsed == null) {
+                    // 304 Not Modified: keep the records we hold and just mark them
+                    // fresh. Must not fall through to the empty-list path below, which
+                    // would clear real chain controls mid-storm.
+                    CacheEntry held = cache.get(district);
+                    if (held != null) {
+                        cache.put(district, new CacheEntry(held.records, System.currentTimeMillis()));
+                        DebugLog.event("chains D" + district + ": unchanged (304)");
+                    }
+                } else {
+                    cache.put(district, new CacheEntry(parsed, System.currentTimeMillis()));
+                    Log.d(TAG, "D" + district + " chain controls: " + parsed.size() + " records");
+                    DebugLog.event("chains D" + district + ": " + parsed.size() + " records");
+                }
                 int total = 0;
                 for (CacheEntry ce : cache.values()) total += ce.records.size();
                 SourceStatus.success(SabreResponseBuilder.SOURCE_CHAINS, total);
-                Log.d(TAG, "D" + district + " chain controls: " + parsed.size() + " records");
-                DebugLog.event("chains D" + district + ": " + parsed.size() + " records");
             } catch (Exception e) {
                 SourceStatus.failure(SabreResponseBuilder.SOURCE_CHAINS,
                         "D" + district + " " + e.getClass().getSimpleName());
@@ -120,14 +132,23 @@ public class WinterSource {
         });
     }
 
+    /** @return parsed records, or {@code null} when the server replies 304 Not Modified. */
     private List<ChainControl> fetchDistrict(int district) throws Exception {
         URL url = new URL(feedUrl(district));
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setConnectTimeout(TIMEOUT_MS);
         conn.setReadTimeout(TIMEOUT_MS);
         conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14)");
+        ConditionalGet cg = validators.computeIfAbsent(district, d -> new ConditionalGet());
+        for (Map.Entry<String, String> h
+                : cg.requestHeaders(cache.get(district) != null).entrySet()) {
+            conn.setRequestProperty(h.getKey(), h.getValue());
+        }
         try {
             int code = conn.getResponseCode();
+            // Checked before the non-200 branch below: a 304 means "unchanged", not
+            // "no data", and must keep the cached records rather than blank them.
+            if (code == HttpsURLConnection.HTTP_NOT_MODIFIED) return null;
             // Districts with no chain-control program (D4 Bay Area, D5 Central Coast,
             // D12 Orange County) return a non-200 for their cc feed. It used to be 404;
             // as of 2026 Caltrans returns 500. Treat ANY non-200 as "no chain controls
@@ -141,9 +162,16 @@ public class WinterSource {
                 DebugLog.event("chains D" + district + ": HTTP " + code + " (no data)");
                 return new ArrayList<>();
             }
+            String etag = conn.getHeaderField("ETag");
+            String lastModified = conn.getHeaderField("Last-Modified");
+            List<ChainControl> parsed;
             try (InputStream in = conn.getInputStream()) {
-                return parse(in);
+                parsed = parse(in);
             }
+            // Commit only after a successful parse, so validators never match content
+            // the cache did not actually receive.
+            cg.commit(etag, lastModified);
+            return parsed;
         } finally {
             conn.disconnect();
         }
