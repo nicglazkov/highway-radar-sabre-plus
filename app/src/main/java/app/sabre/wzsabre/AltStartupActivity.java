@@ -14,7 +14,7 @@ import android.util.Log;
  * Why this exists: on Android 15/16, starting a foreground service from a
  * background broadcast receiver is BFSL-restricted. But when HR launches this
  * activity, our app is momentarily in the foreground, so starting the service
- * here is always allowed — a reliable escape hatch that complements the
+ * here is always allowed: a reliable escape hatch that complements the
  * exact-alarm bypass in {@link ForegroundServiceStarter}.
  *
  * The activity starts the service, optionally bounces back to HR (if HR passed
@@ -27,13 +27,13 @@ public class AltStartupActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "Launched — starting service from foreground");
+        Log.d(TAG, "Launched: starting service from foreground");
 
         ForegroundServiceStarter.start(this, null, null);
 
         // If HR told us how to return to it, do so (matches official 2.2 behaviour).
         // This activity is exported, so restrict the callback target to Highway Radar
-        // — otherwise any app could make us launch an arbitrary component (confused
+        //: otherwise any app could make us launch an arbitrary component (confused
         // deputy) with us as the attributed source.
         try {
             String cbApp  = getIntent().getStringExtra("callback_app");

@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.net.ssl.HttpsURLConnection;
 
 /**
- * Caltrans LCS (Lane Closure System) source — live lane and road closures from
+ * Caltrans LCS (Lane Closure System) source, live lane and road closures from
  * the per-district feeds at
  * {@code https://cwwp2.dot.ca.gov/data/d<N>/lcs/lcsStatusD<NN>.xml}.
  *
@@ -36,7 +36,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class LcsSource {
     private static final String TAG = "LcsSource";
 
-    // Refresh cadence. These feeds are the app's largest network cost by far — the
+    // Refresh cadence. These feeds are the app's largest network cost by far, the
     // district XML is multi-megabyte (D7 measured at 15.7 MB on 2026-08-04) and CWWP
     // does not gzip it, so at the old 5-minute cadence a driver near several district
     // boundaries could pull well over 100 MB of cellular data per hour. An established
@@ -155,7 +155,7 @@ public class LcsSource {
                 if (parsed == null) {
                     // 304 Not Modified: the feed we already hold is still current, so
                     // just mark it fresh. This is the whole point of the conditional
-                    // GET — an unchanged multi-megabyte feed costs zero bytes.
+                    // GET: an unchanged multi-megabyte feed costs zero bytes.
                     CacheEntry held = cache.get(district);
                     if (held != null) {
                         cache.put(district, new CacheEntry(held.closures, System.currentTimeMillis()));
@@ -215,7 +215,7 @@ public class LcsSource {
     // ── Streaming XML parse ──────────────────────────────────────────────────
 
     /**
-     * Streaming parse — the feed is ~4 MB, so it is consumed directly from the
+     * Streaming parse: the feed is ~4 MB, so it is consumed directly from the
      * stream rather than read into a String. Field tag names in the schema are
      * globally unique (beginLatitude vs endLatitude etc.), so no section
      * tracking is needed; text accumulates per element like CHPSource.
@@ -277,7 +277,7 @@ public class LcsSource {
             try {
                 eventType = parser.next();
             } catch (Exception e) {
-                Log.w(TAG, "LCS feed parse error — salvaged " + out.size() + " records");
+                Log.w(TAG, "LCS feed parse error, salvaged " + out.size() + " records");
                 break;
             }
         }
@@ -309,7 +309,7 @@ public class LcsSource {
     }
 
     /**
-     * True when only shoulders/median are closed (no travel lane affected) —
+     * True when only shoulders/median are closed (no travel lane affected),
      * e.g. lanesClosed = "RShoulder". "3, RShoulder", "All", "Left HOV" and
      * turn-lane closures still count as lane closures.
      */
@@ -317,7 +317,7 @@ public class LcsSource {
         String l = c.lanesClosed;
         if (l == null || l.isEmpty()) return false;
         String lower = l.toLowerCase(Locale.US);
-        // "aux" (Auxiliary) is a travel lane — closing it is a real lane closure even
+        // "aux" (Auxiliary) is a travel lane, closing it is a real lane closure even
         // when the value carries no digit (e.g. "Median, LShoulder, Auxiliary").
         if (lower.contains("all") || lower.contains("hov") || lower.contains("turn")
                 || lower.contains("aux")) return false;
@@ -362,7 +362,7 @@ public class LcsSource {
         if (!c.locationName.isEmpty()) sb.append(" @ ").append(c.locationName);
         if (!c.nearbyPlace.isEmpty()) sb.append(" (").append(c.nearbyPlace).append(')');
         if (!c.lanesClosed.isEmpty() && !"Full".equalsIgnoreCase(c.typeOfClosure))
-            sb.append(" · lanes: ").append(c.lanesClosed);
+            sb.append(", lanes: ").append(c.lanesClosed);
         return sb.toString();
     }
 }

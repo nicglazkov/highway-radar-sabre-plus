@@ -11,7 +11,7 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * Checks GitHub Releases for a newer version. Since the app is sideloaded (no Play
  * Store auto-update), this powers both the in-app "update available" card and a
- * once-per-version notification. No auth needed — the public releases endpoint is
+ * once-per-version notification. No auth needed: the public releases endpoint is
  * used within GitHub's unauthenticated rate limit.
  */
 public final class UpdateChecker {
@@ -31,7 +31,7 @@ public final class UpdateChecker {
         }
     }
 
-    /** Blocking network call — returns null on any failure. Must run off the main thread. */
+    /** Blocking network call: returns null on any failure. Must run off the main thread. */
     public static Result fetchLatest() {
         HttpsURLConnection conn = null;
         try {

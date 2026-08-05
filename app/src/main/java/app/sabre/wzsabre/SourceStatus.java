@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * screen can show a diagnostics panel (last update, item count, last error) even
  * though the sources live inside {@link SabreService}. Both run in the same
  * process, so a static map is sufficient; state is lost on process death, which
- * is fine — it reflects the current session.
+ * is fine: it reflects the current session.
  *
  * <p>Each {@link Entry} is immutable and swapped in atomically, so a reader always
  * sees a self-consistent snapshot (never, say, a fresh count next to a stale error).

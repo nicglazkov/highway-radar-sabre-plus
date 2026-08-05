@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 /**
  * Settings screen for the CHP alert feed.
  *
- * Category rows are inflated programmatically — one per ChpCategory — so
+ * Category rows are inflated programmatically, one per ChpCategory, so
  * adding a new category requires no layout changes.
  *
  * All changes are saved to SharedPreferences immediately (no "Save" button
@@ -82,7 +82,7 @@ public class MainActivity extends Activity {
             try {
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
             } catch (Exception e) {
-                // No browser / template unavailable — fall back to the issues list.
+                // No browser / template unavailable, fall back to the issues list.
                 try {
                     startActivity(new Intent(Intent.ACTION_VIEW,
                             Uri.parse("https://github.com/nicglazkov/highway-radar-sabre-plus/issues")));
@@ -93,12 +93,12 @@ public class MainActivity extends Activity {
 
     /**
      * "Privacy" shows a plain-language summary of what the app does and does not do
-     * with data, entirely on-device, plus a link to the full PRIVACY.md policy.
-     * ACTION_VIEW needs no permission. Kept in sync with PRIVACY.md.
+     * with data, entirely on-device, plus a link to the full privacy policy.
+     * ACTION_VIEW needs no permission. Kept in sync with PRIVACY.md and docs/privacy.html.
      */
     private void buildPrivacyButton() {
         final String policyUrl =
-                "https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/PRIVACY.md";
+                "https://nicglazkov.github.io/highway-radar-sabre-plus/privacy.html";
         String summary =
             "SABRE Plus has no servers and no accounts, and collects no personal data. "
           + "Everything runs on your device.\n\n"
@@ -284,7 +284,7 @@ public class MainActivity extends Activity {
             container.addView(row);
         }
 
-        // Last crash (if any) — tap to clear.
+        // Last crash (if any): tap to clear.
         String[] crash = CrashLog.readSummary(this);
         if (crash != null) {
             TextView cr = new TextView(this);
@@ -311,9 +311,9 @@ public class MainActivity extends Activity {
     private static String formatStatus(String label, SourceStatus.Entry e) {
         if (e == null || !e.ran) return label + ": not fetched yet";
         StringBuilder sb = new StringBuilder(label).append(": ");
-        if (e.lastUpdateMs > 0) sb.append(e.count).append(" · ").append(ago(e.lastUpdateMs));
+        if (e.lastUpdateMs > 0) sb.append(e.count).append(", ").append(ago(e.lastUpdateMs));
         else sb.append("no data yet");
-        if (e.lastError != null) sb.append(" · error: ").append(e.lastError);
+        if (e.lastError != null) sb.append(", error: ").append(e.lastError);
         return sb.toString();
     }
 
@@ -386,7 +386,7 @@ public class MainActivity extends Activity {
 
     private void updateServiceStatus() {
         TextView tv = findViewById(R.id.serviceStatus);
-        tv.setText("Plugin ready · runs while Highway Radar is open");
+        tv.setText("Plugin ready, runs while Highway Radar is open");
     }
 
     // ── Category rows ─────────────────────────────────────────────────────────
@@ -425,7 +425,7 @@ public class MainActivity extends Activity {
             typeRow.setVisibility(enabled ? View.VISIBLE : View.GONE);
             setRowAlpha(row, enabled);
 
-            // Switch listener — save immediately
+            // Switch listener: save immediately
             sw.setOnCheckedChangeListener((CompoundButton btn, boolean isChecked) -> {
                 config.setEnabled(cat, isChecked);
                 config.save(this);
@@ -433,7 +433,7 @@ public class MainActivity extends Activity {
                 setRowAlpha(row, isChecked);
             });
 
-            // Spinner listener — save immediately
+            // Spinner listener: save immediately
             typeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {

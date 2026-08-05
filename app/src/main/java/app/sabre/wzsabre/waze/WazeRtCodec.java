@@ -134,7 +134,7 @@ final class WazeRtCodec {
     /**
      * Extracts removed-alert uuids from a batch. The RT server signals a cleared
      * alert with an {@code old_command} line of the form {@code "RmAlert,<uuid>"}
-     * (NOT a RemoveAlertAction message — verified in wzsabre 2.2
+     * (NOT a RemoveAlertAction message: verified in wzsabre 2.2
      * WazeProto.parseRemovedAlertIds). Strip the prefix and trim to get the uuid.
      */
     static List<String> parseRemovedAlertIds(WazeProto.Batch batch) {

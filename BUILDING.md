@@ -8,7 +8,7 @@
 | Android SDK | API 35 |
 | JDK | **17+** to run Gradle/AGP (the JBR bundled with Android Studio works). The app code itself targets Java 11. |
 
-No NDK or additional toolchains needed. The Waze protobuf classes are generated automatically on first build from `app/src/main/proto/waze.proto` — no manual protoc step. Debug builds need no keystore; only `assembleRelease` requires a `keystore.properties` at the repo root.
+No NDK or additional toolchains needed. The Waze protobuf classes are generated automatically on first build from `app/src/main/proto/waze.proto`: no manual protoc step. Debug builds need no keystore; only `assembleRelease` requires a `keystore.properties` at the repo root.
 
 ## Clone and build
 
@@ -66,11 +66,11 @@ Current test suites:
 |-------|-------|----------------|
 | `AlertMapperTest` | 55 | CHP/Waze type → SABRE type (injury codes, locale independence, Waze coarse categories) |
 | `ChpConfigTest` | 42 | Category toggles, type overrides, age filter, LogTime parsing (both CHP feed formats) |
-| `SabreProtocolTest` | 38 | HR JSON schema — all 11 required alert fields, type whitelist, nullability, drop-bad-alert semantics |
+| `SabreProtocolTest` | 38 | HR JSON schema, all 11 required alert fields, type whitelist, nullability, drop-bad-alert semantics |
 | `LcsSourceTest` | 27 | Caltrans LCS parsing, 1097/1098/1022 state filtering, shoulder/aux skip, span pins, district selection |
 | `CHPSourceTest` | 18 | XML parsing (incl. entity refs + real feed shape), radius filter, coordinate parsing, haversine |
 | `WildfireSourceTest` | 7 | WFIGS ArcGIS JSON parse (incl. error body + RX filter), SABRE mapping |
-| `WinterSourceTest` | 7 | Chain-control parse, R-0…R-3 active filtering, SABRE mapping |
+| `WinterSourceTest` | 7 | Chain-control parse, R-0 to R-3 active filtering, SABRE mapping |
 | `AlertDeduperTest` | 7 | Cross-source-only pin de-duplication (family + proximity, confirm-fold) |
 | `UpdateCheckerTest` | 4 | Version-comparison logic for the update check |
 | Waze suites | 23 | RT cache delta-merge/soft-delete, in-band error classification, shrinking-box geometry, confirm-ts, RmAlert parsing |
@@ -117,7 +117,7 @@ app/src/main/java/app/sabre/wzsabre/
 ### Package ID = `app.sabre.wzsabre`
 Highway Radar's SABRE discovery whitelists this package ID. Keeping the same ID means HR finds this plugin without requiring any HR-side changes.
 
-### SABRE protocol — `SabreFetchResponseAlert` schema
+### SABRE protocol: `SabreFetchResponseAlert` schema
 HR uses `kotlinx.serialization` with a bitmask that requires **all 11 fields** to be present on every alert object. Missing any field throws `MissingFieldException` in HR and crashes the crowdsourced-alert layer. `SabreResponseBuilder.buildAlert()` enforces this and rejects NaN coordinates and overflowing `report_ts` at build time.
 
 The 11 fields: `alert_source`, `alert_id`, `user_id`, `type`, `lat`, `lon`, `heading_deg`, `street_name` (nullable), `report_ts` (Int, not Long), `confirm_ts` (nullable Int), `confirm_count`.
@@ -133,8 +133,8 @@ a cache and refreshes it on a background thread, and persists/reuses the account
 registers at most once. The protobuf schema lives at `app/src/main/proto/waze.proto` and is
 compiled with `protobuf-javalite` (gradle `com.google.protobuf` plugin).
 
-The RT `/command` endpoint is session-stateful — it sends each alert once, then a
-`"RmAlert,<uuid>"` `old_command` line when it clears — so `WazeAlertCache` **merges** query
+The RT `/command` endpoint is session-stateful, it sends each alert once, then a
+`"RmAlert,<uuid>"` `old_command` line when it clears, so `WazeAlertCache` **merges** query
 deltas (adds upsert, removals soft-delete for 5 min) instead of replacing the cache, which is
 what stops alerts from vanishing mid-drive. Each refresh queries a series of progressively
 smaller boxes (`GeoBoxes`, a shrinking-bbox scan) so the server doesn't thin out
@@ -147,7 +147,7 @@ Lane/road closures come from the per-district Caltrans Lane Closure System feeds
 (`https://cwwp2.dot.ca.gov/data/d<N>/lcs/lcsStatusD<NN>.xml`). `LcsSource` picks districts by
 bounding box around the requested location, streams the ~4 MB XML (never held in memory as a
 string), and keeps a parsed per-district cache (5-min TTL, 30-min max serve age) refreshed on
-a background thread — the HR request path only ever reads the cache. A closure is reported
+a background thread: the HR request path only ever reads the cache. A closure is reported
 only when it is physically in place: CHP code **1097** (established) set, **1098** (picked up)
 and **1022** (canceled) not set; shoulder-only closures are skipped, and closures spanning
 more than 2 km get a pin at both ends.

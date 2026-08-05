@@ -24,8 +24,8 @@ import app.sabre.wzsabre.SourceStatus;
  * approach Waze now blocks with HTTP 403). Mints an anonymous Waze account, logs
  * in, and queries crowd-sourced alerts.
  *
- * <p>Because an RT query long-polls (up to ~10.5s) — longer than HR's response
- * budget — fetches are served from a cache that is refreshed asynchronously in the
+ * <p>Because an RT query long-polls (up to ~10.5s): longer than HR's response
+ * budget: fetches are served from a cache that is refreshed asynchronously in the
  * background. The first HR request after a cold start returns no Waze data; once
  * the background refresh completes (~10s) every subsequent request is served
  * instantly from the warm cache. {@link #prewarm} kicks that refresh off at
@@ -33,7 +33,7 @@ import app.sabre.wzsabre.SourceStatus;
  *
  * <p>The RT {@code /command} endpoint is session-stateful (each alert is sent once
  * per session, then a "RmAlert," removal when it clears), so query results are
- * MERGED into a persistent {@link WazeAlertCache} rather than replacing it — see
+ * MERGED into a persistent {@link WazeAlertCache} rather than replacing it, see
  * that class for why the previous replace-each-time behaviour lost alerts mid-drive.
  *
  * <p>The account credentials + device fingerprint are persisted and the live
@@ -48,13 +48,13 @@ public final class WazeProtocolSource {
     private static final double REFRESH_MOVE_KM   = 4.0;      // ...or if the center moved this far
     private static final double CACHE_DISCARD_KM  = 25.0;     // don't serve (or keep) a cache from far away
     // Don't serve a cache that hasn't been refreshable for this long (e.g. network
-    // outage / Waze down) — stale police/accident alerts presented as current are
+    // outage / Waze down): stale police/accident alerts presented as current are
     // worse than no Waze data.
     private static final long   CACHE_MAX_SERVE_AGE_MS = 10 * 60_000L;
 
     // Zoom levels queried per refresh (WazeAlertFetcher default maxSteps=5) and the
     // total wall-clock budget for the box loop (mirrors the official's per-slot
-    // withTimeout of ~10s — whatever boxes complete in time are merged, the rest
+    // withTimeout of ~10s: whatever boxes complete in time are merged, the rest
     // wait for the next refresh).
     private static final int  SHRINK_STEPS    = 5;
     private static final long QUERY_BUDGET_MS = 10_000L;
@@ -87,7 +87,7 @@ public final class WazeProtocolSource {
     // triggerRefreshIfStale, so it must be volatile (and a plain long can tear on 32-bit).
     private int           consecutiveRejections = 0;
     private volatile long backoffUntilMs        = 0L;
-    // The community last written to prefs — avoids rewriting identical credentials
+    // The community last written to prefs, avoids rewriting identical credentials
     // on every ~12s refresh.
     private String persistedCommunity = null;
 
@@ -135,7 +135,7 @@ public final class WazeProtocolSource {
 
     private void triggerRefreshIfStale(double lat, double lon, double radiusMeters) {
         long now = SystemClock.elapsedRealtime();
-        if (now < backoffUntilMs) return;   // in rejection backoff — don't hammer Waze
+        if (now < backoffUntilMs) return;   // in rejection backoff: don't hammer Waze
         boolean moved = cacheTimeMs != 0 && haversineKm(lat, lon, cacheLat, cacheLon) > REFRESH_MOVE_KM;
         boolean stale = cacheTimeMs == 0 || (now - cacheTimeMs) > CACHE_TTL_MS || moved;
         if (stale && refreshing.compareAndSet(false, true)) {
@@ -174,11 +174,11 @@ public final class WazeProtocolSource {
         } catch (WazeExceptions.AccountRejectedException e) {
             handleAccountRejected(e, lat, lon, radiusMeters);
         } catch (WazeExceptions.SessionExpiredException e) {
-            Log.w(TAG, "Session expired — re-logging in: " + e.getMessage());
+            Log.w(TAG, "Session expired: re-logging in: " + e.getMessage());
             if (session != null) session.invalidateSession();   // keep creds, just re-login
             queryArea(ensureSession(lat, lon), lat, lon, radiusMeters);
         }
-        // Reached only on a fully successful refresh — clear any rejection backoff.
+        // Reached only on a fully successful refresh, clear any rejection backoff.
         consecutiveRejections = 0;
         backoffUntilMs = 0L;
         SourceStatus.success(SabreResponseBuilder.SOURCE_WAZE, alertCache.size());
@@ -189,7 +189,7 @@ public final class WazeProtocolSource {
 
     /**
      * Recover from a rejected account. Backs off before the next refresh regardless,
-     * and only mints a replacement account while under the per-day cap — so a
+     * and only mints a replacement account while under the per-day cap, so a
      * persistent rejection can't burn the anonymous-account quota. Once the cap or
      * the consecutive-rejection ceiling is hit, gives up this cycle (cache unchanged)
      * and lets the growing backoff throttle retries.
@@ -197,18 +197,18 @@ public final class WazeProtocolSource {
     private void handleAccountRejected(Exception e, double lat, double lon, double radiusMeters)
             throws Exception {
         // Once the 24h registration window rolls over, forgive the consecutive-rejection
-        // ceiling — otherwise a run of rejections could lock Waze out for the rest of
+        // ceiling: otherwise a run of rejections could lock Waze out for the rest of
         // the service's life even after the daily cap has reset.
         if (regWindowRolledOver()) consecutiveRejections = 0;
         consecutiveRejections++;
         setBackoff();
         if (!canRegisterToday() || consecutiveRejections > WazeConstants.MAX_CONSECUTIVE_REJECTIONS) {
             Log.w(TAG, "Account rejected; registration cap/limit reached (" + consecutiveRejections
-                    + " consecutive) — backing off without re-registering: " + e.getMessage());
+                    + " consecutive): backing off without re-registering: " + e.getMessage());
             DebugLog.event("waze: rejected, cap reached (" + consecutiveRejections + " consecutive)");
             throw e;
         }
-        Log.w(TAG, "Account rejected — re-registering (attempt " + consecutiveRejections + "): "
+        Log.w(TAG, "Account rejected: re-registering (attempt " + consecutiveRejections + "): "
                 + e.getMessage());
         DebugLog.event("waze: rejected, re-registering (attempt " + consecutiveRejections + ")");
         session = null;
@@ -257,7 +257,7 @@ public final class WazeProtocolSource {
     private void queryArea(WazeSession s, double lat, double lon, double radiusMeters) throws Exception {
         long sessionBefore = s.currentServerSessionId();
         s.prepareForArea(lat, lon);
-        // Credentials exist now (register/login just ran) — persist immediately so a
+        // Credentials exist now (register/login just ran), persist immediately so a
         // failure in the box loop below can't lose a freshly minted account and force
         // a wasteful re-register on the next run. Only write when they actually changed.
         WazeCredentials creds = s.getCredentials();
@@ -269,7 +269,7 @@ public final class WazeProtocolSource {
         // sends no RmAlert for alerts that cleared while we were logged out, so the
         // stale cache must be dropped to avoid ghosts in Highway Radar. Defer that
         // clear until the FIRST box query succeeds: if the box loop fails right after
-        // a re-login (cell dead zone — exactly when re-logins happen), we keep serving
+        // a re-login (cell dead zone, exactly when re-logins happen), we keep serving
         // the old cache instead of blanking Waze for up to CACHE_MAX_SERVE_AGE_MS.
         boolean sessionChanged = s.currentServerSessionId() != sessionBefore;
         boolean cleared = false;
@@ -355,7 +355,7 @@ public final class WazeProtocolSource {
                 .apply();
     }
 
-    /** Clear only the credential/device keys — the registration-rate counter
+    /** Clear only the credential/device keys, the registration-rate counter
      *  (reg_count / reg_window_start) must survive so the per-day cap still holds. */
     private void clearPersisted() {
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()

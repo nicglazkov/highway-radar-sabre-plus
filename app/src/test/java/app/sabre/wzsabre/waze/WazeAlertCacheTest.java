@@ -39,7 +39,7 @@ public class WazeAlertCacheTest {
     public void mergesDeltasAcrossQueries() {
         WazeAlertCache cache = new WazeAlertCache();
         cache.submit(adds(alert("A", 0), alert("B", 0)));
-        // Second query is a DELTA — only the new alert. A and B must survive.
+        // Second query is a DELTA, only the new alert. A and B must survive.
         cache.submit(adds(alert("C", 0)));
         assertEquals(Arrays.asList("A", "B", "C"), uuids(cache.snapshot()));
     }

@@ -135,12 +135,21 @@ If you already have wzsabre installed:
 - On Android 15: open this app first, then HR. The background service must be running before HR requests data.
 
 **CHP alerts visible but no Waze alerts**
-- Waze requires a real internet connection. On the very first use the plugin registers an anonymous Waze session in the background; Waze alerts can take ~10–20 seconds to appear that first time. After that the session and a live alert cache are kept warm and pre-loaded at start, so alerts appear within a second or two on subsequent sessions.
+- Waze requires a real internet connection. On the very first use the plugin registers an anonymous Waze session in the background; Waze alerts can take 10 to 20 seconds to appear that first time. After that the session and a live alert cache are kept warm and pre-loaded at start, so alerts appear within a second or two on subsequent sessions.
 - Check that the app has network permission (it should request none explicitly; all network access is in the background service).
 
-**No alerts at all**
-- Confirm HR is using the correct plugin: HR → Settings → SABRE → should show "SABRE Plus".
-- Check that no alert categories are all turned off in the app settings.
+**No alerts at all, or Highway Radar still shows "WzSabre"**
+
+Highway Radar remembers the plugin it discovered and keeps using that cached registration after you swap wzsabre for SABRE Plus. Work through these in order:
+
+1. Confirm HR is using the correct plugin: HR → Settings → SABRE → should show "SABRE Plus".
+2. Check that the alert categories are not all turned off in the app settings.
+3. Fully close and reopen Highway Radar (swipe it away from recents, then launch it again). This makes HR re-run plugin discovery.
+4. **If it still does not work, clear Highway Radar's cache:** Android **Settings → Apps → Highway Radar → Storage → Clear cache**, then open Highway Radar again. This drops the stale registration and forces a fresh discovery. Reported by a user as the step that finally worked.
+
+> ⚠️ Use **Clear cache**, not **Clear storage**. Clear storage would erase your Highway Radar settings.
+
+Tapping **Share diagnostics** in the SABRE Plus app tells you which of these applies: it reports whether HR has re-detected SABRE Plus or is still running off a cached registration.
 
 ---
 
@@ -154,8 +163,8 @@ The graph shows the full path from a Highway Radar request to alerts on its map.
 
 **Jump to the source for each step**
 
-- Plugin pipeline: [MainBroadcastReceiver](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/MainBroadcastReceiver.java) · [ForegroundServiceStarter](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/ForegroundServiceStarter.java) · [SabreService](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/SabreService.java) · [SabreResponseBuilder](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/SabreResponseBuilder.java)
-- Sources: [CHP](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/CHPSource.java) · [Waze](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/waze/WazeProtocolSource.java) · [Caltrans LCS](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/LcsSource.java) · [Wildfires](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/WildfireSource.java) · [Chain controls](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/WinterSource.java)
+- Plugin pipeline: [MainBroadcastReceiver](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/MainBroadcastReceiver.java) | [ForegroundServiceStarter](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/ForegroundServiceStarter.java) | [SabreService](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/SabreService.java) | [SabreResponseBuilder](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/SabreResponseBuilder.java)
+- Sources: [CHP](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/CHPSource.java) | [Waze](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/waze/WazeProtocolSource.java) | [Caltrans LCS](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/LcsSource.java) | [Wildfires](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/WildfireSource.java) | [Chain controls](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/app/src/main/java/app/sabre/wzsabre/WinterSource.java)
 
 <details>
 <summary><b>Interactive version</b> (zoom and clickable nodes, on the GitHub website)</summary>
@@ -168,7 +177,7 @@ flowchart TD
     HR -- "2. REQUEST / FETCH_REQUEST<br/>lat, lon, radius" --> RCV
 
     RCV["MainBroadcastReceiver<br/>listens for wzsabre and<br/>legacy action names"]
-    RCV -. "handshake reply:<br/>id · 5 sources · action names" .-> HR
+    RCV -. "handshake reply:<br/>id, 5 sources, action names" .-> HR
     RCV -- "startForegroundService<br/>+ exact-alarm fallback" --> FSS
     FSS["ForegroundServiceStarter"] --> SVC
     SVC["SabreService<br/>foreground service,<br/>reloads settings each fetch"]
@@ -177,9 +186,9 @@ flowchart TD
         direction LR
         CHP["🚔 CHP Live Feed<br/>sa.xml statewide<br/>radius + age + category filter"]
         WAZE["🚗 Waze<br/>mobile RT protobuf<br/>register, login, query<br/>delta-merged cache"]
-        LCS["🚧 Caltrans LCS<br/>per-district closure XML<br/>code 1097 only · cached 15 min<br/>conditional GET"]
-        FIRE["🔥 Wildfires<br/>WFIGS active CA fires<br/>contained/stale filtered<br/>size filter · cached 5 min"]
-        CHAINS["❄️ Chain controls<br/>per-district CC XML<br/>R-1/R-2/R-3 · cached 5 min"]
+        LCS["🚧 Caltrans LCS<br/>per-district closure XML<br/>code 1097 only<br/>cached 15 min<br/>conditional GET"]
+        FIRE["🔥 Wildfires<br/>WFIGS active CA fires<br/>contained/stale filtered<br/>size filter<br/>cached 5 min"]
+        CHAINS["❄️ Chain controls<br/>per-district CC XML<br/>R-1/R-2/R-3<br/>cached 5 min"]
     end
 
     SVC --> CHP & WAZE & LCS & FIRE & CHAINS
@@ -233,7 +242,7 @@ Pull requests welcome. Run the test suite before submitting:
 
 ## Privacy
 
-SABRE Plus has no servers, no accounts, and no analytics, and collects no personal data. Everything runs on your device. It fetches road data from public feeds (CHP, Caltrans, wildfires) and from Waze; only the Waze feature sends your approximate location, over an anonymous session, so it can return nearby alerts. See the full [Privacy Policy](PRIVACY.md).
+SABRE Plus has no servers, no accounts, and no analytics, and collects no personal data. Everything runs on your device. It fetches road data from public feeds (CHP, Caltrans, wildfires) and from Waze; only the Waze feature sends your approximate location, over an anonymous session, so it can return nearby alerts. See the full [Privacy Policy](https://nicglazkov.github.io/highway-radar-sabre-plus/privacy.html).
 
 ---
 

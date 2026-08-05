@@ -1,12 +1,12 @@
 # Privacy Policy
 
-_Last updated: 2026-07-12_
+_Last updated: 2026-08-04_
 
 SABRE Plus is a free, open-source Highway Radar plugin. It has **no servers, no accounts, and no analytics**, and it **collects no personal data**. Everything it does runs on your own device. This document explains, in plain terms, exactly what stays on your device, what leaves it, and what never happens.
 
 ## The short version
 
-- SABRE Plus does not have a backend. There is nothing for us to collect, because there is nowhere for your data to go that we control.
+- The app runs entirely on your phone. There is no server of ours for your data to reach.
 - We do not use analytics, crash-reporting services, advertising, or trackers of any kind.
 - We do not create accounts, assign user IDs, or read your device's advertising ID.
 - We do not store your location history, and we never sell or share data.
@@ -58,3 +58,6 @@ If this policy changes, the update will be committed to this file in the public 
 
 Questions or concerns: open an issue at
 https://github.com/nicglazkov/highway-radar-sabre-plus/issues
+
+This policy is also published as a web page at
+https://nicglazkov.github.io/highway-radar-sabre-plus/privacy.html

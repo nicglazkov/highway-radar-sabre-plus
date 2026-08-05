@@ -125,8 +125,12 @@ public final class DiagnosticsReport {
             sb.append("HR re-detected SABRE Plus (registration is current)\n");
         } else {
             sb.append("HR is using a cached registration from a previously-installed plugin "
-                    + "(it may still display an old name like \"WzSabre\"). Data still flows; "
-                    + "fully restart Highway Radar to refresh the name.\n");
+                    + "(it may still display an old name like \"WzSabre\"). Data still flows. "
+                    + "To refresh it: fully close and reopen Highway Radar. If that does not "
+                    + "work, or no alerts arrive at all, clear Highway Radar's cache in "
+                    + "Android Settings, Apps, Highway Radar, Storage, Clear cache. Use Clear "
+                    + "cache, NOT Clear storage: Clear storage would erase your Highway Radar "
+                    + "settings.\n");
         }
         sb.append("We advertise to HR: id=app.sabre.wzsabre, version=").append(BuildConfig.VERSION_NAME)
           .append(", request_action=app.sabre.wzsabre.REQUEST, sources=[chp,waze,lcs,fire,chains]\n");

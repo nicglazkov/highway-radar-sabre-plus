@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Records the most recent uncaught exception to a private file so the settings
- * diagnostics panel can surface "last crash" — turns a vague "it crashed" report
+ * diagnostics panel can surface "last crash", turns a vague "it crashed" report
  * into something actionable. Stays entirely on-device; never transmitted.
  */
 public final class CrashLog {

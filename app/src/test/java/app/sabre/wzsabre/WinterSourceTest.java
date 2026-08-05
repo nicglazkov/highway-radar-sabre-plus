@@ -106,6 +106,6 @@ public class WinterSourceTest {
     public void describe_format() throws Exception {
         WinterSource.ChainControl c = parse(feed(
                 record("i", 38.46, -120.04, "SR-4", "BEAR VALLEY", "Arnold", true, "R-2"))).get(0);
-        assertEquals("Chains R-2 · SR-4 @ BEAR VALLEY (Arnold)", WinterSource.describe(c));
+        assertEquals("Chains R-2, SR-4 @ BEAR VALLEY (Arnold)", WinterSource.describe(c));
     }
 }

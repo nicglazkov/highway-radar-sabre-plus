@@ -31,7 +31,7 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
                 // to the service so it stops after a short grace period; a new session
                 // within the window cancels the stop. If the service isn't running
                 // there's nothing to shut down, so we don't start it just to stop it.
-                Log.d(TAG, "Shutdown received — forwarding to service");
+                Log.d(TAG, "Shutdown received: forwarding to service");
                 if (SabreService.RUNNING) {
                     try {
                         context.startService(new Intent(context, SabreService.class)
@@ -60,7 +60,7 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
 
     /**
      * Reads a numeric extra regardless of how it was typed: adb's --ef sends a
-     * Float, --ed a Double — getDoubleExtra() silently returns the default for a
+     * Float, --ed a Double. getDoubleExtra() silently returns the default for a
      * Float extra, which made the documented --ef test commands no-ops.
      */
     private static double numberExtra(Intent intent, String key, double dflt) {
@@ -85,7 +85,7 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
         if (responseAction == null)
             responseAction = intent.getStringExtra("response_action");
         if (responseAction == null) {
-            Log.e(TAG, "No response_action in handshake — cannot respond");
+            Log.e(TAG, "No response_action in handshake, cannot respond");
             return;
         }
         String pkg = context.getPackageName();

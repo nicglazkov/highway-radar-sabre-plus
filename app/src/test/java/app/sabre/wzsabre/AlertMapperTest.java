@@ -65,7 +65,7 @@ public class AlertMapperTest {
     @Test
     public void mapping_isLocaleIndependent_turkish() {
         // On a Turkish/Azeri device, default-locale "silver".toUpperCase() dots the i
-        // (→ "SİLVER"), so contains("SILVER") would silently fail — un-suppressing
+        // (→ "SİLVER"), so contains("SILVER") would silently fail, un-suppressing
         // Silver Alerts and misrouting other 'i'-bearing types. Mapping must uppercase
         // with Locale.US. These inputs carry a lowercase i, the trigger condition.
         Locale prev = Locale.getDefault();
@@ -108,7 +108,7 @@ public class AlertMapperTest {
     @Test public void chp_nonInjury()       { assertEquals("ACCIDENT_MINOR",  AlertMapper.fromChpLogType("1182 NON-INJURY TC")); }
     @Test public void chp_hitAndRun()       { assertEquals("ACCIDENT_MINOR",  AlertMapper.fromChpLogType("20002 HIT AND RUN")); }
 
-    // Real feed LogType strings for every collision code — must map to the correct
+    // Real feed LogType strings for every collision code, must map to the correct
     // ACCIDENT severity, not fall through to the HAZARD_ON_ROAD_DEBRIS catch-all.
     // (Regression: 1180/1181 injury collisions were rendering as road debris.)
     @Test public void chp_1179_realString()   { assertEquals("ACCIDENT_MAJOR", AlertMapper.fromChpLogType("1179-Trfc Collision-1141 Enrt")); }

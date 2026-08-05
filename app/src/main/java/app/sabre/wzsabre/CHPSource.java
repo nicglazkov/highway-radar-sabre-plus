@@ -28,14 +28,14 @@ import javax.net.ssl.HttpsURLConnection;
  * and NEVER fetched on the Highway Radar request path. Earlier this was a blocking
  * network call: a slow/hung CHP fetch (the feed sits behind a flaky load balancer)
  * could occupy the shared fetch thread pool and starve Waze/LCS, and any single
- * failure returned zero CHP alerts for that cycle — so incidents flapped in and out
+ * failure returned zero CHP alerts for that cycle, so incidents flapped in and out
  * while driving through cell dead zones. Now {@link #fetchAlerts} returns the last
  * good parse instantly and a stale fetch only affects freshness, never availability.
  */
 public class CHPSource {
     private static final String TAG     = "CHPSource";
     private static final String CHP_URL = "https://media.chp.ca.gov/sa_xml/sa.xml";
-    // Background thread, so the timeouts don't gate the HR response — but still bounded
+    // Background thread, so the timeouts don't gate the HR response, but still bounded
     // so a hung fetch can't pin the refresh thread indefinitely.
     private static final int CONNECT_TIMEOUT_MS = 8_000;
     private static final int READ_TIMEOUT_MS    = 8_000;
@@ -113,7 +113,7 @@ public class CHPSource {
                     SourceStatus.success(SabreResponseBuilder.SOURCE_CHP,
                             cache == null ? 0 : cache.size());
                 } catch (Exception e) {
-                    // Keep serving the last good parse — a transient failure must not
+                    // Keep serving the last good parse, a transient failure must not
                     // blank CHP for the whole cycle.
                     Log.w(TAG, "CHP refresh failed (serving cache): "
                             + e.getClass().getSimpleName() + ": " + e.getMessage());
@@ -134,7 +134,7 @@ public class CHPSource {
         conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
         conn.setReadTimeout(READ_TIMEOUT_MS);
         conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14)");
-        // Only send validators when we actually hold a cached parse — otherwise a 304
+        // Only send validators when we actually hold a cached parse, otherwise a 304
         // would leave us with nothing to serve.
         if (cache != null) {
             if (etag != null)         conn.setRequestProperty("If-None-Match", etag);
@@ -152,7 +152,7 @@ public class CHPSource {
                 while ((n = reader.read(buf)) != -1) sb.append(buf, 0, n);
             }
             List<Incident> parsed = parseAll(sb.toString());
-            // Commit the validators only after a successful read+parse — if the body
+            // Commit the validators only after a successful read+parse, if the body
             // read throws mid-stream, the old cache and its (still-matching) validators
             // stay in sync, so the next request re-fetches rather than 304-ing onto a
             // cache that was never updated.
@@ -225,7 +225,7 @@ public class CHPSource {
                 // high, leaving malformed XML at the end. Salvage every complete <Log>
                 // parsed so far instead of dropping all of them (which would yield zero
                 // alerts exactly when the roads are busiest).
-                Log.w(TAG, "CHP feed truncated mid-stream — salvaged " + incidents.size()
+                Log.w(TAG, "CHP feed truncated mid-stream, salvaged " + incidents.size()
                         + " complete records before the cut");
                 break;
             }

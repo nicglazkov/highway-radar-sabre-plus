@@ -88,7 +88,7 @@ public class AlertMapper {
         if (t.contains("SILVER") || t.contains("MISSING")) return null;
         if (t.contains("ESCORT")) return "HAZARD_ON_ROAD_SLIPPERY";
 
-        // Unknown — return as generic road hazard rather than drop it
+        // Unknown: return as generic road hazard rather than drop it
         return "HAZARD_ON_ROAD_DEBRIS";
     }
 
@@ -123,7 +123,7 @@ public class AlertMapper {
                         ? "POLICE_HIDDEN" : "POLICE_VISIBLE";
 
             case "CAMERA":
-                // Fixed/mobile speed & red-light cameras — flag for enforcement awareness.
+                // Fixed/mobile speed & red-light cameras, flag for enforcement awareness.
                 return "POLICE_HIDDEN";
 
             case "ACCIDENT":

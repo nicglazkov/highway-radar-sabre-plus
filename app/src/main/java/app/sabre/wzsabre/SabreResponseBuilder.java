@@ -29,8 +29,8 @@ public class SabreResponseBuilder {
 
     /**
      * Highway Radar's package. Every reply broadcast is explicitly targeted at it
-     * (Intent.setPackage) so the alert payload — a list of alerts centered on the
-     * driver's location — is delivered only to HR and cannot be harvested by any
+     * (Intent.setPackage) so the alert payload, a list of alerts centered on the
+     * driver's location, is delivered only to HR and cannot be harvested by any
      * other app that registers a receiver for the (publicly known) response action.
      */
     public static final String HR_PACKAGE = "com.highwayradar.app";
@@ -45,14 +45,14 @@ public class SabreResponseBuilder {
      */
     public static final double HEADING_UNKNOWN = -720.0;
 
-    /** Max alerts per response batch — matches the official wzsabre (200). */
+    /** Max alerts per response batch, matches the official wzsabre (200). */
     public static final int MAX_ALERTS_PER_BATCH = 200;
 
     /**
      * Alert type strings HR's renderer accepts. This is the union of (a) the
      * canonical SABRE types our CHP/LCS sources emit and (b) the full Waze alert
      * type + subtype vocabulary, which the official wzsabre passes through raw to
-     * the same HR app — so HR is known to handle every string here. An alert whose
+     * the same HR app, so HR is known to handle every string here. An alert whose
      * type is outside this set can only be a bug in our own mapping, so {@link
      * #build} drops it rather than risk HR's renderer on an unexpected string.
      *
@@ -115,7 +115,7 @@ public class SabreResponseBuilder {
      * <pre>
      * {
      *   "request_id": String,        // required, non-null
-     *   "error_message": null,       // nullable String — present but null
+     *   "error_message": null,       // nullable String: present but null
      *   "response": {
      *     "n_batches": Int,           // required
      *     "batch_id":  Int,           // required
@@ -127,9 +127,9 @@ public class SabreResponseBuilder {
      *         "lat":           Double,   // required
      *         "lon":           Double,   // required
      *         "heading_deg":   Double,   // required
-     *         "street_name":   String?,  // nullable String — present (may be null)
+     *         "street_name":   String?,  // nullable String: present (may be null)
      *         "report_ts":     Int,      // required; must fit in Int (not Long)
-     *         "confirm_ts":    Int?      // nullable Int — present (may be null)
+     *         "confirm_ts":    Int?      // nullable Int: present (may be null)
      *       }                            // NB: no user_id / confirm_count (HR dropped them; strict parser rejects extras)
      *     ]
      *   }
@@ -159,14 +159,14 @@ public class SabreResponseBuilder {
         List<SabreAlert> alerts = batchAlerts;
 
         // One malformed alert must never take down the whole response (HR would
-        // get nothing and show "plugin not responding") — drop it and keep the rest.
+        // get nothing and show "plugin not responding"), drop it and keep the rest.
         JSONArray alertsArray = new JSONArray();
         for (SabreAlert a : alerts) {
             if (a == null || !isValidType(a.type)) continue;
             try {
                 alertsArray.put(buildAlert(a));
             } catch (RuntimeException | JSONException ignored) {
-                // invalid coords / report_ts / NaN heading — skip this alert only.
+                // invalid coords / report_ts / NaN heading, skip this alert only.
                 // JSONException is caught too: JSONObject.put(double) throws it (a
                 // checked exception, not a RuntimeException) on a NaN/Infinite value.
             }

@@ -24,7 +24,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 /**
  * Caltrans chain-control (winter) requirements, from the per-district feeds at
- * {@code https://cwwp2.dot.ca.gov/data/d<N>/cc/ccStatusD<NN>.xml} — the same CWWP
+ * {@code https://cwwp2.dot.ca.gov/data/d<N>/cc/ccStatusD<NN>.xml}: the same CWWP
  * portal and per-district shape as {@link LcsSource}, so district selection and the
  * async-cache pattern are shared.
  *
@@ -230,7 +230,7 @@ public class WinterSource {
             try {
                 eventType = parser.next();
             } catch (Exception e) {
-                Log.w(TAG, "chain-control feed parse error — salvaged " + out.size() + " records");
+                Log.w(TAG, "chain-control feed parse error, salvaged " + out.size() + " records");
                 break;
             }
         }
@@ -261,7 +261,7 @@ public class WinterSource {
 
     static String describe(ChainControl c) {
         StringBuilder sb = new StringBuilder("Chains ").append(c.status);
-        if (!c.route.isEmpty()) sb.append(" · ").append(c.route);
+        if (!c.route.isEmpty()) sb.append(", ").append(c.route);
         if (!c.locationName.isEmpty()) sb.append(" @ ").append(c.locationName);
         if (!c.nearbyPlace.isEmpty()) sb.append(" (").append(c.nearbyPlace).append(')');
         return sb.toString();

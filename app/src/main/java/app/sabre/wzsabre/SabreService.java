@@ -28,12 +28,12 @@ public class SabreService extends Service {
     private static final int NOTIFICATION_ID = 1;
 
     // Update-check (sideloaded app, no Play auto-update): at most once/day, and a
-    // notification at most once per new version — deliberately not spammy.
+    // notification at most once per new version, deliberately not spammy.
     private static final String UPDATE_CHANNEL_ID = "SabreUpdateChannel";
     private static final int    UPDATE_NOTIFICATION_ID = 2;
     private static final long   UPDATE_CHECK_INTERVAL_MS = 24 * 3600_000L;
 
-    /** Live while the service exists — lets MainBroadcastReceiver decide whether a
+    /** Live while the service exists, lets MainBroadcastReceiver decide whether a
      *  SHUTDOWN needs forwarding (no point starting the service just to stop it). */
     static volatile boolean RUNNING = false;
 
@@ -47,7 +47,7 @@ public class SabreService extends Service {
     private static final long SHUTDOWN_GRACE_MS = 20_000L;      // HR said bye; brief wait for a re-open
     private final Handler lifecycleHandler = new Handler(Looper.getMainLooper());
     private final Runnable stopRunnable = () -> {
-        Log.d(TAG, "Highway Radar idle/closed — stopping service");
+        Log.d(TAG, "Highway Radar idle/closed, stopping service");
         RUNNING = false;   // stop accepting SHUTDOWN forwards that would resurrect us
         stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
@@ -86,11 +86,11 @@ public class SabreService extends Service {
         wazeSource = new app.sabre.wzsabre.waze.WazeProtocolSource(this);
         createNotificationChannel();
         startForeground(NOTIFICATION_ID, buildForegroundNotification());
-        chpSource.prewarm();          // statewide feed — no location needed
-        // Only warm wildfires if the source is enabled — otherwise it's a wasted
+        chpSource.prewarm();          // statewide feed: no location needed
+        // Only warm wildfires if the source is enabled, otherwise it's a wasted
         // network fetch on every service start for a disabled source.
         if (ChpConfig.load(this).fireEnabled) fireSource.prewarm();
-        prewarmFromLastLocation();    // Waze — needs last known location
+        prewarmFromLastLocation();    // Waze: needs last known location
         maybeCheckForUpdate();        // throttled; notifies once per new version
         armIdleStop();                // stop if no HR activity arrives
         Log.d(TAG, "Service started");
@@ -174,16 +174,16 @@ public class SabreService extends Service {
         String action = intent != null ? intent.getStringExtra("action") : null;
 
         // HR is ending the session. Wait a short grace period in case it immediately
-        // opens a new one (its normal behaviour), then stop — a fresh FETCH/handshake
+        // opens a new one (its normal behaviour), then stop, a fresh FETCH/handshake
         // within the window re-arms the idle timer and cancels this stop.
         if (action != null && action.contains("SHUTDOWN")) {
-            Log.d(TAG, "SHUTDOWN received — stopping after grace period");
+            Log.d(TAG, "SHUTDOWN received, stopping after grace period");
             scheduleStop(SHUTDOWN_GRACE_MS);
             return START_STICKY;
         }
 
         // Any other start (fetch, handshake pre-warm, boot, or a system restart with
-        // a null intent) means HR still wants us — cancel any pending stop and
+        // a null intent) means HR still wants us, cancel any pending stop and
         // re-arm the idle watchdog.
         armIdleStop();
         if (action != null && action.contains("FETCH_REQUEST")) {
@@ -200,7 +200,7 @@ public class SabreService extends Service {
     // ANR-killed. Both overloads exist across API 34 (int) and 35 (int,int).
     @Override
     public void onTimeout(int startId) {
-        Log.w(TAG, "FGS onTimeout — stopping cleanly");
+        Log.w(TAG, "FGS onTimeout, stopping cleanly");
         RUNNING = false;
         lifecycleHandler.removeCallbacks(stopRunnable);
         stopForeground(STOP_FOREGROUND_REMOVE);
@@ -235,7 +235,7 @@ public class SabreService extends Service {
         DebugLog.fetchReceived();
         requestExecutor.submit(() -> {
             // Parsed up front so the catch block can still answer HR with an error
-            // response — an unanswered request makes HR show "plugin not responding".
+            // response: an unanswered request makes HR show "plugin not responding".
             String requestId = null, responseAction = null;
             try {
                 JSONObject req = new JSONObject(data);
@@ -384,7 +384,7 @@ public class SabreService extends Service {
     /**
      * One synthetic alert of each SABRE type, lined up ~120m north of (lat,lon) and
      * spread east-west, so driving north makes Highway Radar pop them all as stacked
-     * cards — used to visually confirm HR renders every alert type correctly.
+     * cards: used to visually confirm HR renders every alert type correctly.
      */
     private List<SabreAlert> buildTestAlerts(double lat, double lon) {
         String[][] specs = {
@@ -415,7 +415,7 @@ public class SabreService extends Service {
     private void sendFetchResponse(String responseAction, String requestId,
                                     List<SabreAlert> alerts) throws JSONException {
         // Split into batches of MAX_ALERTS_PER_BATCH, each its own broadcast, with
-        // n_batches/batch_id set — mirrors the official wzsabre. Always ≥1 batch
+        // n_batches/batch_id set: mirrors the official wzsabre. Always ≥1 batch
         // (an empty list still sends one empty batch so HR sees a response).
         int n = alerts.size();
         int batchSize = SabreResponseBuilder.MAX_ALERTS_PER_BATCH;
@@ -431,7 +431,7 @@ public class SabreService extends Service {
             sendBroadcast(intent);
             Log.d(TAG, "Response batch " + (i + 1) + "/" + nBatches + " sent to: " + responseAction);
             // The full payload (driver-centered alert list) is only logged in debug
-            // builds — it's noise and a minor privacy leak into bugreports otherwise.
+            // builds: it's noise and a minor privacy leak into bugreports otherwise.
             if (BuildConfig.DEBUG) Log.d(TAG, "Response JSON: " + responseJson);
         }
     }
@@ -456,7 +456,7 @@ public class SabreService extends Service {
          .setContentTitle("SABRE Plus")
          .setContentText("Providing CHP, Waze, and Caltrans road alerts to Highway Radar")
          .setVisibility(Notification.VISIBILITY_PUBLIC);
-        // setForegroundServiceBehavior is API 31 (S), not Q — guarding at Q threw
+        // setForegroundServiceBehavior is API 31 (S), not Q, guarding at Q threw
         // NoSuchMethodError on Android 10/11, killing the service on those devices.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
             b.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE);

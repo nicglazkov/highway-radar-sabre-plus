@@ -67,7 +67,7 @@ final class ForegroundServiceStarter {
             Log.d(TAG, "startForegroundService succeeded");
         } catch (Exception e) {
             Log.w(TAG, "startForegroundService denied (BFSL): " + e.getMessage()
-                    + " — trying exact-alarm bypass");
+                    + ": trying exact-alarm bypass");
             if (tryExactAlarm(context, intent)) {
                 Log.d(TAG, "Scheduled exact-alarm FGS start");
                 return;
@@ -88,7 +88,7 @@ final class ForegroundServiceStarter {
             AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             if (am == null) return false;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
-                Log.w(TAG, "Cannot schedule exact alarms — permission not granted");
+                Log.w(TAG, "Cannot schedule exact alarms, permission not granted");
                 return false;
             }
             // Vary the request code by the payload too: two FETCH_REQUESTs in quick
