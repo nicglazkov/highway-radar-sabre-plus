@@ -57,7 +57,7 @@ public class WildfireSourceTest {
 
     @Test(expected = Exception.class)
     public void parse_arcgisErrorBody_throws() throws Exception {
-        // ArcGIS returns HTTP 200 with an error body on a bad query — must NOT be
+        // ArcGIS returns HTTP 200 with an error body on a bad query, must NOT be
         // treated as "0 fires" (which would hide the outage in diagnostics).
         WildfireSource.parse("{\"error\":{\"code\":400,\"message\":\"Invalid field\"}}");
     }
@@ -91,7 +91,7 @@ public class WildfireSourceTest {
     @Test
     public void describe_formatsSizeAndContainment() throws Exception {
         List<WildfireSource.Fire> fires = WildfireSource.parse(JSON);
-        assertEquals("Wildfire: PARK FIRE · 1,200 ac · 40% contained",
+        assertEquals("Wildfire: PARK FIRE, 1,200 ac, 40% contained",
                 WildfireSource.describe(fires.get(0)));
         // Unknown size/containment → name only
         assertEquals("Wildfire: RIDGE FIRE", WildfireSource.describe(fires.get(1)));

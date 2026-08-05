@@ -22,7 +22,7 @@ public class BootReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         if (!Intent.ACTION_BOOT_COMPLETED.equals(action)
                 && !Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) return;
-        Log.d(TAG, action + " — starting SabreService");
+        Log.d(TAG, action + ": starting SabreService");
         // Both actions are exempt from BFSL, but route through the starter so the
         // exact-alarm / WorkManager fallbacks apply if the direct start is denied.
         ForegroundServiceStarter.start(context, null, null);

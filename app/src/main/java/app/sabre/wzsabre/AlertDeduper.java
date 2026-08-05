@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Collapses duplicate pins that DIFFERENT sources report for the same real-world
- * event — e.g. a CHP accident and a Waze accident at the same intersection, or a
+ * event: e.g. a CHP accident and a Waze accident at the same intersection, or a
  * CHP closure and a Caltrans LCS closure on the same segment.
  *
  * <p>Two alerts are duplicates when they come from different sources, share an alert

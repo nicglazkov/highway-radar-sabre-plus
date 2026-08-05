@@ -17,7 +17,7 @@ local.properties
 # App module build output
 app/build/
 
-# Signing keys — never commit these
+# Signing keys: never commit these
 *.keystore
 *.jks
 keystore.properties

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Persistent uuid-keyed alert cache with soft-delete — ported verbatim from the
+ * Persistent uuid-keyed alert cache with soft-delete, ported verbatim from the
  * official wzsabre 2.2 {@code WazeAlertFetcher} (alertCache + softDeleted +
  * submitAlerts + purgeExpiredSoftDeletes + isSoftDeleteExpired + return filter).
  *

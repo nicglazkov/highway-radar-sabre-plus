@@ -45,6 +45,8 @@
   "mainEntity": [
     {"@type":"Question","name":"Is SABRE Plus a replacement for wzsabre?",
      "acceptedAnswer":{"@type":"Answer","text":"Yes. It uses the same plugin ID Highway Radar looks for, so Highway Radar finds it automatically. Because Android allows only one app per ID, uninstall wzsabre first, then install SABRE Plus. Your Highway Radar settings are unaffected."}},
+    {"@type":"Question","name":"SABRE Plus is installed but no alerts arrive, or Highway Radar still shows WzSabre. What do I do?",
+     "acceptedAnswer":{"@type":"Answer","text":"Highway Radar caches the plugin registration it first discovered and keeps using it after you switch. Fully close and reopen Highway Radar so it runs discovery again. If that does not fix it, clear Highway Radar's cache: Android Settings, Apps, Highway Radar, Storage, Clear cache. Use Clear cache, not Clear storage, because Clear storage erases your Highway Radar settings."}},
     {"@type":"Question","name":"Does SABRE Plus cost anything?",
      "acceptedAnswer":{"@type":"Answer","text":"No. It is free and open source under the MIT license, with no account, no ads and no in-app purchases."}},
     {"@type":"Question","name":"What data does SABRE Plus collect?",
@@ -57,315 +59,7 @@
 }
 </script>
 
-<style>
-/* ─────────────────────────────────────────────────────────────────────────
-   SABRE Plus landing page.
-   Palette and type come from California highway hardware: a Caltrans
-   changeable message sign (amber LED on night asphalt) mounted over a
-   concrete-grey page. No webfonts and no third-party requests, which keeps
-   the page consistent with an app that ships no trackers.
-   ───────────────────────────────────────────────────────────────────────── */
-:root {
-  --asphalt:   #0B0C0E;   /* inside of the sign housing */
-  --amber:     #FFB000;   /* Caltrans CMS amber LED */
-  --amber-dim: #6E4B00;   /* unlit element */
-  --spade:     #0B6E4F;   /* California route shield green */
-  --concrete:  #E6E7E4;   /* page surface, K-rail grey */
-  --panel:     #F2F3F0;
-  --ink:       #1B1D20;
-  --ink-soft:  #55595E;
-  --rule:      #C9CBC6;
-  --stripe:    #F2C14E;   /* lane paint */
-
-  --display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-             "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Mono",
-          "Roboto Mono", Menlo, Consolas, monospace;
-
-  --measure: 68rem;
-  --gap: clamp(3.5rem, 8vw, 6.5rem);
-}
-
-/* Night driving. The sign is the constant; the road around it goes dark. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --concrete: #111316;
-    --panel:    #191C20;
-    --ink:      #E9EAE7;
-    --ink-soft: #9AA0A6;
-    --rule:     #2C3036;
-    --spade:    #3FA37B;
-  }
-}
-
-*, *::before, *::after { box-sizing: border-box; }
-
-html { -webkit-text-size-adjust: 100%; }
-
-body {
-  margin: 0;
-  background: var(--concrete);
-  color: var(--ink);
-  font-family: var(--display);
-  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-}
-
-a { color: inherit; }
-
-:where(a, button, summary):focus-visible {
-  outline: 3px solid var(--spade);
-  outline-offset: 3px;
-  border-radius: 2px;
-}
-
-img { max-width: 100%; height: auto; display: block; }
-
-.wrap { width: min(100% - 2.5rem, var(--measure)); margin-inline: auto; }
-
-/* ── Eyebrow / section labels: the data face, used like a spec sheet ────── */
-.label {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  margin: 0 0 0.75rem;
-}
-
-h1, h2, h3 { line-height: 1.08; letter-spacing: -0.025em; margin: 0; }
-h1 { font-size: clamp(2.1rem, 1.2rem + 4.2vw, 4rem); font-weight: 800; }
-h2 { font-size: clamp(1.6rem, 1.1rem + 2.2vw, 2.5rem); font-weight: 800; }
-h3 { font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; }
-
-/* ── Masthead ──────────────────────────────────────────────────────────── */
-.masthead {
-  position: sticky; top: 0; z-index: 20;
-  background: color-mix(in srgb, var(--concrete) 88%, transparent);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--rule);
-}
-.masthead .wrap {
-  display: flex; align-items: center; gap: 0.75rem;
-  min-height: 3.5rem;
-}
-.mark { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; font-weight: 800; letter-spacing: -0.02em; }
-.mark img { width: 26px; height: 26px; border-radius: 6px; }
-.masthead nav { margin-left: auto; display: flex; align-items: center; gap: 1.25rem; }
-.masthead nav a { font-family: var(--mono); font-size: 0.8125rem; text-decoration: none; color: var(--ink-soft); }
-.masthead nav a:hover { color: var(--ink); }
-.masthead .btn { color: var(--asphalt); }
-@media (max-width: 34rem) { .nav-hide { display: none; } }
-
-/* ── Buttons ───────────────────────────────────────────────────────────── */
-.btn {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  font-family: var(--mono); font-size: 0.875rem; font-weight: 600;
-  letter-spacing: 0.02em;
-  padding: 0.7rem 1.15rem;
-  background: var(--amber); color: var(--asphalt);
-  text-decoration: none; border: 1px solid transparent; border-radius: 3px;
-  transition: transform 0.12s ease, filter 0.12s ease;
-}
-.btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
-.btn--ghost {
-  background: transparent; color: var(--ink);
-  border-color: var(--rule);
-}
-.btn--ghost:hover { border-color: var(--ink); filter: none; }
-.btn--lg { font-size: 0.9375rem; padding: 0.95rem 1.5rem; }
-
-/* ── Hero ──────────────────────────────────────────────────────────────── */
-.hero { padding: clamp(3rem, 7vw, 5.5rem) 0 var(--gap); }
-.hero p.lede {
-  font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.25rem);
-  color: var(--ink-soft);
-  max-width: 44ch;
-  margin: 1.25rem 0 0;
-}
-.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
-.hero .terms {
-  font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-soft);
-  margin: 1rem 0 0;
-}
-
-/* ── THE SIGN: the one bold element on the page ────────────────────────── */
-.gantry { margin-top: clamp(2.5rem, 6vw, 4rem); }
-
-.sign {
-  position: relative;
-  background: var(--asphalt);
-  border: 3px solid #3A3D42;
-  border-radius: 5px;
-  padding: clamp(1.1rem, 3.5vw, 2rem) clamp(1rem, 3vw, 2rem);
-  box-shadow: 0 18px 40px -22px rgba(0,0,0,0.85), inset 0 0 0 2px #17191C;
-  overflow: hidden;
-}
-/* The LED grid. Sits over the text so the type reads as lit elements. */
-.sign::after {
-  content: "";
-  position: absolute; inset: 0;
-  background-image:
-    repeating-linear-gradient(to right,  rgba(0,0,0,0.42) 0 1px, transparent 1px 3px),
-    repeating-linear-gradient(to bottom, rgba(0,0,0,0.42) 0 1px, transparent 1px 3px);
-  pointer-events: none;
-}
-.sign__head {
-  font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.22em;
-  text-transform: uppercase; color: var(--amber-dim);
-  display: flex; justify-content: space-between; gap: 1rem;
-  margin-bottom: 0.9rem;
-}
-.sign__msg {
-  font-family: var(--mono);
-  font-size: clamp(0.9rem, 0.5rem + 2.1vw, 1.6rem);
-  font-weight: 700; line-height: 1.5; letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--amber);
-  text-shadow: 0 0 14px rgba(255,176,0,0.45);
-  min-height: 3em;
-  margin: 0;
-}
-.sign__msg span { display: block; }
-.sign__src {
-  font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.18em;
-  text-transform: uppercase; color: var(--amber-dim);
-  margin: 0.9rem 0 0;
-}
-/* The gantry legs, so the sign reads as mounted over the road. */
-.gantry__legs { display: flex; justify-content: space-between; padding: 0 12%; }
-.gantry__legs i {
-  display: block; width: 7px; height: clamp(18px, 3vw, 30px);
-  background: linear-gradient(to bottom, #3A3D42, transparent);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .sign__msg { transition: opacity 0.35s ease; }
-  .sign__msg.is-swapping { opacity: 0.15; }
-}
-
-/* ── Lane-line divider: the road's own way of separating lanes ─────────── */
-.lane {
-  height: 6px; border: 0; margin: 0;
-  background: repeating-linear-gradient(
-    to right, var(--stripe) 0 42px, transparent 42px 76px);
-  opacity: 0.75;
-}
-
-/* ── Sections ──────────────────────────────────────────────────────────── */
-.band { padding: var(--gap) 0; }
-.band > .wrap > h2 + p { color: var(--ink-soft); max-width: 56ch; margin: 1rem 0 0; }
-
-/* ── Source strips: small signs, echoing the hero ──────────────────────── */
-.sources { display: grid; gap: 0.75rem; margin-top: 2.5rem; }
-.source {
-  display: grid;
-  grid-template-columns: auto minmax(0,1fr);
-  gap: 0 1.15rem;
-  align-items: start;
-  background: var(--panel);
-  border: 1px solid var(--rule);
-  border-left: 4px solid var(--amber);
-  border-radius: 3px;
-  padding: 1.15rem 1.25rem;
-}
-.source__tag {
-  font-family: var(--mono); font-size: 0.6875rem; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  background: var(--asphalt); color: var(--amber);
-  padding: 0.3rem 0.5rem; border-radius: 2px; white-space: nowrap;
-  grid-row: span 2;
-}
-.source p { margin: 0.35rem 0 0; color: var(--ink-soft); font-size: 0.9375rem; }
-.source__cadence {
-  font-family: var(--mono); font-size: 0.75rem; color: var(--ink-soft);
-  margin-top: 0.5rem;
-}
-@media (max-width: 34rem) {
-  .source { grid-template-columns: minmax(0,1fr); gap: 0.6rem; }
-  .source__tag { grid-row: auto; justify-self: start; }
-}
-
-/* ── Screens ───────────────────────────────────────────────────────────── */
-.screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 2.5rem; }
-.screens figure { margin: 0; }
-.screens img { border: 1px solid var(--rule); border-radius: 6px; background: var(--panel); }
-.screens figcaption {
-  font-family: var(--mono); font-size: 0.75rem; color: var(--ink-soft);
-  margin-top: 0.65rem; line-height: 1.45;
-}
-@media (max-width: 44rem) { .screens { grid-template-columns: 1fr; max-width: 22rem; } }
-
-/* ── Install: numbered because it genuinely is a sequence ──────────────── */
-.warn {
-  background: var(--panel);
-  border: 1px solid var(--rule);
-  border-left: 4px solid var(--stripe);
-  border-radius: 3px;
-  padding: 1.15rem 1.25rem;
-  margin-top: 2.25rem;
-}
-.warn h3 { margin-bottom: 0.4rem; }
-.warn p { margin: 0; color: var(--ink-soft); font-size: 0.9375rem; }
-
-.steps { list-style: none; counter-reset: step; padding: 0; margin: 2.25rem 0 0; }
-.steps li {
-  counter-increment: step;
-  display: grid; grid-template-columns: auto minmax(0,1fr); gap: 1.15rem;
-  padding: 1.15rem 0; border-top: 1px solid var(--rule);
-}
-.steps li:last-child { border-bottom: 1px solid var(--rule); }
-.steps li::before {
-  content: counter(step, decimal-leading-zero);
-  font-family: var(--mono); font-size: 0.875rem; font-weight: 700;
-  color: var(--amber-dim);
-}
-@media (prefers-color-scheme: dark) { .steps li::before { color: var(--amber); } }
-.steps p { margin: 0.35rem 0 0; color: var(--ink-soft); font-size: 0.9375rem; }
-
-/* ── Privacy ledger ────────────────────────────────────────────────────── */
-.ledger { margin-top: 2.5rem; border-top: 1px solid var(--rule); }
-.ledger div {
-  display: flex; align-items: baseline; gap: 1rem;
-  padding: 0.85rem 0; border-bottom: 1px solid var(--rule);
-  font-family: var(--mono); font-size: 0.875rem;
-}
-.ledger dt { flex: 1; margin: 0; color: var(--ink); }
-.ledger dd { margin: 0; color: var(--spade); font-weight: 600; letter-spacing: 0.04em; text-align: right; }
-.ledger dd.is-note { color: var(--ink-soft); font-weight: 400; }
-
-/* ── FAQ ───────────────────────────────────────────────────────────────── */
-.faq { margin-top: 2.5rem; border-top: 1px solid var(--rule); }
-.faq details { border-bottom: 1px solid var(--rule); }
-.faq summary {
-  cursor: pointer; list-style: none;
-  padding: 1.15rem 2rem 1.15rem 0; position: relative;
-  font-weight: 700; letter-spacing: -0.01em;
-}
-.faq summary::-webkit-details-marker { display: none; }
-.faq summary::after {
-  content: "+"; position: absolute; right: 0.25rem; top: 50%;
-  transform: translateY(-50%);
-  font-family: var(--mono); font-weight: 400; color: var(--ink-soft);
-}
-.faq details[open] summary::after { content: "\2013"; }
-.faq p { margin: 0 0 1.25rem; color: var(--ink-soft); max-width: 62ch; font-size: 0.9375rem; }
-
-/* ── Closing call to action ────────────────────────────────────────────── */
-.closer { padding: var(--gap) 0; text-align: center; }
-.closer .actions { justify-content: center; }
-.closer p { color: var(--ink-soft); max-width: 46ch; margin: 1rem auto 0; }
-
-/* ── Footer ────────────────────────────────────────────────────────────── */
-footer { border-top: 1px solid var(--rule); padding: 2.5rem 0 3.5rem; }
-footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; align-items: center; }
-footer a { font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-soft); text-decoration: none; }
-footer a:hover { color: var(--ink); text-decoration: underline; }
-footer .disclaim {
-  font-size: 0.8125rem; color: var(--ink-soft); margin: 1.5rem 0 0;
-  max-width: 70ch; line-height: 1.55;
-}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -388,7 +82,6 @@ footer .disclaim {
 
   <section class="hero">
     <div class="wrap">
-      <p class="label">Highway Radar plugin &middot; California &middot; Free and open source</p>
       <h1>CHP, Waze and Caltrans alerts on your Highway&nbsp;Radar map.</h1>
       <p class="lede">
         Highway Radar can pull crowd-sourced alerts from a plugin. SABRE Plus is that
@@ -401,7 +94,7 @@ footer .disclaim {
         </a>
         <a class="btn btn--ghost btn--lg" href="#install">Read the install steps</a>
       </div>
-      <p class="terms">Android 7.0+ &nbsp;·&nbsp; no account &nbsp;·&nbsp; no ads &nbsp;·&nbsp; no tracking &nbsp;·&nbsp; MIT licensed</p>
+      <p class="terms">Android 7.0+, no account, no ads, no tracking, MIT licensed</p>
 
       <!-- The signature element: a Caltrans-style changeable message sign
            cycling the kind of alert each source actually produces. -->
@@ -409,7 +102,7 @@ footer .disclaim {
         <div class="sign">
           <div class="sign__head">
             <span>Live alert feed</span>
-            <span aria-hidden="true">CA · SABRE</span>
+            <span aria-hidden="true">CA SABRE</span>
           </div>
           <p class="sign__msg" id="signMsg" aria-live="off">
             <span>Traffic collision, no injury</span>
@@ -580,8 +273,8 @@ footer .disclaim {
       <p class="label">Privacy</p>
       <h2>What it does not do.</h2>
       <p>
-        There is no backend to speak of, because there is no backend. The app talks to
-        public road feeds and to Waze, and that is the whole list.
+        The app runs entirely on your phone. It reads public road feeds and Waze, and
+        nothing else.
       </p>
 
       <dl class="ledger">
@@ -592,6 +285,10 @@ footer .disclaim {
         <div><dt>Data leaving your device</dt><dd class="is-note">Approximate location, to Waze only</dd></div>
         <div><dt>Source code</dt><dd class="is-note">Public, MIT licensed</dd></div>
       </dl>
+
+      <div class="actions">
+        <a class="btn btn--ghost" href="privacy.html">Read the full privacy policy</a>
+      </div>
     </div>
   </section>
 
@@ -609,6 +306,22 @@ footer .disclaim {
             Yes. It uses the same plugin ID that Highway Radar's discovery looks for, so
             Highway Radar picks it up automatically. Android only allows one app to hold
             that ID, so uninstall wzsabre before installing SABRE Plus.
+          </p>
+        </details>
+        <details>
+          <summary>I installed it but no alerts arrive, or Highway Radar still says "WzSabre"</summary>
+          <p>
+            Highway Radar remembers the plugin it first discovered and keeps using that
+            cached registration after you switch. Fully close and reopen Highway Radar,
+            which makes it run discovery again. If that does not fix it, clear Highway
+            Radar's cache: Android Settings, then Apps, then Highway Radar, then Storage,
+            then Clear cache. Use <strong>Clear cache</strong>, not Clear storage, because
+            Clear storage would erase your Highway Radar settings.
+          </p>
+          <p>
+            Tapping Share diagnostics in the SABRE Plus app tells you which case you are
+            in: it reports whether Highway Radar has re-detected SABRE Plus or is still
+            running off a cached registration.
           </p>
         </details>
         <details>
@@ -671,7 +384,7 @@ footer .disclaim {
     <a href="https://github.com/nicglazkov/highway-radar-sabre-plus">GitHub</a>
     <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases">Releases</a>
     <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md">Changelog</a>
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/PRIVACY.md">Privacy policy</a>
+    <a href="privacy.html">Privacy policy</a>
     <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/issues">Report a problem</a>
     <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/LICENSE">MIT license</a>
   </div>

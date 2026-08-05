@@ -126,7 +126,7 @@ public class ChpConfig {
     }
 
     // ── Factory methods ───────────────────────────────────────────────────────
-    /** All categories enabled, max age 60 min — for use in unit tests. */
+    /** All categories enabled, max age 60 min, for use in unit tests. */
     public static ChpConfig loadDefaults() {
         return new ChpConfig();
     }

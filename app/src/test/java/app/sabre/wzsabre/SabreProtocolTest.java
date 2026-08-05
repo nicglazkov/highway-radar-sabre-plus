@@ -220,7 +220,7 @@ public class SabreProtocolTest {
 
     @Test
     public void build_dropsUnknownType_keepsValidAlerts() throws Exception {
-        // An unknown SABRE type string would crash HR's renderer — never send it.
+        // An unknown SABRE type string would crash HR's renderer, never send it.
         SabreAlert bad = new SabreAlert("bad", "chp", "TOTALLY_BOGUS_TYPE",
                 34.0, -118.0, 0.0, null, NOW_SECONDS);
         SabreAlert badNull = new SabreAlert("bad2", "chp", null,

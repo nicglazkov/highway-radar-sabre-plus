@@ -2,7 +2,7 @@
 <!--
   Launcher foreground: a road receding toward an amber radar beacon.
   Adaptive-icon canvas is 108x108 with a 66dp-diameter safe zone centered at
-  (54,54) — all content stays within ~radius 32 so circular masks never clip it.
+  (54,54): all content stays within ~radius 32 so circular masks never clip it.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"

@@ -14,7 +14,7 @@ public class ChpConfigTest {
 
     private static final double LAT = 37.7749, LON = -122.4194, R = 50_000;
 
-    // XML templates — incident inside radius SF
+    // XML templates: incident inside radius SF
     private String xml(String logType, String logTime) {
         return "<?xml version=\"1.0\"?><CHP_INCIDENTS><INCIDENTS Area=\"SF\">" +
                "<Log ID=\"TST-1\">" +

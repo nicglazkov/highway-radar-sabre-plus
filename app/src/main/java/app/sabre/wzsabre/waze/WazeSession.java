@@ -12,12 +12,12 @@ import java.util.Map;
 /**
  * One Waze "RT" protocol session: mints an anonymous account (register), logs in,
  * and runs alert queries. Single-slot, synchronous (runs on the caller's worker
- * thread). Ported from wzsabre 2.2 wazemo.WazeSession (fetch path only — no
+ * thread). Ported from wzsabre 2.2 wazemo.WazeSession (fetch path only: no
  * reporting/keepalive/pooling).
  *
  * No backend or pre-shared credentials are needed: register() asks Waze itself for
  * a fresh username/password. Credentials + device can be injected (persisted across
- * runs) so we don't re-register on every fetch — Waze caps anonymous accounts per day.
+ * runs) so we don't re-register on every fetch, Waze caps anonymous accounts per day.
  */
 final class WazeSession {
     private static final String TAG = "WazeRT";
@@ -45,7 +45,7 @@ final class WazeSession {
     WazeCredentials getCredentials() { return credentials; }
     DeviceIdentity  getDevice()      { return device; }
 
-    /** Server session id (0 if not logged in) — lets the caller detect a re-login. */
+    /** Server session id (0 if not logged in), lets the caller detect a re-login. */
     long currentServerSessionId() { return session != null ? session.serverSessionId : 0L; }
 
     /** Drop the logged-in session but KEEP credentials, so the next call re-logs in
@@ -56,7 +56,7 @@ final class WazeSession {
      * Inspect a parsed response batch for in-band errors the server returns with an
      * HTTP 200: a {@code ServerError} element, or a {@code LoginError}. Without this,
      * a server that invalidates the session but replies 200 looks like success and
-     * the session zombies — {@code lastRequestMs} keeps updating so it never idles
+     * the session zombies: {@code lastRequestMs} keeps updating so it never idles
      * out, and no alerts are ever merged again. Mirrors the official's checkErrors.
      */
     static void checkErrors(WazeProto.Batch batch)
@@ -78,7 +78,7 @@ final class WazeSession {
                 if (code >= 500)
                     throw new WazeExceptions.WazeOperationException(
                             "server error " + code + ": " + err.getDescription());
-                // Informational / unknown (incl. the proto default code 0) — the
+                // Informational / unknown (incl. the proto default code 0), the
                 // official ignores these; a normal 200 batch can legitimately carry
                 // one, so do NOT fail the whole refresh over it.
                 Log.w(TAG, "Ignoring non-fatal server error " + code + ": " + err.getDescription());
@@ -89,7 +89,7 @@ final class WazeSession {
 
     /**
      * Map a Waze auth-error type to an exception. Transient server-side problems
-     * (INTERNAL_ISSUES / UNKNOWN) are operational — they must NOT nuke a good account
+     * (INTERNAL_ISSUES / UNKNOWN) are operational, they must NOT nuke a good account
      * by triggering a re-register; only genuine credential/authorization failures do.
      */
     private static void throwForLoginError(WazeProto.LoginError.AuthErrorType t)
@@ -160,7 +160,7 @@ final class WazeSession {
         WazeHttpClient.HttpResult r = http.post(url(WazeConstants.PATH_LOGIN),
                 body.getBytes(StandardCharsets.UTF_8), headers);
         // A 4xx here means Waze no longer accepts these credentials (anonymous
-        // accounts get purged) — classify as AccountRejected so the caller clears
+        // accounts get purged): classify as AccountRejected so the caller clears
         // the persisted account and re-registers instead of failing forever.
         if (r.code >= 400 && r.code < 500)
             throw new WazeExceptions.AccountRejectedException("login HTTP " + r.code);
@@ -171,7 +171,7 @@ final class WazeSession {
         checkErrors(batch);   // in-band LoginError → specific exception, not blanket reject
         for (WazeProto.Element el : batch.getElementList()) {
             // A login failure can arrive nested in the LoginResponse oneof (not just
-            // as a top-level LoginError element) — classify it too, so a transient
+            // as a top-level LoginError element), classify it too, so a transient
             // INTERNAL_ISSUES doesn't fall through to the blanket AccountRejected
             // below and needlessly re-register.
             if (el.hasLoginResponse() && el.getLoginResponse().hasLoginError())
@@ -234,7 +234,7 @@ final class WazeSession {
     /**
      * Register (if no credentials) + log in (if no valid session) + run the
      * SeeMe/SetMood/Location/MapDisplayed handshake. Call once before a run of
-     * {@link #queryBox} calls — mirrors the official, which handshakes per login,
+     * {@link #queryBox} calls: mirrors the official, which handshakes per login,
      * not per query.
      */
     void prepareForArea(double lat, double lon) throws Exception {

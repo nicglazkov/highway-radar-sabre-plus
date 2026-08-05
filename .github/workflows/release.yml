@@ -37,7 +37,7 @@ jobs:
             echo "signable=true" >> "$GITHUB_OUTPUT"
           else
             echo "signable=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Signing secrets missing/incomplete — skipping automated release. Release manually or add all four secrets (see BUILDING.md)."
+            echo "::warning::Signing secrets missing/incomplete: skipping automated release. Release manually or add all four secrets (see BUILDING.md)."
           fi
 
   release:

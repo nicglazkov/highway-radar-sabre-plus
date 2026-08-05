@@ -30,7 +30,7 @@
                 android:id="@+id/serviceStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Service starting…"
+                android:text="Service starting..."
                 android:textSize="13sp"
                 android:textColor="#BBDEFB"
                 android:layout_marginTop="4dp" />

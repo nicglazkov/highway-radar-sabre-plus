@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy: SABRE Plus for Highway Radar</title>
+<meta name="description" content="SABRE Plus has no servers, no accounts and no analytics, and collects no personal data. This policy sets out exactly what stays on your device, what leaves it, and what never happens.">
+<link rel="canonical" href="https://nicglazkov.github.io/highway-radar-sabre-plus/privacy.html">
+<meta name="theme-color" content="#E6E7E4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)">
+
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://nicglazkov.github.io/highway-radar-sabre-plus/privacy.html">
+<meta property="og:title" content="Privacy policy: SABRE Plus">
+<meta property="og:description" content="No servers, no accounts, no analytics, no personal data. Everything runs on your device.">
+<meta property="og:image" content="https://nicglazkov.github.io/highway-radar-sabre-plus/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="screenshots/app-icon.png">
+<link rel="apple-touch-icon" href="screenshots/app-icon.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Privacy policy: SABRE Plus for Highway Radar",
+  "url": "https://nicglazkov.github.io/highway-radar-sabre-plus/privacy.html",
+  "dateModified": "2026-08-04",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "SABRE Plus",
+    "url": "https://nicglazkov.github.io/highway-radar-sabre-plus/"
+  }
+}
+</script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="mark" href="./">
+      <img src="screenshots/app-icon.png" alt="">
+      SABRE Plus
+    </a>
+    <nav>
+      <a class="nav-hide" href="./#sources">Sources</a>
+      <a class="nav-hide" href="./#install">Install</a>
+      <a class="nav-hide" href="./#faq">FAQ</a>
+      <a class="btn" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main class="doc">
+  <div class="wrap">
+    <p class="label">Privacy policy</p>
+    <h1>SABRE Plus collects nothing about you.</h1>
+    <p class="stamp">Last updated 2026-08-04</p>
+
+    <p class="intro">
+      SABRE Plus is a free, open-source Highway Radar plugin. It has
+      <strong>no servers, no accounts and no analytics</strong>, and it
+      <strong>collects no personal data</strong>. Everything it does runs on your own
+      device. This page sets out exactly what stays on your device, what leaves it, and
+      what never happens.
+    </p>
+
+    <h2>The short version</h2>
+    <ul>
+      <li>The app runs entirely on your phone. There is no server of ours for your data to reach.</li>
+      <li>No analytics, crash-reporting services, advertising or trackers of any kind.</li>
+      <li>No accounts, no user IDs, and no reading of your device's advertising ID.</li>
+      <li>No location history is stored, and nothing is ever sold or shared.</li>
+    </ul>
+
+    <h2>What is stored on your device</h2>
+    <p>
+      All of this is kept in the app's private storage and is never transmitted by us:
+    </p>
+    <ul>
+      <li>
+        <strong>Your settings.</strong> Which sources and categories are on, the age
+        filter, the wildfire size limit, and so on.
+      </li>
+      <li>
+        <strong>An anonymous Waze session.</strong> To use the Waze feature the app
+        registers an anonymous session with Waze, with no name, email, phone or account.
+        A session token is cached so it does not have to register again every time.
+      </li>
+      <li>
+        <strong>A short diagnostics log.</strong> A small in-memory record of recent
+        activity (counts, category names, source health and errors) to help with
+        troubleshooting. It goes somewhere only if <strong>you</strong> tap
+        <strong>Share diagnostics</strong> and choose where to send it. It contains no
+        location, street names, alert IDs or personal data.
+      </li>
+      <li>
+        <strong>A local crash log.</strong> If the app crashes, a summary is written to a
+        private file so you can include it in a bug report if you want to. It stays on
+        your device unless you share it.
+      </li>
+    </ul>
+
+    <h2>What leaves your device</h2>
+    <p>
+      To show you road conditions, the app fetches data from public and third-party
+      sources. Those requests go straight from your device to those services. They do not
+      pass through any server of ours.
+    </p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Service</th>
+            <th scope="col">What is requested</th>
+            <th scope="col">Location sent?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>California Highway Patrol</strong><br><code>media.chp.ca.gov</code></td>
+            <td>The statewide incident feed</td>
+            <td class="ans"><span class="ans-no">No.</span> The whole-state feed is fetched, then filtered on your device.</td>
+          </tr>
+          <tr>
+            <td><strong>Caltrans</strong><br><code>dot.ca.gov</code></td>
+            <td>Lane-closure and chain-control feeds for the districts near you</td>
+            <td class="ans"><span class="ans-no">No.</span> Which districts to fetch is worked out on your device. Your coordinates are not sent.</td>
+          </tr>
+          <tr>
+            <td><strong>Wildfire feed, NIFC</strong><br><code>arcgis.com</code></td>
+            <td>Active California wildfires</td>
+            <td class="ans"><span class="ans-no">No.</span> All active California fires are fetched, then filtered on your device.</td>
+          </tr>
+          <tr>
+            <td><strong>Waze</strong><br><code>waze.com</code></td>
+            <td>Nearby crowd-sourced alerts</td>
+            <td class="ans"><span class="ans-yes">Yes.</span> To return alerts near you, the app sends your approximate location, a map area around you, over an anonymous session.</td>
+          </tr>
+          <tr>
+            <td><strong>GitHub</strong><br><code>api.github.com</code></td>
+            <td>A check for a newer version of the app</td>
+            <td class="ans"><span class="ans-no">No.</span> A standard version check. No location.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      As with any app that uses the internet, each service you contact can see your
+      device's public <strong>IP address</strong>, and what they do with it is governed by
+      their own privacy policies. Waze is the only case where your approximate location
+      leaves the device. If you would rather send no location to Waze, turn the Waze
+      source off in Highway Radar's settings.
+    </p>
+
+    <h2>What never happens</h2>
+    <ul>
+      <li>No analytics or usage tracking.</li>
+      <li>No advertising or ad identifiers.</li>
+      <li>No accounts, sign-ins or user identifiers.</li>
+      <li>No location history and no profiles.</li>
+      <li>No selling, renting or sharing of data with anyone.</li>
+    </ul>
+
+    <h2>Permissions</h2>
+    <p>
+      The app asks only for what it needs to relay alerts while you drive: internet
+      access, a foreground-service notification, a wake lock, exact alarms to keep the
+      service reachable, and an optional battery-optimization exemption. It does
+      <strong>not</strong> ask for your contacts, camera, microphone, photos or precise
+      device location. The location it filters by comes from Highway Radar's request, not
+      from a location permission of its own.
+    </p>
+
+    <h2>Children</h2>
+    <p>
+      This app is a navigation utility for drivers and is not directed at children.
+    </p>
+
+    <h2>Changes</h2>
+    <p>
+      If this policy changes, the update is committed to
+      <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/PRIVACY.md">PRIVACY.md</a>
+      in the public repository and the date at the top of this page changes with it.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Questions or concerns:
+      <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/issues">open an issue</a>
+      on GitHub.
+    </p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="./">Home</a>
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus">GitHub</a>
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases">Releases</a>
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/issues">Report a problem</a>
+    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/LICENSE">MIT license</a>
+  </div>
+</footer>
+
+</body>
+</html>

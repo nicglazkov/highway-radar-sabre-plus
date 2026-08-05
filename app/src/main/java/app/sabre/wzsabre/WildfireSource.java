@@ -20,12 +20,12 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * Active California wildfires, from the interagency WFIGS "Current Wildland Fire
  * Incident Locations" ArcGIS feature service (hosted by NIFC). Each fire is a point
- * (point of origin) with name, size, and containment — shown as a road hazard so a
+ * (point of origin) with name, size, and containment, shown as a road hazard so a
  * driver gets a heads-up that there's an active fire near the route.
  *
  * <p>Like the CHP and LCS sources, this is served from a background-refreshed cache
  * and never fetched on the Highway Radar request path. The CAL FIRE incidents feed
- * is Akamai-blocked to non-browser clients, so WFIGS is used instead — it is the
+ * is Akamai-blocked to non-browser clients, so WFIGS is used instead, it is the
  * authoritative interagency source and is openly queryable.
  *
  * <p>NOTE: a fire's point is its origin, not a precise road hazard; a large fire may
@@ -123,7 +123,7 @@ public class WildfireSource {
      * non-incident records. Observed live on 2026-08-04: 9 of 91 "active" California
      * records were noise, including a 69,352-acre fire 100% contained 16 days earlier.
      *
-     * <p>The rules stay deliberately conservative — a fire that is still burning must
+     * <p>The rules stay deliberately conservative, a fire that is still burning must
      * never be dropped. Age alone is not disqualifying, because large fires legitimately
      * burn for months (the 2024 Park Fire took 64 days to reach containment).
      */
@@ -212,9 +212,9 @@ public class WildfireSource {
             throw new Exception("WFIGS query error: " + root.optJSONObject("error"));
         }
         if (root.optBoolean("exceededTransferLimit", false)) {
-            // Server capped the result set — we'd be silently dropping fires. Very
+            // Server capped the result set, we'd be silently dropping fires. Very
             // unlikely for active CA wildfires, but log it rather than hide it.
-            Log.w(TAG, "WFIGS response hit the record cap — some fires may be omitted");
+            Log.w(TAG, "WFIGS response hit the record cap, some fires may be omitted");
         }
         JSONArray features = root.optJSONArray("features");
         if (features == null) return out;
@@ -263,8 +263,8 @@ public class WildfireSource {
     static String describe(Fire f) {
         StringBuilder sb = new StringBuilder("Wildfire");
         if (!f.name.isEmpty()) sb.append(": ").append(f.name);
-        if (f.sizeAcres >= 0) sb.append(" · ").append(formatAcres(f.sizeAcres)).append(" ac");
-        if (f.pctContained >= 0) sb.append(" · ").append((int) Math.round(f.pctContained)).append("% contained");
+        if (f.sizeAcres >= 0) sb.append(", ").append(formatAcres(f.sizeAcres)).append(" ac");
+        if (f.pctContained >= 0) sb.append(", ").append((int) Math.round(f.pctContained)).append("% contained");
         return sb.toString();
     }
 

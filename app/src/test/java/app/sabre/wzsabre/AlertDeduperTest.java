@@ -50,7 +50,7 @@ public class AlertDeduperTest {
 
     @Test
     public void sameSourceCoLocatedNotMerged() {
-        // Two distinct CHP accidents ~30m apart at an interchange must BOTH survive —
+        // Two distinct CHP accidents ~30m apart at an interchange must BOTH survive,
         // only cross-source duplicates are collapsed.
         List<SabreAlert> in = Arrays.asList(
                 a("chp_1", SabreResponseBuilder.SOURCE_CHP, "ACCIDENT_MAJOR", LAT, LON, 0),

@@ -152,7 +152,7 @@ public class LcsSourceTest {
 
     @Test
     public void isActive_overrunWithinGrace_staysActive() throws Exception {
-        // ended 1h ago by schedule but still 1097 — crews running late
+        // ended 1h ago by schedule but still 1097, crews running late
         LcsSource.Closure c = parse(feed(record("A-1", 37.3, -122.4, 37.31, -122.41,
                 "Full", "All", NOW - 86400, NOW - 3600, false, true, false, false))).get(0);
         assertTrue(LcsSource.isActive(c, NOW));
@@ -271,7 +271,7 @@ public class LcsSourceTest {
         LcsSource.Closure c = activeClosure();
         c.typeOfClosure = "Lane";
         c.lanesClosed = "2, RShoulder";
-        assertEquals("SR-1 Lane closure @ San Bruno Ave (Half Moon Bay) · lanes: 2, RShoulder",
+        assertEquals("SR-1 Lane closure @ San Bruno Ave (Half Moon Bay), lanes: 2, RShoulder",
                 LcsSource.describe(c));
     }
 
