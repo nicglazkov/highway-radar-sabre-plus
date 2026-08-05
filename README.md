@@ -145,7 +145,7 @@ Highway Radar remembers the plugin it discovered and keeps using that cached reg
 1. Confirm HR is using the correct plugin: HR → Settings → SABRE → should show "SABRE Plus".
 2. Check that the alert categories are not all turned off in the app settings.
 3. Fully close and reopen Highway Radar (swipe it away from recents, then launch it again). This makes HR re-run plugin discovery.
-4. **If it still does not work, clear Highway Radar's cache:** Android **Settings → Apps → Highway Radar → Storage → Clear cache**, then open Highway Radar again. This drops the stale registration and forces a fresh discovery. Reported by a user as the step that finally worked.
+4. **If it still does not work, clear Highway Radar's cache:** Android **Settings → Apps → Highway Radar → Storage → Clear cache**, then open Highway Radar again. This drops the stale registration and forces a fresh discovery.
 
 > ⚠️ Use **Clear cache**, not **Clear storage**. Clear storage would erase your Highway Radar settings.
 

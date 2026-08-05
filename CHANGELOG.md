@@ -5,7 +5,7 @@ All notable changes to this project. This project adheres to [semantic-ish versi
 ## [1.9.6] - 2026-08-04
 
 ### Added
-- **Better help when Highway Radar keeps using the old plugin.** Highway Radar remembers the plugin it first discovered, so after switching from wzsabre it can keep using the cached registration: it shows the old "WzSabre" name, and in some cases no alerts arrive at all. Restarting Highway Radar usually fixes it, but one user found that only clearing Highway Radar's cache did. The Share diagnostics report, the README and the website now spell out both steps, in order, and warn to use "Clear cache" and not "Clear storage", which would erase your Highway Radar settings.
+- **Better help when Highway Radar keeps using the old plugin.** Highway Radar remembers the plugin it first discovered, so after switching from wzsabre it can keep using the cached registration: it shows the old "WzSabre" name, and in some cases no alerts arrive at all. Restarting Highway Radar usually fixes it. When it does not, clearing Highway Radar's cache does. The Share diagnostics report, the README and the website now spell out both steps, in order, and warn to use "Clear cache" and not "Clear storage", which would erase your Highway Radar settings.
 - **The privacy policy now has its own web page**, at https://nicglazkov.github.io/highway-radar-sabre-plus/privacy.html. The Privacy button in the app opens that instead of a Markdown file on GitHub, so it is readable on a phone.
 
 ### Changed
