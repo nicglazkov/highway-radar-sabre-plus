@@ -216,7 +216,8 @@ public class AlertMapperTest {
         assertEquals(AlertMapper.WazeReportSubtype.Kind.POLICE, p.kind);
         assertEquals(2, p.subtypeNumber); // POLICE_HIDDEN_REPORT
         assertEquals(AlertMapper.WazeReportSubtype.Kind.CRASH, AlertMapper.wazeReportSubtype("ACCIDENT_MAJOR").kind);
-        assertEquals(5, AlertMapper.wazeReportSubtype("ACCIDENT_MAJOR").subtypeNumber == 3 ? 5 : AlertMapper.wazeReportSubtype("JAM_HEAVY_TRAFFIC").subtypeNumber);
+        assertEquals(3, AlertMapper.wazeReportSubtype("ACCIDENT_MAJOR").subtypeNumber);
+        assertEquals(5, AlertMapper.wazeReportSubtype("JAM_HEAVY_TRAFFIC").subtypeNumber);
         assertEquals(AlertMapper.WazeReportSubtype.Kind.HAZARD, AlertMapper.wazeReportSubtype("HAZARD_ON_ROAD_CAR_STOPPED").kind);
         assertEquals(3, AlertMapper.wazeReportSubtype("HAZARD_ON_ROAD_CAR_STOPPED").subtypeNumber);
     }
