@@ -95,9 +95,9 @@ jobs:
           fi
           # Every release leads with a friendly, unmissable note for wzsabre users.
           printf '%s\n' \
-            "> **👋 Coming from the original wzsabre? Uninstall it first.**" \
+            "> **Coming from the original wzsabre? Uninstall it first.**" \
             ">" \
-            "> SABRE Plus replaces wzsabre and shares the plugin ID that Highway Radar looks for, so Android only allows one of them at a time. Uninstall the old **wzsabre** app (long-press its icon, then App info, then Uninstall), then install SABRE Plus below. Your Highway Radar setup stays exactly as it is. Never had wzsabre? Just install, you are all set. 🙂" \
+            "> SABRE Plus replaces wzsabre and uses the same plugin ID that Highway Radar discovers, so Android allows only one of them at a time. Uninstall the old **wzsabre** app (long-press its icon, then App info, then Uninstall), then install SABRE Plus below. Your Highway Radar setup stays exactly as it is. If you never had wzsabre, install SABRE Plus and you are all set." \
             "" > RELEASE_NOTES.md
           cat BODY.md >> RELEASE_NOTES.md
           echo "--- release notes ---"; cat RELEASE_NOTES.md
