@@ -251,6 +251,51 @@ final class WazeSession {
         return command(WazeRtCodec.mapDisplayedCommand(bbox[0], bbox[1], bbox[2], bbox[3]));
     }
 
+    /**
+     * Submit a user report to Waze. Prepares the area (handshake), sends the
+     * AddUserReportedAlertRequest, and reads the response uuid/points. Position-only
+     * (no road-snap SegmentNodes) unless a future tile-snap step supplies nodes.
+     */
+    ReportResult submitReport(app.sabre.wzsabre.ReportRequest r, long nowMs) throws Exception {
+        WazeProto.AddUserReportedAlertRequest req =
+                WazeReportCodec.buildRequest(r, nowMs, 0L, 0L);
+        if (req == null) return ReportResult.fail("unreportable type: " + r.type);
+        prepareForArea(r.lat, r.lon);
+        WazeProto.Batch batch = command(WazeRtCodec.reportPayload(req));
+        String uuid = WazeReportCodec.reportUuidFrom(batch);
+        int points = WazeReportCodec.reportPointsFrom(batch);
+        if (uuid != null) {
+            Log.d(TAG, "Report accepted: uuid=" + uuid + " pts=" + points);
+            return ReportResult.ok(uuid, points);
+        }
+        Log.w(TAG, "No report response in batch");
+        return ReportResult.fail("no report response");
+    }
+
+    /** Thumbs-up an existing Waze alert by its numeric id. */
+    void confirmAlert(long id) throws Exception {
+        prepareForArealess();
+        command("ThumbsUp," + id);
+        Log.d(TAG, "Confirmed alert " + id);
+    }
+
+    /** Remove/deny an existing Waze alert by its numeric id ("not there"). */
+    void discardAlert(long id) throws Exception {
+        prepareForArealess();
+        command("ReportRmAlert," + id);
+        Log.d(TAG, "Discarded alert " + id);
+    }
+
+    /** Ensure logged in for a bare command that needs no MapDisplayed handshake. */
+    private void prepareForArealess() throws Exception {
+        // confirm/discard carry lat/lon in the HR payload; callers that have them
+        // should use prepareForArea. When absent, ensure the session is at least
+        // registered+logged-in using the last known position is not available here,
+        // so require the caller to have prepared. If no session, this throws, and the
+        // caller (WazeReporter) will have called prepareForArea first.
+        if (session == null) throw new WazeExceptions.SessionExpiredException("confirm/discard before login");
+    }
+
     /** Full flow for a single box: prepare + one query. Used by the debug selfTest. */
     List<WazeAlert> fetchArea(double lat, double lon, double radiusMeters) throws Exception {
         prepareForArea(lat, lon);

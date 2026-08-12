@@ -25,6 +25,12 @@ final class WazeRtCodec {
         return "ProtoBase64," + Base64.encodeToString(batch.toByteArray(), Base64.NO_WRAP);
     }
 
+    /** One report line: ProtoBase64-framed AddUserReportedAlertRequest on an Element. */
+    static String reportPayload(WazeProto.AddUserReportedAlertRequest req) {
+        return protoBase64Line(WazeProto.Element.newBuilder()
+                .setAddUserReportedAlertRequest(req).build());
+    }
+
     // ── Request line builders ────────────────────────────────────────────────
 
     static String buildClientInfoLine(DeviceIdentity device, double lon, double lat) {
