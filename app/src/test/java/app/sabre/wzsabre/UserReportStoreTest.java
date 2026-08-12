@@ -49,4 +49,31 @@ public class UserReportStoreTest {
         s.removeNear(37.8001, -122.2701, 1500L);
         assertTrue(s.activeAlerts(37.8, -122.27, 5000, 2000L).isEmpty());
     }
+
+    @Test
+    public void renderableButInvalidTypeFallsBackToValid() throws JSONException {
+        // HAZARD_ON_SHOULDER_CONSTRUCTION is renderable-prefixed (starts with HAZARD, so
+        // AlertMapper.renderableEchoType passes it through verbatim) but is NOT a member of
+        // SabreResponseBuilder.VALID_TYPES, unlike its siblings HAZARD_ON_SHOULDER_CAR_STOPPED /
+        // _ANIMALS / _MISSING_SIGN. Proves the fallback is doing real work.
+        String outOfSetType = "HAZARD_ON_SHOULDER_CONSTRUCTION";
+        assertTrue(!SabreResponseBuilder.isValidType(outOfSetType));
+
+        UserReportStore s = new UserReportStore();
+        ReportRequest r = ReportRequest.fromJson("{\"lat\":37.8,\"lon\":-122.27,\"type\":\"" +
+                outOfSetType + "\"}");
+        s.add(r, 1000L);
+        List<SabreAlert> out = s.activeAlerts(37.8, -122.27, 5000, 2000L);
+        assertEquals(1, out.size());
+        assertTrue(SabreResponseBuilder.isValidType(out.get(0).type));
+    }
+
+    @Test
+    public void validTypePassesThroughUnchanged() throws JSONException {
+        UserReportStore s = new UserReportStore();
+        s.add(police(37.8, -122.27), 1000L);
+        List<SabreAlert> out = s.activeAlerts(37.8, -122.27, 5000, 2000L);
+        assertEquals(1, out.size());
+        assertEquals("POLICE_VISIBLE", out.get(0).type);
+    }
 }

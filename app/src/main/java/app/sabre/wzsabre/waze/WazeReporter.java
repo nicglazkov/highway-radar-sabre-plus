@@ -12,6 +12,15 @@ import app.sabre.wzsabre.ReportRequest;
  * read path (same SharedPreferences file/keys), so reporting doesn't register an
  * extra account, Waze caps anonymous accounts per day.
  *
+ * <p>This is a READ-ONLY consumer of that shared account: it never registers its
+ * own account (only {@link WazeProtocolSource}'s {@code canRegisterToday()}/
+ * {@code recordRegistration()} accounting is allowed to mint one) and never deletes
+ * the shared {@code community}/{@code secret} credentials (deleting them here would
+ * force the read path to re-register too). If no account has been minted yet,
+ * {@link #ensureSession} fails and the report is not sent to Waze; the HR echo pin
+ * still shows via {@link app.sabre.wzsabre.UserReportStore}, and once the read path
+ * mints an account on its next fetch, subsequent reports succeed.
+ *
  * <p>This runs a separate {@link WazeSession} from the read path but shares the
  * account. A login on one session can log the other out server-side; both sessions
  * re-login on {@code SessionExpiredException}, so this self-heals. Not redesigned
@@ -72,34 +81,33 @@ public final class WazeReporter {
         SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         String community = p.getString("community", null);
         String secret = p.getString("secret", null);
-        WazeCredentials creds = (community != null && secret != null)
-                ? new WazeCredentials(community, secret) : null;
+        if (community == null || secret == null) {
+            // No shared account minted yet. The write path must never register one
+            // itself (only WazeProtocolSource's canRegisterToday()/recordRegistration()
+            // accounting is allowed to do that) - so fail gracefully. The HR echo pin
+            // still shows; the read path mints the account on its next fetch, after
+            // which reports succeed.
+            throw new WazeExceptions.WazeOperationException(
+                    "no shared Waze account yet; report not sent to Waze");
+        }
+        WazeCredentials creds = new WazeCredentials(community, secret);
         DeviceIdentity dev = new DeviceIdentity(
                 p.getString("dev_mfr", "Google"), p.getString("dev_model", "Pixel 8"),
                 p.getString("dev_os", "15-SDK35"),
                 p.getInt("dev_w", 1080), p.getInt("dev_h", 2400),
                 p.getString("dev_iid", java.util.UUID.randomUUID().toString()));
         WazeSession s = new WazeSession(region, dev, creds);
-        s.prepareForArea(lat, lon); // registers if needed + logs in + handshake
-        // Persist any newly minted account under the SAME keys as the read path.
-        WazeCredentials got = s.getCredentials();
-        if (got != null && (community == null || secret == null)) {
-            p.edit().putString("community", got.community).putString("secret", got.secret)
-             .putString("dev_mfr", dev.manufacturer).putString("dev_model", dev.model)
-             .putString("dev_os", dev.osVersion).putInt("dev_w", dev.screenW).putInt("dev_h", dev.screenH)
-             .putString("dev_iid", dev.installationId).apply();
-        }
+        s.prepareForArea(lat, lon); // creds are non-null, so this only logs in + handshake, never registers
         session = s;
         return s;
     }
 
     private void invalidateOnAuthError(Exception e) {
         if (e instanceof WazeExceptions.AccountRejectedException) {
+            // Drop only this reporter's in-memory session, not the shared credentials:
+            // WazeProtocolSource (the read path) owns the shared account's lifecycle, so
+            // deleting community/secret here would force the read path to re-register too.
             session = null;
-            // Only drop the credentials, leave reg_count/reg_window_start (rate-limit
-            // state) and device keys alone, matching WazeProtocolSource's contract.
-            ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-               .remove("community").remove("secret").apply();
         } else if (e instanceof WazeExceptions.SessionExpiredException && session != null) {
             session.invalidateSession();
         }

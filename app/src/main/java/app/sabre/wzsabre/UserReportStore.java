@@ -24,6 +24,10 @@ public final class UserReportStore {
     public synchronized void add(ReportRequest r, long nowMs) {
         String type = AlertMapper.renderableEchoType(r.type);
         if (type == null) return; // nothing HR would draw
+        // The response builder drops any type not in its VALID_TYPES set. Guarantee the
+        // echo renders by falling back to a known-valid renderable type when the mapped
+        // type is renderable-prefixed but not in that set.
+        if (!SabreResponseBuilder.isValidType(type)) type = "HAZARD_ON_ROAD_DEBRIS";
         String id = "alert-0/userreport-" + nowMs;
         long reportTs = (nowMs / 1000L) - r.timeDeltaS;
         SabreAlert a = new SabreAlert(id, SabreResponseBuilder.SOURCE_WAZE, type,
