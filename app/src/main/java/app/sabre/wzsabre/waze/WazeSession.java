@@ -253,16 +253,59 @@ final class WazeSession {
     }
 
     /**
-     * Submit a user report to Waze. Prepares the area (handshake), sends the
-     * AddUserReportedAlertRequest, and reads the response uuid/points. Position-only
-     * (no road-snap SegmentNodes) unless a future tile-snap step supplies nodes.
+     * Submit a user report to Waze via the full road-snap command sequence
+     * (recon D): handshake, an initial SeeMe+Location+MapDisplayed, a tile
+     * fetch + nearest-segment snap, an At position update carrying the
+     * (possibly absent) directional SegmentNodes, a short simulated-driving
+     * camouflage sequence (only when a segment matched), the actual report,
+     * and a trailing SeeMe close-out. Only the report POST's response batch
+     * is parsed for the result; the rest are best-effort / fire-and-forget,
+     * mirroring the official client.
      */
     ReportResult submitReport(app.sabre.wzsabre.ReportRequest r, long nowMs) throws Exception {
-        WazeProto.AddUserReportedAlertRequest req =
-                WazeReportCodec.buildRequest(r, nowMs, 0L, 0L);
-        if (req == null) return ReportResult.fail("unreportable type: " + r.type);
         prepareForArea(r.lat, r.lon);
+
+        // Command A: SeeMe + Location + MapDisplayed around the report point.
+        double[] boxA = WazeRtCodec.circleToBox(r.lon, r.lat);
+        command(WazeRtCodec.seeMeCommand(1) + "\n" + WazeRtCodec.locationCommand(r.lon, r.lat)
+                + "\n" + WazeRtCodec.mapDisplayedCommand(boxA[0], boxA[1], boxA[2], boxA[3]));
+
+        List<RoadSegment> segs = fetchTileSegments(r.lat, r.lon);
+        int heading = normalizeAngle360(Math.round(r.headingDeg));
+        SegmentMatch m = RoadGeo.findMatchingSegment(
+                new LatLon(r.lat, r.lon), r.headingDeg, segs, 15.0, 50.0);
+        if (m != null) {
+            Log.d(TAG, "Snapped to road " + m.segment.segmentId + (m.reverse ? " REV" : " FWD"));
+        } else {
+            Log.d(TAG, "No road match (" + segs.size() + " candidates)");
+        }
+        long fromNode = m != null ? m.fromNodeDirectional() : -1;
+        long toNode   = m != null ? m.toNodeDirectional()   : -1;
+
+        // Command B: At position update carrying the (possibly absent) snap result.
+        double[] boxB = WazeRtCodec.circleToBox(r.lon, r.lat);
+        command(WazeRtCodec.atCommand(r.lon, r.lat, heading, fromNode, toNode) + "\n"
+                + WazeRtCodec.mapDisplayedCommand(boxB[0], boxB[1], boxB[2], boxB[3]));
+
+        if (m != null) {
+            simulateDriving(r.lat, r.lon, heading, fromNode, toNode);
+        }
+
+        // Command C: the actual report. SegmentNodes omitted (0/0) when no match.
+        WazeProto.AddUserReportedAlertRequest req = WazeReportCodec.buildRequest(
+                r, nowMs, m != null ? fromNode : 0, m != null ? toNode : 0);
+        if (req == null) return ReportResult.fail("unreportable type: " + r.type);
         WazeProto.Batch batch = command(WazeRtCodec.reportPayload(req));
+
+        // Command D: trailing SeeMe close-out (anti-abuse camouflage). Response
+        // discarded; a failure here must not turn an already-accepted report into
+        // a failure.
+        try {
+            command(WazeRtCodec.seeMeCommand(2));
+        } catch (Exception ignore) {
+            // best-effort, matches recon D step 9
+        }
+
         String uuid = WazeReportCodec.reportUuidFrom(batch);
         int points = WazeReportCodec.reportPointsFrom(batch);
         if (uuid != null) {
@@ -271,6 +314,42 @@ final class WazeSession {
         }
         Log.w(TAG, "No report response in batch");
         return ReportResult.fail("no report response");
+    }
+
+    /** Normalize a heading in degrees to [0, 360). */
+    private static int normalizeAngle360(long deg) {
+        int d = (int) (deg % 360);
+        if (d < 0) d += 360;
+        return d;
+    }
+
+    /**
+     * Best-effort "driving" camouflage sent after the At update (recon D step 6):
+     * three ~1s steps along {@code heading} at Waze's simulated driving speed
+     * (13.4 m/s), each POSTing an At + MapDisplayed pair for the stepped
+     * position. Mirrors the official client's simulateDriving; anti-abuse
+     * camouflage, so it must run (not be skippable) whenever a segment matched,
+     * but a failed step (network or sleep) must never abort the report itself.
+     */
+    private void simulateDriving(double lat, double lon, int heading, long fromNode, long toNode) {
+        double rad = Math.toRadians(heading);
+        for (int i = 0; i < 3; i++) {
+            lat += (Math.cos(rad) * 13.4) / WazeConstants.M_PER_DEG_LAT;
+            lon += (Math.sin(rad) * 13.4) / WazeConstants.mPerDegLon(lat);
+            try {
+                double[] box = WazeRtCodec.circleToBox(lon, lat);
+                command(WazeRtCodec.atCommand(lon, lat, heading, fromNode, toNode) + "\n"
+                        + WazeRtCodec.mapDisplayedCommand(box[0], box[1], box[2], box[3]));
+            } catch (Exception e) {
+                Log.w(TAG, "simulateDriving step " + i + " failed: "
+                        + e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
+            try {
+                Thread.sleep(300L);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     /**
