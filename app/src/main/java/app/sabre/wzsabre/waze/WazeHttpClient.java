@@ -78,6 +78,23 @@ final class WazeHttpClient {
         throw last;
     }
 
+    /** Ported from wzsabre 2.2 wazemo.WazeHttpClient.get: plain GET, no body. */
+    HttpResult get(String url, Map<String, String> headers) throws IOException {
+        Request.Builder rb = new Request.Builder()
+                .url(url)
+                .get();
+        if (headers != null) {
+            for (Map.Entry<String, String> e : headers.entrySet()) {
+                if (e.getValue() != null) rb.header(e.getKey(), e.getValue());
+            }
+        }
+        Request request = rb.build();
+        try (Response resp = client.newCall(request).execute()) {
+            byte[] b = resp.body() != null ? resp.body().bytes() : new byte[0];
+            return new HttpResult(resp.code(), b);
+        }
+    }
+
     /** Simple in-memory cookie jar scoped to one Waze session. */
     private static final class SessionCookieJar implements CookieJar {
         private final List<Cookie> cookies = new ArrayList<>();

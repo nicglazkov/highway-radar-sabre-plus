@@ -23,8 +23,8 @@ android {
         // Highway Radar on Android 6.0 (API 23), so this drops no real users.
         minSdk = 24
         targetSdk = 35
-        versionCode = 26
-        versionName = "1.9.6"
+        versionCode = 27
+        versionName = "1.10.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

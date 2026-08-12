@@ -37,6 +37,8 @@ An open-source **Highway Radar SABRE plugin** for California, and a drop-in **wz
 
 All sources run in parallel and feed into the standard HR crowdsourced-alerts layer, the same map overlay that wzsabre used to power.
 
+Reports work both ways, like the original wzsabre. When you report something in Highway Radar, it shows on your map right away and is submitted to Waze (snapped to the road you are on, over an anonymous session). Confirming an alert or marking one "not there" reaches Waze too.
+
 ---
 
 ## Screenshots
@@ -236,7 +238,7 @@ Pull requests welcome. Run the test suite before submitting:
 ./gradlew test
 ```
 
-242 unit tests cover the SABRE response format, alert type mapping (incl. Waze category filters), the Waze alert cache (delta merge + soft-delete), in-band Waze error classification, shrinking-box geometry, crowd-confirmation tracking, CHP XML parsing, Caltrans LCS and chain-control parsing and filtering, wildfire (WFIGS) parsing, cross-source de-duplication, the update-check version compare, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup, and [CHANGELOG.md](CHANGELOG.md) for release history.
+293 unit tests cover the SABRE response format, alert type mapping (incl. Waze category filters and report type mapping), report parsing and the road-snap report path (tile decode, segment match, acceptance), the Waze alert cache (delta merge + soft-delete), in-band Waze error classification, shrinking-box geometry, crowd-confirmation tracking, CHP XML parsing, Caltrans LCS and chain-control parsing and filtering, wildfire (WFIGS) parsing, cross-source de-duplication, the update-check version compare, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup, and [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ---
 
