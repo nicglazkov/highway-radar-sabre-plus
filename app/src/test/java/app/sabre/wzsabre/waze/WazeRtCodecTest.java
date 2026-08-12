@@ -44,8 +44,8 @@ public class WazeRtCodecTest {
     }
 
     @Test
-    public void seeMeCommandMode2IsTerse() {
-        assertEquals("SeeMe,2", WazeRtCodec.seeMeCommand(2));
+    public void seeMeCommandMode2FollowsReferenceFormula() {
+        assertEquals("SeeMe,2,2,T,T,T,1,-1,1,7", WazeRtCodec.seeMeCommand(2));
     }
 
     @Test

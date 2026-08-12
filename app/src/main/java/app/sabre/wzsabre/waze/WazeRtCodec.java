@@ -120,10 +120,11 @@ final class WazeRtCodec {
     /** Default SeeMe level (matches the handshake's original no-arg behavior). */
     static String seeMeCommand()  { return seeMeCommand(1); }
 
-    /** mode 1 = handshake SeeMe; mode 2 = the terse post-report SeeMe used to
-     *  close out the simulateDriving sequence (recon D step 9). */
+    /** mode 1 = handshake SeeMe; mode 2 = the post-report SeeMe used to close
+     *  out the simulateDriving sequence (recon D step 9). Formula matches
+     *  wazemo.WazeProto.seeMeCommand(level): "SeeMe," + level + ",2,T,T,T,1,-1,1,7". */
     static String seeMeCommand(int mode) {
-        return mode == 1 ? "SeeMe,1,2,T,T,T,1,-1,1,7" : "SeeMe," + mode;
+        return "SeeMe," + mode + ",2,T,T,T,1,-1,1,7";
     }
 
     static String setMoodCommand(){ return "SetMood,1"; }
