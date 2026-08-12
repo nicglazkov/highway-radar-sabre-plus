@@ -26,6 +26,10 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
                 // listen for it or that user gets zero data.
                 DebugLog.noteFetchAction(action);
                 ForegroundServiceStarter.start(context, "FETCH_REQUEST", intent.getStringExtra("data"));
+            } else if (classifyReportAction(action) != null) {
+                String kind = classifyReportAction(action);
+                Log.d(TAG, "Report-channel action: " + action + " -> " + kind);
+                ForegroundServiceStarter.start(context, kind, intent.getStringExtra("data"));
             } else if (action != null && action.contains("SHUTDOWN")) {
                 // HR is ending the session (it usually reopens one shortly). Forward
                 // to the service so it stops after a short grace period; a new session
@@ -56,6 +60,20 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
         } catch (Exception e) {
             Log.e(TAG, "Error handling broadcast", e);
         }
+    }
+
+    /**
+     * Classify an HR report-channel action to a normalized label, or null if the
+     * action is not a report/confirm/discard. CONFIRM/DISCARD are checked before
+     * REPORT so the legacy CONFIRM_REPORT/DISCARD_REPORT names do not fall into the
+     * REPORT branch (all three end in "REPORT").
+     */
+    static String classifyReportAction(String action) {
+        if (action == null) return null;
+        if (action.contains("CONFIRM")) return "CONFIRM";
+        if (action.contains("DISCARD")) return "DISCARD";
+        if (action.endsWith("REPORT"))  return "REPORT";
+        return null;
     }
 
     /**
