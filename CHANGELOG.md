@@ -2,6 +2,12 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.10.0] - 2026-08-12
+
+### Added
+- **Reports you make in Highway Radar now show on the map, and are sent to Waze.** Before this, when you reported something in Highway Radar the plugin quietly ignored it: the report never appeared on your map and never reached Waze, unlike the original wzsabre. Now the plugin keeps your own report and includes it in every update to Highway Radar for about 30 minutes, so it shows on your map right away regardless of anything else. It also submits the report to Waze the way the Waze app does: it snaps the report to the nearest road in your direction of travel and sends it over an anonymous session. A report reaches Waze when your travel direction lines up with a road, which is the normal case when you are driving; if the direction is unknown the map pin still shows.
+- **Confirming an alert and marking one "not there" now reach Waze.** Tapping the thumbs-up on an alert, or reporting that it is not there, now forwards that to Waze instead of doing nothing.
+
 ## [1.9.6] - 2026-08-04
 
 ### Added
