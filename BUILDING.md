@@ -1,4 +1,4 @@
-# Building from Source
+# Building from source
 
 ## Prerequisites
 
@@ -66,10 +66,10 @@ Current test suites:
 |-------|-------|----------------|
 | `AlertMapperTest` | 55 | CHP/Waze type → SABRE type (injury codes, locale independence, Waze coarse categories) |
 | `ChpConfigTest` | 42 | Category toggles, type overrides, age filter, LogTime parsing (both CHP feed formats) |
-| `SabreProtocolTest` | 38 | HR JSON schema, all 11 required alert fields, type whitelist, nullability, drop-bad-alert semantics |
+| `SabreProtocolTest` | 38 | HR JSON schema, all 11 required alert fields, type allowlist, nullability, drop-bad-alert semantics |
 | `LcsSourceTest` | 27 | Caltrans LCS parsing, 1097/1098/1022 state filtering, shoulder/aux skip, span pins, district selection |
-| `CHPSourceTest` | 18 | XML parsing (incl. entity refs + real feed shape), radius filter, coordinate parsing, haversine |
-| `WildfireSourceTest` | 7 | WFIGS ArcGIS JSON parse (incl. error body + RX filter), SABRE mapping |
+| `CHPSourceTest` | 18 | XML parsing (including entity refs + real feed shape), radius filter, coordinate parsing, haversine |
+| `WildfireSourceTest` | 7 | WFIGS ArcGIS JSON parse (including error body + RX filter), SABRE mapping |
 | `WinterSourceTest` | 7 | Chain-control parse, R-0 to R-3 active filtering, SABRE mapping |
 | `AlertDeduperTest` | 7 | Cross-source-only pin de-duplication (family + proximity, confirm-fold) |
 | `UpdateCheckerTest` | 4 | Version-comparison logic for the update check |
@@ -115,7 +115,7 @@ app/src/main/java/app/sabre/wzsabre/
 ## Key architecture decisions
 
 ### Package ID = `app.sabre.wzsabre`
-Highway Radar's SABRE discovery whitelists this package ID. Keeping the same ID means HR finds this plugin without requiring any HR-side changes.
+Highway Radar's SABRE discovery allowlists this package ID. Keeping the same ID means HR finds this plugin without requiring any HR-side changes.
 
 ### SABRE protocol: `SabreFetchResponseAlert` schema
 HR uses `kotlinx.serialization` with a bitmask that requires **all 11 fields** to be present on every alert object. Missing any field throws `MissingFieldException` in HR and crashes the crowdsourced-alert layer. `SabreResponseBuilder.buildAlert()` enforces this and rejects NaN coordinates and overflowing `report_ts` at build time.
@@ -139,8 +139,8 @@ deltas (adds upsert, removals soft-delete for 5 min) instead of replacing the ca
 what stops alerts from vanishing mid-drive. Each refresh queries a series of progressively
 smaller boxes (`GeoBoxes`, a shrinking-bbox scan) so the server doesn't thin out
 minor alerts near the driver; the session is pre-warmed at service start from the last known
-location; and Waze subtype names are passed through to HR verbatim (no remap/whitelist), since
-HR understands the full Waze vocabulary.
+location; and Waze subtype names are passed through to HR verbatim (no remap/allowlist), since
+HR accepts the full Waze vocabulary.
 
 ### Caltrans LCS closures
 Lane/road closures come from the per-district Caltrans Lane Closure System feeds

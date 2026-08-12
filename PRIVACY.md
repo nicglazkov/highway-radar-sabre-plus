@@ -6,14 +6,14 @@ SABRE Plus is a free, open-source Highway Radar plugin. It has **no servers, no 
 
 ## The short version
 
-- The app runs entirely on your phone. There is no server of ours for your data to reach.
-- We do not use analytics, crash-reporting services, advertising, or trackers of any kind.
-- We do not create accounts, assign user IDs, or read your device's advertising ID.
-- We do not store your location history, and we never sell or share data.
+- The app runs entirely on your phone. There is no SABRE Plus server for your data to reach.
+- SABRE Plus uses no analytics, crash-reporting services, advertising, or trackers of any kind.
+- SABRE Plus does not create accounts, assign user IDs, or read your device's advertising ID.
+- SABRE Plus does not store your location history, and never sells or shares data.
 
 ## What is stored on your device
 
-All of this is kept locally in the app's private storage and never transmitted by us:
+All of this is kept locally in the app's private storage and never transmitted:
 
 - **Your settings** (which sources and categories are on, the age filter, wildfire size, and so on).
 - **An anonymous Waze session.** To use the Waze feature, the app registers an anonymous session with Waze (no name, email, phone, or account). A session token is cached on your device so it does not have to re-register every time.
@@ -22,19 +22,19 @@ All of this is kept locally in the app's private storage and never transmitted b
 
 ## What leaves your device
 
-To show you road conditions, the app fetches data from public and third-party sources. These requests go directly from your device to those services; they do not pass through any server of ours.
+To show you road conditions, the app fetches data from public and third-party sources. These requests go directly from your device to those services; they do not pass through any SABRE Plus server.
 
 | Service | What is requested | Is your location sent? |
 |---|---|---|
 | **California Highway Patrol** (`media.chp.ca.gov`) | The statewide incident feed | No. The whole-state feed is fetched and filtered on your device. |
 | **Caltrans** (`dot.ca.gov`) | Lane-closure and chain-control feeds for the districts near you | No. Which district feeds to fetch is worked out on your device; your coordinates are not sent. |
 | **Wildfire feed / NIFC** (`arcgis.com`) | Active California wildfires | No. All active California fires are fetched and filtered on your device. |
-| **Waze** (`waze.com`) | Nearby crowd-sourced alerts | **Yes.** To return alerts near you, the app sends your **approximate location** (a map area around you) to Waze over an anonymous session. |
+| **Waze** (`waze.com`) | Nearby crowdsourced alerts | **Yes.** To return alerts near you, the app sends your **approximate location** (a map area around you) to Waze over an anonymous session. |
 | **GitHub** (`api.github.com`) | A check for a newer version of the app | No. This is a standard version check and sends no location. |
 
 As with any app that uses the internet, each service you contact can see your device's public **IP address**, and their use of it is governed by their own privacy policies. The Waze feature is the only case where your approximate location leaves the device. If you prefer not to send any location to Waze, you can turn the Waze source off in Highway Radar's settings.
 
-## What we never do
+## What the app never does
 
 - No analytics or usage tracking.
 - No advertising or ad identifiers.

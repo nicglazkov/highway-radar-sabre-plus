@@ -116,15 +116,15 @@ public final class DiagnosticsReport {
         sb.append("Recent request interval: ")
           .append(interval <= 0 ? "n/a" : (interval / 1000) + "s").append('\n');
         String fa = DebugLog.lastFetchAction();
-        sb.append("Fetch action HR uses: ").append(fa == null ? "none received" : fa).append('\n');
+        sb.append("Fetch action Highway Radar uses: ").append(fa == null ? "none received" : fa).append('\n');
         sb.append("Handshakes (discovery) this session: ").append(DebugLog.handshakeCount()).append('\n');
-        sb.append("HR registration: ");
+        sb.append("Highway Radar registration: ");
         if (DebugLog.sessionFetchCount() == 0 && DebugLog.handshakeCount() == 0) {
-            sb.append("HR has not contacted the plugin yet this session\n");
+            sb.append("Highway Radar has not contacted the plugin yet this session\n");
         } else if (DebugLog.handshakeCount() > 0) {
-            sb.append("HR re-detected SABRE Plus (registration is current)\n");
+            sb.append("Highway Radar re-detected SABRE Plus (registration is current)\n");
         } else {
-            sb.append("HR is using a cached registration from a previously-installed plugin "
+            sb.append("Highway Radar is using a cached registration from a previously installed plugin "
                     + "(it may still display an old name like \"WzSabre\"). Data still flows. "
                     + "To refresh it: fully close and reopen Highway Radar. If that does not "
                     + "work, or no alerts arrive at all, clear Highway Radar's cache in "
@@ -132,7 +132,7 @@ public final class DiagnosticsReport {
                     + "cache, NOT Clear storage: Clear storage would erase your Highway Radar "
                     + "settings.\n");
         }
-        sb.append("We advertise to HR: id=app.sabre.wzsabre, version=").append(BuildConfig.VERSION_NAME)
+        sb.append("Advertised to Highway Radar: id=app.sabre.wzsabre, version=").append(BuildConfig.VERSION_NAME)
           .append(", request_action=app.sabre.wzsabre.REQUEST, sources=[chp,waze,lcs,fire,chains]\n");
     }
 

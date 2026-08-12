@@ -11,7 +11,7 @@ All notable changes to this project. This project adheres to [semantic-ish versi
 ## [1.9.6] - 2026-08-04
 
 ### Added
-- **Better help when Highway Radar keeps using the old plugin.** Highway Radar remembers the plugin it first discovered, so after switching from wzsabre it can keep using the cached registration: it shows the old "WzSabre" name, and in some cases no alerts arrive at all. Restarting Highway Radar usually fixes it. When it does not, clearing Highway Radar's cache does. The Share diagnostics report, the README and the website now spell out both steps, in order, and warn to use "Clear cache" and not "Clear storage", which would erase your Highway Radar settings.
+- **Better help when Highway Radar keeps using the old plugin.** Highway Radar caches the plugin it first discovered, so after switching from wzsabre it can keep using the cached registration: it shows the old "WzSabre" name, and in some cases no alerts arrive at all. Restarting Highway Radar usually fixes it. When it does not, clearing Highway Radar's cache does. The Share diagnostics report, the README and the website now spell out both steps, in order, and warn to use "Clear cache" and not "Clear storage", which would erase your Highway Radar settings.
 - **The privacy policy now has its own web page**, at https://nicglazkov.github.io/highway-radar-sabre-plus/privacy.html. The Privacy button in the app opens that instead of a Markdown file on GitHub, so it is readable on a phone.
 
 ### Changed
@@ -36,7 +36,7 @@ All notable changes to this project. This project adheres to [semantic-ish versi
 ## [1.9.2] - 2026-07-10
 
 ### Fixed
-- **Fixes "plugin installed but no alerts" for anyone who used the original wzsabre first.** Highway Radar remembers a plugin by its ID and keeps the original wzsabre's cached setup even after you switch to SABRE Plus, so it kept asking for data using wzsabre's request name, which SABRE Plus did not answer (Highway Radar showed "Crowd-sourced alerts problems" and never sent a request). SABRE Plus now also answers the original wzsabre's request names, so Highway Radar starts receiving alerts immediately, with no need to re-detect the plugin.
+- **Fixes "plugin installed but no alerts" for anyone who used the original wzsabre first.** Highway Radar caches a plugin by its ID and keeps the original wzsabre's cached setup even after you switch to SABRE Plus, so it kept asking for data using wzsabre's request name, which SABRE Plus did not answer (Highway Radar showed "Crowd-sourced alerts problems" and never sent a request). SABRE Plus now also answers the original wzsabre's request names, so Highway Radar starts receiving alerts immediately, with no need to re-detect the plugin.
 
 ## [1.9.1] - 2026-07-10
 
@@ -56,7 +56,7 @@ All notable changes to this project. This project adheres to [semantic-ish versi
 ## [1.8.4] - 2026-07-09
 
 ### Fixed
-- **Highway Radar receives alert data again on the latest HR.** Highway Radar 3.2 tightened its plugin data format and removed two fields our alerts still sent (`user_id` and `confirm_count`). HR reads plugin responses strictly, so those extra fields made it silently reject every response: the plugin looked connected but no alerts appeared. Our alert and discovery payloads now match HR 3.2's format exactly.
+- **Highway Radar receives alert data again on the latest HR.** Highway Radar 3.2 tightened its plugin data format and removed two fields the plugin's alerts still sent (`user_id` and `confirm_count`). HR reads plugin responses strictly, so those extra fields made it silently reject every response: the plugin looked connected but no alerts appeared. The plugin's alert and discovery payloads now match HR 3.2's format exactly.
 
 ## [1.8.3] - 2026-07-06
 
@@ -93,7 +93,7 @@ All notable changes to this project. This project adheres to [semantic-ish versi
 Fix found from a real test drive.
 
 ### Fixed
-- **Chain controls stop hammering feeds that don't exist.** In regions with no mountain routes (e.g. the Bay Area), Caltrans returns "not found" for the chain-control feed. The plugin was re-requesting those every few seconds all drive and showing a false error in Diagnostics; it now treats "not found" as "no chain controls here" and caches it like any other result.
+- **Chain controls stop hammering feeds that don't exist.** In regions with no mountain routes (for example, the Bay Area), Caltrans returns "not found" for the chain-control feed. The plugin was re-requesting those every few seconds all drive and showing a false error in Diagnostics; it now treats "not found" as "no chain controls here" and caches it like any other result.
 
 ## [1.7] - 2026-07-02
 
@@ -128,7 +128,7 @@ New data source, in-app updates, and quality-of-life.
 - **Automated releases**: pushing a version tag builds a signed APK and publishes the GitHub release via CI.
 
 ### Changed
-- Duplicate pins reported by more than one source (e.g. a CHP and a Waze accident at the same spot) are now merged into one.
+- Duplicate pins reported by more than one source (for example, a CHP and a Waze accident at the same spot) are now merged into one.
 - CI actions updated; the debug/release build is unchanged.
 
 ## [1.5.1] - 2026-07-01

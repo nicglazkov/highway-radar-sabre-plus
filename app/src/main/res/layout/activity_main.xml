@@ -30,7 +30,7 @@
                 android:id="@+id/serviceStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Service starting..."
+                android:text="Starting the service"
                 android:textSize="13sp"
                 android:textColor="#BBDEFB"
                 android:layout_marginTop="4dp" />
@@ -68,7 +68,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="CHP ALERT CATEGORIES"
+            android:text="CHP alert categories"
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#757575"
@@ -90,7 +90,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="CALTRANS CLOSURES"
+            android:text="Caltrans closures"
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#757575"
@@ -117,7 +117,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Lane &amp; road closures (LCS)"
+                    android:text="Lane and road closures (LCS)"
                     android:textSize="14sp"
                     android:textColor="#212121" />
 
@@ -140,7 +140,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="WILDFIRES"
+            android:text="Wildfires"
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#757575"
@@ -214,7 +214,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="CHAIN CONTROLS"
+            android:text="Chain controls"
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#757575"
@@ -264,7 +264,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="INCIDENT AGE"
+            android:text="Incident age"
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#757575"
@@ -291,7 +291,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Drops stale CHP log entries using the incident's own LogTime"
+                android:text="Drops stale CHP entries based on the time the incident was logged"
                 android:textSize="12sp"
                 android:textColor="#757575"
                 android:layout_marginTop="2dp"
@@ -307,7 +307,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="WAZE FILTERS"
+            android:text="Waze filters"
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#757575"
@@ -332,7 +332,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="NOTIFICATIONS"
+            android:text="Notifications"
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#757575"
@@ -368,7 +368,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="DIAGNOSTICS"
+            android:text="Diagnostics"
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#757575"
@@ -398,7 +398,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ABOUT"
+            android:text="About"
             android:textSize="11sp"
             android:textStyle="bold"
             android:textColor="#757575"

@@ -8,32 +8,32 @@ package app.sabre.wzsabre;
 public enum ChpCategory {
 
     MAJOR_ACCIDENT(
-            "Fatal & Injury Accidents",
+            "Fatal and injury accidents",
             "1179, 1141, sig alerts, fatal collisions",
             "ACCIDENT_MAJOR"),
 
     MINOR_ACCIDENT(
-            "Minor Accidents",
+            "Minor accidents",
             "Non-injury collisions, hit-and-run",
             "ACCIDENT_MINOR"),
 
     POLICE_ON_ROAD(
-            "Officer on Road",
+            "Officer on road",
             "Traffic control, construction/maintenance escort",
             "POLICE_VISIBLE"),
 
     CONGESTION(
-            "Closures & Congestion",
+            "Closures and congestion",
             "Road closures, traffic advisories",
             "HAZARD_ON_ROAD_CONGESTION"),
 
     DEBRIS(
-            "Debris & Road Hazards",
+            "Debris and road hazards",
             "Debris, vehicle fires, unrecognized incidents",
             "HAZARD_ON_ROAD_DEBRIS"),
 
     WEATHER(
-            "Weather Hazards",
+            "Weather hazards",
             "Fog, wind, snow, ice, chain controls",
             null);   // null = keep natural per-type mapping (fog→FOG, snow→SLIPPERY, etc.)
 

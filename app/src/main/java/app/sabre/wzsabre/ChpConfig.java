@@ -184,15 +184,15 @@ public class ChpConfig {
 
     // ── Display type options for the UI spinner ───────────────────────────────
 
-    /** Human-readable labels for the type picker. Index 0 = "Keep Default". */
+    /** Human-readable labels for the type picker. Index 0 = "Keep default". */
     public static final String[] TYPE_LABELS = {
-        "Keep Default",
-        "Accident (Major)",
-        "Accident (Minor)",
-        "Police Visible",
-        "Road Closure",
-        "Road Debris",
-        "Slippery Road",
+        "Keep default",
+        "Accident (major)",
+        "Accident (minor)",
+        "Police visible",
+        "Road closure",
+        "Road debris",
+        "Slippery road",
     };
 
     /** SABRE type values matching TYPE_LABELS. null = keep default. */

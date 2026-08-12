@@ -186,7 +186,7 @@ public class MainActivity extends Activity {
 
     private void buildWazeFilters() {
         LinearLayout c = findViewById(R.id.wazeFilterContainer);
-        addWazeToggle(c, "Police & cameras", config.wazePolice, v -> config.wazePolice = v);
+        addWazeToggle(c, "Police and cameras", config.wazePolice, v -> config.wazePolice = v);
         addWazeToggle(c, "Accidents",        config.wazeAccidents, v -> config.wazeAccidents = v);
         addWazeToggle(c, "Hazards",          config.wazeHazards, v -> config.wazeHazards = v);
         addWazeToggle(c, "Traffic jams",     config.wazeJams, v -> config.wazeJams = v);
@@ -386,7 +386,7 @@ public class MainActivity extends Activity {
 
     private void updateServiceStatus() {
         TextView tv = findViewById(R.id.serviceStatus);
-        tv.setText("Plugin ready, runs while Highway Radar is open");
+        tv.setText("Plugin ready. Runs while Highway Radar is open.");
     }
 
     // ── Category rows ─────────────────────────────────────────────────────────

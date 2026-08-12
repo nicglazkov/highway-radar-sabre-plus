@@ -122,10 +122,10 @@
       <p class="label">What it adds</p>
       <h2>Five feeds, one map layer.</h2>
       <p>
-        Every source is fetched in parallel, filtered to the area Highway Radar asked
-        about, de-duplicated across sources, and handed over as standard crowd alerts.
-        Reports go both ways too: when you report something in Highway Radar it shows on
-        your map and is submitted to Waze, over an anonymous session.
+        SABRE Plus fetches every source in parallel, filters it to the area Highway Radar
+        requested, de-duplicates it across sources, and hands over the result as standard
+        crowd alerts. Reports go both ways too: when you report something in Highway Radar
+        it shows on your map and is submitted to Waze, over an anonymous session.
         Turn any of them off in the app.
       </p>
 
@@ -156,10 +156,10 @@
           <h3>Lane and road closures</h3>
           <p>
             Closures that are physically in place right now, from the Caltrans Lane
-            Closure System. Shoulder work is skipped, and a long closure gets a pin at
-            each end so you see where it starts and stops.
+            Closure System. The app skips shoulder work, and gives a long closure a pin
+            at each end so you see where it starts and stops.
           </p>
-          <p class="source__cadence">Cached, refreshed every 15 min</p>
+          <p class="source__cadence">Cached, refreshed every 15 minutes</p>
         </article>
 
         <article class="source">
@@ -170,7 +170,7 @@
             size and containment. Contained and stale records are filtered out, and you
             can hide anything under a size you choose.
           </p>
-          <p class="source__cadence">Cached, refreshed every 5 min</p>
+          <p class="source__cadence">Cached, refreshed every 5 minutes</p>
         </article>
 
         <article class="source">
@@ -180,7 +180,7 @@
             R-1, R-2 and R-3 chain requirements on the mountain routes, at the
             checkpoint where they are enforced. I-80, US-50, SR-88, SR-89 and US-395.
           </p>
-          <p class="source__cadence">Cached, refreshed every 5 min</p>
+          <p class="source__cadence">Cached, refreshed every 5 minutes</p>
         </article>
       </div>
     </div>
@@ -202,7 +202,7 @@
         <figure>
           <img src="screenshots/hr_state.png" width="1080" height="2400" loading="lazy"
                alt="Highway Radar's plugin settings showing SABRE Plus detected and selected.">
-          <figcaption>Highway Radar finds the plugin on its own. Nothing to configure.</figcaption>
+          <figcaption>Highway Radar detects the plugin automatically. Nothing to configure.</figcaption>
         </figure>
         <figure>
           <img src="screenshots/hr-map.png" width="1080" height="2400" loading="lazy"
@@ -313,8 +313,8 @@
         <details>
           <summary>I installed it but no alerts arrive, or Highway Radar still says "WzSabre"</summary>
           <p>
-            Highway Radar remembers the plugin it first discovered and keeps using that
-            cached registration after you switch. Fully close and reopen Highway Radar,
+            Highway Radar caches the plugin registration it first discovered and keeps
+            using it after you switch. Fully close and reopen Highway Radar,
             which makes it run discovery again. If that does not fix it, clear Highway
             Radar's cache: Android Settings, then Apps, then Highway Radar, then Storage,
             then Clear cache. Use <strong>Clear cache</strong>, not Clear storage, because
