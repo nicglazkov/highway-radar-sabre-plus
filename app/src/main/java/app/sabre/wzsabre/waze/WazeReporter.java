@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import app.sabre.wzsabre.ConfirmDiscardRequest;
 import app.sabre.wzsabre.ReportRequest;
 
 /**

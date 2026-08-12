@@ -64,6 +64,8 @@ public class SabreService extends Service {
     private WildfireSource fireSource;
     private WinterSource chainsSource;
     private app.sabre.wzsabre.waze.WazeProtocolSource wazeSource;
+    private final UserReportStore userReportStore = new UserReportStore();
+    private app.sabre.wzsabre.waze.WazeReporter wazeReporter;
 
     // Last fetch location, persisted so the Waze session can be pre-warmed at the
     // next service start (HR's handshake starts the service before its first
@@ -84,6 +86,7 @@ public class SabreService extends Service {
         fireSource = new WildfireSource();
         chainsSource = new WinterSource();
         wazeSource = new app.sabre.wzsabre.waze.WazeProtocolSource(this);
+        wazeReporter = new app.sabre.wzsabre.waze.WazeReporter(this);
         createNotificationChannel();
         startForeground(NOTIFICATION_ID, buildForegroundNotification());
         chpSource.prewarm();          // statewide feed: no location needed
@@ -188,6 +191,16 @@ public class SabreService extends Service {
         armIdleStop();
         if (action != null && action.contains("FETCH_REQUEST")) {
             handleFetchRequest(intent.getStringExtra("data"));
+        }
+        if (action != null && action.equals("REPORT")) {
+            final String data = intent.getStringExtra("data");
+            requestExecutor.submit(() -> handleReport(data));
+        } else if (action != null && action.equals("CONFIRM")) {
+            final String data = intent.getStringExtra("data");
+            requestExecutor.submit(() -> handleConfirmDiscard(data, true));
+        } else if (action != null && action.equals("DISCARD")) {
+            final String data = intent.getStringExtra("data");
+            requestExecutor.submit(() -> handleConfirmDiscard(data, false));
         }
         return START_STICKY;
     }
@@ -343,6 +356,10 @@ public class SabreService extends Service {
                     allAlerts.addAll(buildTestAlerts(testLat, testLon));
                 }
 
+                // Echo the user's own recent reports so HR draws the pin immediately,
+                // independent of whether Waze accepted the report.
+                allAlerts.addAll(userReportStore.activeAlerts(lat, lon, radius, System.currentTimeMillis()));
+
                 // Collapse duplicate pins across sources (e.g. CHP + Waze accident at
                 // the same spot) before sending.
                 int rawCount = allAlerts.size();
@@ -361,6 +378,35 @@ public class SabreService extends Service {
                 }
             }
         });
+    }
+
+    private void handleReport(String data) {
+        try {
+            ReportRequest r = ReportRequest.fromJson(data);
+            // 1) Echo to the HR map immediately (guaranteed pin, independent of Waze).
+            userReportStore.add(r, System.currentTimeMillis());
+            // 2) Push to Waze (best-effort).
+            boolean ok = wazeReporter.submit(r);
+            Log.d(TAG, "Report handled: type=" + r.type + " wazeAccepted=" + ok);
+        } catch (Exception e) {
+            Log.w(TAG, "Bad REPORT payload: " + e.getMessage());
+        }
+    }
+
+    private void handleConfirmDiscard(String data, boolean confirm) {
+        try {
+            ConfirmDiscardRequest c = ConfirmDiscardRequest.fromJson(data);
+            if (c.test) { Log.d(TAG, "test " + (confirm ? "confirm" : "discard") + ", not sending"); return; }
+            long id = c.wazeAlertId();
+            if (confirm) {
+                wazeReporter.confirm(c.lat, c.lon, id);
+            } else {
+                wazeReporter.discard(c.lat, c.lon, id);
+                userReportStore.removeNear(c.lat, c.lon, System.currentTimeMillis()); // drop own echo if any
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Bad CONFIRM/DISCARD payload: " + e.getMessage());
+        }
     }
 
     private void sendErrorResponse(String responseAction, String requestId, Exception cause)
