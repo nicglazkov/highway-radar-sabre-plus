@@ -59,6 +59,11 @@ public class SabreService extends Service {
     // response would come back empty until the queue drained.
     private ExecutorService requestExecutor;
     private ExecutorService fetchExecutor;
+    // REPORT/CONFIRM/DISCARD run here, never on requestExecutor: a slow Waze report
+    // submission (cold-start register/login/handshake can take 10-20s) queued ahead
+    // of a FETCH_REQUEST on a shared single-thread executor would stall that fetch
+    // past HR's ~8s budget, causing a "plugin not responding" banner.
+    private ExecutorService reportExecutor;
     private CHPSource chpSource;
     private LcsSource lcsSource;
     private WildfireSource fireSource;
@@ -81,6 +86,7 @@ public class SabreService extends Service {
         DebugLog.event("service started");
         requestExecutor = Executors.newSingleThreadExecutor();
         fetchExecutor   = Executors.newFixedThreadPool(5);
+        reportExecutor  = Executors.newSingleThreadExecutor();
         chpSource  = new CHPSource();
         lcsSource  = new LcsSource();
         fireSource = new WildfireSource();
@@ -194,13 +200,13 @@ public class SabreService extends Service {
         }
         if (action != null && action.equals("REPORT")) {
             final String data = intent.getStringExtra("data");
-            requestExecutor.submit(() -> handleReport(data));
+            reportExecutor.submit(() -> handleReport(data));
         } else if (action != null && action.equals("CONFIRM")) {
             final String data = intent.getStringExtra("data");
-            requestExecutor.submit(() -> handleConfirmDiscard(data, true));
+            reportExecutor.submit(() -> handleConfirmDiscard(data, true));
         } else if (action != null && action.equals("DISCARD")) {
             final String data = intent.getStringExtra("data");
-            requestExecutor.submit(() -> handleConfirmDiscard(data, false));
+            reportExecutor.submit(() -> handleConfirmDiscard(data, false));
         }
         return START_STICKY;
     }
@@ -232,6 +238,7 @@ public class SabreService extends Service {
         lifecycleHandler.removeCallbacks(stopRunnable);
         if (requestExecutor != null) requestExecutor.shutdownNow();
         if (fetchExecutor   != null) fetchExecutor.shutdownNow();
+        if (reportExecutor  != null) reportExecutor.shutdownNow();
         if (wazeSource != null) wazeSource.shutdown();
         if (lcsSource  != null) lcsSource.shutdown();
         if (chpSource  != null) chpSource.shutdown();
