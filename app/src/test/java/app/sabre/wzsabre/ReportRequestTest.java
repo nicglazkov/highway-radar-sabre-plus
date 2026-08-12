@@ -48,4 +48,28 @@ public class ReportRequestTest {
             "{\"lat\":1.0,\"lon\":2.0,\"alert_id\":\"userreport-99\"}");
         assertEquals(-1L, c.wazeAlertId());
     }
+
+    @Test
+    public void reportAcceptsLatitudeLongitudeFallback() throws JSONException {
+        ReportRequest r = ReportRequest.fromJson(
+            "{\"latitude\":1.5,\"longitude\":-2.5,\"type\":\"POLICE_VISIBLE\"}");
+        assertEquals(1.5, r.lat, 1e-9);
+        assertEquals(-2.5, r.lon, 1e-9);
+    }
+
+    @Test
+    public void confirmAcceptsLatitudeLongitudeFallback() throws JSONException {
+        ConfirmDiscardRequest c = ConfirmDiscardRequest.fromJson(
+            "{\"latitude\":1.5,\"longitude\":-2.5,\"alert_id\":\"alert-7/u\"}");
+        assertEquals(1.5, c.lat, 1e-9);
+        assertEquals(-2.5, c.lon, 1e-9);
+        assertEquals(7L, c.wazeAlertId());
+    }
+
+    @Test
+    public void confirmAlertPrefixedNoSlashParses() throws JSONException {
+        ConfirmDiscardRequest c = ConfirmDiscardRequest.fromJson(
+            "{\"lat\":1.0,\"lon\":2.0,\"alert_id\":\"alert-654321\"}");
+        assertEquals(654321L, c.wazeAlertId());
+    }
 }
