@@ -14,14 +14,14 @@ An open-source **Highway Radar SABRE plugin** for California, and a drop-in **wz
 
 > **Package ID: `app.sabre.wzsabre`** (the same as wzsabre), so Highway Radar discovers this plugin automatically without any reconfiguration.
 
-> ### 👋 Switching from wzsabre? One quick step first
+> ### Switching from wzsabre? One quick step first
 >
 > SABRE Plus is the new home for what wzsabre used to do, and Android only lets **one of them** be installed at a time (they share the plugin ID that Highway Radar looks for). So if the old **wzsabre** app is on your phone:
 >
 > 1. **Uninstall wzsabre** (long-press its icon, then App info, then Uninstall)
 > 2. **Install SABRE Plus** (see [Installation](#installation) below)
 >
-> Your Highway Radar settings stay exactly as they are, and it finds the plugin automatically. Never had wzsabre? You are all set, just install below. 🙂
+> Your Highway Radar settings stay exactly as they are, and it finds the plugin automatically. Never had wzsabre? You are all set, install below.
 
 ---
 
@@ -72,7 +72,7 @@ Reports work both ways, like the original wzsabre. When you report something in 
 
 > **Why the persistent notification?** Android requires a foreground-service notification while the plugin is feeding alerts. The plugin only runs while Highway Radar is open and stops itself shortly after you close HR, so it isn't running (or notifying) in the background the rest of the time.
 
-> **After a phone reboot:** Just open Highway Radar, the plugin starts automatically when HR sends its first request.
+> **After a phone reboot:** Open Highway Radar, the plugin starts automatically when HR sends its first request.
 
 ### Option B: Auto-update with Obtainium
 
@@ -88,7 +88,7 @@ See [BUILDING.md](BUILDING.md).
 
 Open the **SABRE Plus** app to access settings. All changes take effect immediately on the next HR map refresh, no restart needed.
 
-### Alert Categories
+### Alert categories
 
 Each CHP category has two controls:
 
@@ -101,12 +101,12 @@ Each CHP category has two controls:
 | Minor Accidents | Accident (Minor) | Non-injury collisions, hit-and-run |
 | Officer on Road | Police Visible | Traffic control, construction escorts |
 | Closures & Congestion | Road Closure | Road closures, traffic advisories |
-| Debris & Road Hazards | Road Debris | Debris, vehicle fires, misc. hazards |
+| Debris & Road Hazards | Road Debris | Debris, vehicle fires, and miscellaneous hazards |
 | Weather Hazards | *Natural* | Fog, wind, snow, ice, chain controls |
 
 **Tip:** If you find the police icon distracting, set *Officer on Road → Shows as → Road Closure* to get a neutral congestion icon instead.
 
-### Incident Age
+### Incident age
 
 Drops CHP alerts older than a configurable threshold using the incident's actual `LogTime` from the feed (not the time your phone fetched it). This prevents stale multi-hour incidents from cluttering the map.
 
@@ -122,7 +122,7 @@ If you already have wzsabre installed:
 2. Install this APK, it uses the same package ID (`app.sabre.wzsabre`) so HR picks it up without any changes to HR's settings.
 3. Open the new app once to start the service.
 
-> The package ID being identical to wzsabre is intentional: HR's plugin discovery whitelists `app.sabre.wzsabre`, and we reuse it so no HR-side changes are needed.
+> The package ID being identical to wzsabre is intentional: HR's plugin discovery allowlists `app.sabre.wzsabre`, and the plugin reuses that ID so no HR-side changes are needed.
 
 ---
 
@@ -142,14 +142,14 @@ If you already have wzsabre installed:
 
 **No alerts at all, or Highway Radar still shows "WzSabre"**
 
-Highway Radar remembers the plugin it discovered and keeps using that cached registration after you swap wzsabre for SABRE Plus. Work through these in order:
+Highway Radar caches the plugin it discovered and keeps using that cached registration after you swap wzsabre for SABRE Plus. Work through these in order:
 
 1. Confirm HR is using the correct plugin: HR → Settings → SABRE → should show "SABRE Plus".
 2. Check that the alert categories are not all turned off in the app settings.
 3. Fully close and reopen Highway Radar (swipe it away from recents, then launch it again). This makes HR re-run plugin discovery.
 4. **If it still does not work, clear Highway Radar's cache:** Android **Settings → Apps → Highway Radar → Storage → Clear cache**, then open Highway Radar again. This drops the stale registration and forces a fresh discovery.
 
-> ⚠️ Use **Clear cache**, not **Clear storage**. Clear storage would erase your Highway Radar settings.
+> Use **Clear cache**, not **Clear storage**. Clear storage would erase your Highway Radar settings.
 
 Tapping **Share diagnostics** in the SABRE Plus app tells you which of these applies: it reports whether HR has re-detected SABRE Plus or is still running off a cached registration.
 
@@ -222,11 +222,11 @@ flowchart TD
 </details>
 
 - **CHP**: fetches `https://media.chp.ca.gov/sa_xml/sa.xml`, filters by radius and incident age, applies your category settings.
-- **Waze**: emulates the Waze mobile app's binary "RT" protocol. It registers an anonymous Waze session, logs in, and queries crowd-sourced alerts over Waze's protobuf API (the older live-map/georss API is now blocked). The RT feed is session-stateful (each alert is sent once, then removed when it clears), so query results are merged into a persistent alert cache rather than replacing it, this keeps alerts from disappearing as you drive. A series of progressively smaller map viewports is queried so the server doesn't thin out minor alerts near you, the session is pre-warmed at start to cut first-load latency, and Waze alert subtypes (e.g. *car stopped on shoulder*, *heavy traffic*) are passed through to Highway Radar verbatim rather than flattened.
+- **Waze**: emulates the Waze mobile app's binary "RT" protocol. It registers an anonymous Waze session, logs in, and queries crowdsourced alerts over Waze's protobuf API (the older live-map/georss API is now blocked). The RT feed is session-stateful (each alert is sent once, then removed when it clears), so query results are merged into a persistent alert cache rather than replacing it, this keeps alerts from disappearing as you drive. A series of progressively smaller map viewports is queried so the server doesn't thin out minor alerts near you, the session is pre-warmed at start to cut first-load latency, and Waze alert subtypes (for example, *car stopped on shoulder*, *heavy traffic*) are passed through to Highway Radar verbatim rather than flattened.
 - **Caltrans LCS**: fetches the per-district lane-closure feeds (`https://cwwp2.dot.ca.gov/data/d<N>/lcs/lcsStatusD<NN>.xml`) for whichever districts cover your location. Only closures that are physically established (CHP code 1097 set, not picked up or canceled) are shown; shoulder-only closures are skipped. Closures longer than 2 km get a pin at each end. The feeds are large (1 MB to 16 MB per district, uncompressed by Caltrans), so they are parsed in the background and never delay a Highway Radar request. They are refreshed every 15 minutes, which is what keeps mobile data use down, and that matters most in districts with very large feeds. Each refresh is a conditional request, so a feed that has not changed downloads nothing. Measured on 2026-08-05, Caltrans rewrites these files roughly every 5 minutes even when the contents are identical, so in practice the conditional request usually still returns a full body; it costs nothing and pays off whenever a feed goes quiet.
 - **Wildfires**: active California wildfires from the interagency WFIGS "Current Wildland Fire Incident Locations" feed (NIFC-hosted ArcGIS), filtered to active wildfires in California. Each is shown as a road hazard at the fire's location with its name, size, and containment. Fires the feed still flags as active but that are fully contained, along with stale leftovers and non-incident records such as training exercises, are filtered out. Background-cached like the other sources. Optional minimum-size filter in settings.
 - **Chain controls**: Caltrans winter chain-control status from the per-district CWWP feeds (`https://cwwp2.dot.ca.gov/data/d<N>/cc/ccStatusD<NN>.xml`). Records at level R-1/R-2/R-3 (in service) are shown as slippery-road hazards; off-season the feed is all R-0 so nothing shows.
-- **SABRE protocol**: a broadcast-intent IPC protocol defined by Highway Radar. Our plugin responds to `FETCH_REQUEST` broadcasts with a JSON payload containing `SabreFetchResponseAlert` objects.
+- **SABRE protocol**: a broadcast-intent IPC protocol defined by Highway Radar. SABRE Plus responds to `FETCH_REQUEST` broadcasts with a JSON payload containing `SabreFetchResponseAlert` objects.
 
 ---
 
@@ -238,7 +238,7 @@ Pull requests welcome. Run the test suite before submitting:
 ./gradlew test
 ```
 
-293 unit tests cover the SABRE response format, alert type mapping (incl. Waze category filters and report type mapping), report parsing and the road-snap report path (tile decode, segment match, acceptance), the Waze alert cache (delta merge + soft-delete), in-band Waze error classification, shrinking-box geometry, crowd-confirmation tracking, CHP XML parsing, Caltrans LCS and chain-control parsing and filtering, wildfire (WFIGS) parsing, cross-source de-duplication, the update-check version compare, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup, and [CHANGELOG.md](CHANGELOG.md) for release history.
+293 unit tests cover the SABRE response format, alert type mapping (including Waze category filters and report type mapping), report parsing and the road-snap report path (tile decode, segment match, acceptance), the Waze alert cache (delta merge + soft-delete), in-band Waze error classification, shrinking-box geometry, crowd-confirmation tracking, CHP XML parsing, Caltrans LCS and chain-control parsing and filtering, wildfire (WFIGS) parsing, cross-source de-duplication, the update-check version compare, config filtering, and LogTime parsing. See [BUILDING.md](BUILDING.md) for full dev setup, and [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ---
 
