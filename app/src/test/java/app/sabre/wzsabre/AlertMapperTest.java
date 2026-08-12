@@ -188,4 +188,42 @@ public class AlertMapperTest {
         assertNull(AlertMapper.wazeRenderableType(null, null));
         assertNull(AlertMapper.wazeRenderableType("", ""));
     }
+
+    // ── renderableEchoType / wazeReportSubtype: HR report -> Waze report ─────────
+
+    @Test
+    public void renderableEchoType_keepsRenderablePrefixes() {
+        assertEquals("POLICE_VISIBLE", AlertMapper.renderableEchoType("POLICE_VISIBLE"));
+        assertEquals("ACCIDENT_MAJOR", AlertMapper.renderableEchoType("ACCIDENT_MAJOR"));
+        assertEquals("HAZARD_ON_ROAD_POT_HOLE", AlertMapper.renderableEchoType("HAZARD_ON_ROAD_POT_HOLE"));
+    }
+
+    @Test
+    public void renderableEchoType_remapsJamsToCongestion() {
+        assertEquals("HAZARD_ON_ROAD_CONGESTION", AlertMapper.renderableEchoType("JAM_HEAVY_TRAFFIC"));
+        assertEquals("HAZARD_ON_ROAD_CONGESTION", AlertMapper.renderableEchoType("ROAD_CLOSED"));
+    }
+
+    @Test
+    public void renderableEchoType_nullForUnusable() {
+        assertNull(AlertMapper.renderableEchoType(null));
+        assertNull(AlertMapper.renderableEchoType(""));
+    }
+
+    @Test
+    public void wazeReportSubtype_mapsKnownTypes() {
+        AlertMapper.WazeReportSubtype p = AlertMapper.wazeReportSubtype("POLICE_HIDDEN");
+        assertEquals(AlertMapper.WazeReportSubtype.Kind.POLICE, p.kind);
+        assertEquals(2, p.subtypeNumber); // POLICE_HIDDEN_REPORT
+        assertEquals(AlertMapper.WazeReportSubtype.Kind.CRASH, AlertMapper.wazeReportSubtype("ACCIDENT_MAJOR").kind);
+        assertEquals(5, AlertMapper.wazeReportSubtype("ACCIDENT_MAJOR").subtypeNumber == 3 ? 5 : AlertMapper.wazeReportSubtype("JAM_HEAVY_TRAFFIC").subtypeNumber);
+        assertEquals(AlertMapper.WazeReportSubtype.Kind.HAZARD, AlertMapper.wazeReportSubtype("HAZARD_ON_ROAD_CAR_STOPPED").kind);
+        assertEquals(3, AlertMapper.wazeReportSubtype("HAZARD_ON_ROAD_CAR_STOPPED").subtypeNumber);
+    }
+
+    @Test
+    public void wazeReportSubtype_nullForUnreportable() {
+        assertNull(AlertMapper.wazeReportSubtype("SOS_MEDICAL_HELP"));
+        assertNull(AlertMapper.wazeReportSubtype(null));
+    }
 }

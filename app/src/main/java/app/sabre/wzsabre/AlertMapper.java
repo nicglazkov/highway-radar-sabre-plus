@@ -170,4 +170,81 @@ public class AlertMapper {
         String mapped = fromWazeType(type, subtype);
         return mapped != null ? mapped : raw;
     }
+
+    // ── HR report -> Waze report ────────────────────────────────────────────────
+
+    /**
+     * The render-safe SABRE type to echo a user's own HR report back as, so HR
+     * draws the pin. HR's `type` is already a SABRE type; keep it if it starts with
+     * POLICE/HAZARD/ACCIDENT, otherwise remap (e.g. JAM_* / ROAD_CLOSED ->
+     * HAZARD_ON_ROAD_CONGESTION). Null if unusable.
+     */
+    public static String renderableEchoType(String hrType) {
+        if (hrType == null || hrType.isEmpty()) return null;
+        String u = hrType.toUpperCase(Locale.US);
+        if (u.startsWith("POLICE") || u.startsWith("HAZARD") || u.startsWith("ACCIDENT")) return hrType;
+        String mapped = fromWazeType(topLevel(u), u); // reuse the fetch remap
+        return mapped != null ? mapped : null;
+    }
+
+    /** Best-effort top-level Waze type name from a subtype string, for reuse of fromWazeType. */
+    private static String topLevel(String u) {
+        if (u.startsWith("JAM")) return "JAM";
+        if (u.startsWith("ROAD_CLOSED")) return "ROAD_CLOSED";
+        if (u.startsWith("POLICE")) return "POLICE";
+        if (u.startsWith("ACCIDENT")) return "ACCIDENT";
+        return "HAZARD";
+    }
+
+    /** Which Waze AlertDetails member + subtype enum number a reported HR type maps to. */
+    public static WazeReportSubtype wazeReportSubtype(String hrType) {
+        if (hrType == null) return null;
+        String u = hrType.toUpperCase(Locale.US);
+        if (u.equals("POLICE_HIDDEN") || u.equals("POLICE_HIDING"))
+            return new WazeReportSubtype(WazeReportSubtype.Kind.POLICE, 2);
+        if (u.startsWith("POLICE"))
+            return new WazeReportSubtype(WazeReportSubtype.Kind.POLICE, 1);
+        if (u.equals("ACCIDENT_MAJOR"))
+            return new WazeReportSubtype(WazeReportSubtype.Kind.CRASH, 3);
+        if (u.startsWith("ACCIDENT"))
+            return new WazeReportSubtype(WazeReportSubtype.Kind.CRASH, 4);
+        if (u.equals("JAM_STAND_STILL_TRAFFIC"))
+            return new WazeReportSubtype(WazeReportSubtype.Kind.TRAFFIC, 2);
+        if (u.equals("JAM_LIGHT_TRAFFIC"))
+            return new WazeReportSubtype(WazeReportSubtype.Kind.TRAFFIC, 3);
+        if (u.equals("JAM_MODERATE_TRAFFIC"))
+            return new WazeReportSubtype(WazeReportSubtype.Kind.TRAFFIC, 4);
+        if (u.startsWith("JAM"))
+            return new WazeReportSubtype(WazeReportSubtype.Kind.TRAFFIC, 5);
+        if (u.startsWith("HAZARD")) {
+            int sub = hazardSubtypeNumber(u);
+            return new WazeReportSubtype(WazeReportSubtype.Kind.HAZARD, sub);
+        }
+        return null; // not reportable to Waze (SOS, weather-only, etc.)
+    }
+
+    private static int hazardSubtypeNumber(String u) {
+        if (u.equals("HAZARD_ON_ROAD_CONSTRUCTION")) return 2;
+        if (u.equals("HAZARD_ON_ROAD_CAR_STOPPED")) return 3;
+        if (u.equals("HAZARD_ON_ROAD_OBJECT")) return 4;
+        if (u.equals("HAZARD_ON_ROAD_POT_HOLE")) return 5;
+        if (u.equals("HAZARD_ON_ROAD_TRAFFIC_LIGHT_FAULT")) return 6;
+        if (u.equals("HAZARD_ON_ROAD_OIL")) return 7;
+        if (u.equals("HAZARD_ON_SHOULDER_ANIMALS")) return 8;
+        if (u.equals("HAZARD_ON_SHOULDER_MISSING_SIGN")) return 9;
+        if (u.equals("HAZARD_ON_ROAD_ROAD_KILL")) return 10;
+        if (u.equals("HAZARD_ON_SHOULDER_CAR_STOPPED")) return 12;
+        if (u.equals("HAZARD_ON_SHOULDER")) return 11;
+        return 1; // HAZARD_REPORT_DEFAULT
+    }
+
+    /** Names the Waze AlertDetails member and subtype enum number for a reported type. */
+    public static final class WazeReportSubtype {
+        public enum Kind { POLICE, CRASH, TRAFFIC, HAZARD }
+        public final Kind kind;
+        public final int subtypeNumber;
+        public WazeReportSubtype(Kind kind, int subtypeNumber) {
+            this.kind = kind; this.subtypeNumber = subtypeNumber;
+        }
+    }
 }
