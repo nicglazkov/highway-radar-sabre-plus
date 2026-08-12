@@ -306,13 +306,13 @@ final class WazeSession {
             // best-effort, matches recon D step 9
         }
 
-        String uuid = WazeReportCodec.reportUuidFrom(batch);
-        int points = WazeReportCodec.reportPointsFrom(batch);
-        if (uuid != null) {
-            Log.d(TAG, "Report accepted: uuid=" + uuid + " pts=" + points);
+        if (WazeReportCodec.reportAccepted(batch)) {
+            String uuid = WazeReportCodec.reportUuidFrom(batch);
+            int points = WazeReportCodec.reportPointsFrom(batch);
+            Log.d(TAG, "Report accepted: pts=" + points + " uuid=" + (uuid != null ? uuid : ""));
             return ReportResult.ok(uuid, points);
         }
-        Log.w(TAG, "No report response in batch");
+        Log.w(TAG, "Report not accepted: no accepting response element in batch");
         return ReportResult.fail("no report response");
     }
 

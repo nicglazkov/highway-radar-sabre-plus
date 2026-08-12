@@ -1,6 +1,7 @@
 package app.sabre.wzsabre.waze;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -57,5 +58,58 @@ public class WazeReportCodecTest {
                 .build();
         assertEquals("uuid-xyz", WazeReportCodec.reportUuidFrom(batch));
         assertEquals(6, WazeReportCodec.reportPointsFrom(batch));
+    }
+
+    // Live-Waze finding: a snapped report (with SegmentNodes) comes back with
+    // received_points_count=6, status=STATUS_UNSPECIFIED (the default), and an
+    // EMPTY alert_uuid, on anonymous accounts. That is still an accepted report:
+    // acceptance must be keyed off the presence of the response element (and it
+    // not being an explicit FAILURE), not off a non-empty uuid.
+    @Test public void acceptedWithPointsAndEmptyUuid() {
+        WazeProto.Batch batch = WazeProto.Batch.newBuilder()
+                .addElement(WazeProto.Element.newBuilder()
+                        .setAddUserReportedAlertResponse(WazeProto.AddUserReportedAlertResponse.newBuilder()
+                                .setReceivedPointsCount(6)
+                                // status left unset -> defaults to STATUS_UNSPECIFIED
+                                .build()).build())
+                .build();
+        assertTrue(WazeReportCodec.reportAccepted(batch));
+        assertEquals(6, WazeReportCodec.reportPointsFrom(batch));
+        assertNull(WazeReportCodec.reportUuidFrom(batch));
+    }
+
+    @Test public void acceptedSuccessWithUuid() {
+        WazeProto.Batch batch = WazeProto.Batch.newBuilder()
+                .addElement(WazeProto.Element.newBuilder()
+                        .setAddUserReportedAlertResponse(WazeProto.AddUserReportedAlertResponse.newBuilder()
+                                .setStatus(WazeProto.AddUserReportedAlertResponse.AddAlertStatus.SUCCESS)
+                                .setAlertUuid("abc")
+                                .setReceivedPointsCount(0)
+                                .build()).build())
+                .build();
+        assertTrue(WazeReportCodec.reportAccepted(batch));
+        assertEquals("abc", WazeReportCodec.reportUuidFrom(batch));
+    }
+
+    @Test public void rejectedOnExplicitFailure() {
+        WazeProto.Batch batch = WazeProto.Batch.newBuilder()
+                .addElement(WazeProto.Element.newBuilder()
+                        .setAddUserReportedAlertResponse(WazeProto.AddUserReportedAlertResponse.newBuilder()
+                                .setStatus(WazeProto.AddUserReportedAlertResponse.AddAlertStatus.FAILURE)
+                                .build()).build())
+                .build();
+        assertFalse(WazeReportCodec.reportAccepted(batch));
+    }
+
+    @Test public void notAcceptedWhenNoResponseElement() {
+        // An empty batch (no elements at all) mirrors the confirmed contrast case:
+        // a position-only report (no SegmentNodes) gets no response element back.
+        WazeProto.Batch empty = WazeProto.Batch.newBuilder().build();
+        assertFalse(WazeReportCodec.reportAccepted(empty));
+
+        WazeProto.Batch unrelated = WazeProto.Batch.newBuilder()
+                .addElement(WazeProto.Element.newBuilder().setOldCommand("noop").build())
+                .build();
+        assertFalse(WazeReportCodec.reportAccepted(unrelated));
     }
 }

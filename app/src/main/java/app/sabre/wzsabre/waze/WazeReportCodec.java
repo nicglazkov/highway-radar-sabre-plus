@@ -69,6 +69,27 @@ final class WazeReportCodec {
         return d.build();
     }
 
+    /**
+     * Live-Waze finding: a snapped report (with SegmentNodes) comes back with
+     * received_points_count > 0, status=STATUS_UNSPECIFIED (the default), and
+     * an EMPTY alert_uuid on anonymous accounts, while a position-only report
+     * (no SegmentNodes) gets no response element back at all. So the presence
+     * of an AddUserReportedAlertResponse element that isn't an explicit
+     * FAILURE is the acceptance signal, not a non-empty uuid.
+     */
+    static boolean reportAccepted(WazeProto.Batch batch) {
+        for (WazeProto.Element el : batch.getElementList()) {
+            if (el.hasAddUserReportedAlertResponse()) {
+                WazeProto.AddUserReportedAlertResponse.AddAlertStatus status =
+                        el.getAddUserReportedAlertResponse().getStatus();
+                if (status != WazeProto.AddUserReportedAlertResponse.AddAlertStatus.FAILURE) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     static String reportUuidFrom(WazeProto.Batch batch) {
         for (WazeProto.Element el : batch.getElementList()) {
             if (el.hasAddUserReportedAlertResponse()) {
