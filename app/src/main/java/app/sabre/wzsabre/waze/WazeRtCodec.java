@@ -117,10 +117,28 @@ final class WazeRtCodec {
                 + f6(lonMax) + "," + f6(latMin) + "," + f6(lonMin) + "," + f6(latMin);
     }
 
-    static String seeMeCommand()  { return "SeeMe,1,2,T,T,T,1,-1,1,7"; }
+    /** Default SeeMe level (matches the handshake's original no-arg behavior). */
+    static String seeMeCommand()  { return seeMeCommand(1); }
+
+    /** mode 1 = handshake SeeMe; mode 2 = the terse post-report SeeMe used to
+     *  close out the simulateDriving sequence (recon D step 9). */
+    static String seeMeCommand(int mode) {
+        return mode == 1 ? "SeeMe,1,2,T,T,T,1,-1,1,7" : "SeeMe," + mode;
+    }
+
     static String setMoodCommand(){ return "SetMood,1"; }
     static String locationCommand(double lon, double lat) {
         return "Location," + lon + "," + lat;
+    }
+
+    /**
+     * "At" position update carrying the road-snap result: fromNode/toNode are the
+     * tile-local directional node indices from a {@code SegmentMatch}, or -1/-1 when
+     * no segment matched. lon/lat formatted identically to {@link #locationCommand}
+     * (plain concatenation, not fixed-decimal), matching wazemo.WazeProto.atCommand.
+     */
+    static String atCommand(double lon, double lat, int heading, long fromNode, long toNode) {
+        return "At," + lon + "," + lat + ",0," + heading + ",1," + fromNode + "," + toNode + ",T,0,-1,-1,0";
     }
 
     /** Handshake = SeeMe + SetMood + Location + MapDisplayed, newline-joined, one POST. */

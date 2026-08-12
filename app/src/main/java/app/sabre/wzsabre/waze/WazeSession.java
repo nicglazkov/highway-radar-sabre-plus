@@ -4,6 +4,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -270,6 +271,40 @@ final class WazeSession {
         }
         Log.w(TAG, "No report response in batch");
         return ReportResult.fail("no report response");
+    }
+
+    /**
+     * GETs and decodes the WZDF road-graph tile covering (lat,lon), for road-snap
+     * (Task R5). Requires a live session (uses {@code session.serverSessionId}/
+     * {@code session.secretKey} in the tile URL, matching how the official
+     * authenticates the tile GET). Best-effort: any failure (no session, HTTP
+     * error, empty body, decode error) returns an empty list rather than throwing,
+     * so a snap failure degrades to a position-only report instead of aborting it.
+     */
+    List<RoadSegment> fetchTileSegments(double lat, double lon) {
+        if (session == null) {
+            Log.w(TAG, "fetchTileSegments: no live session");
+            return new ArrayList<>();
+        }
+        try {
+            String tileHost = WazeConstants.tileHost(WazeProtocolSource.region(lat, lon));
+            int tileId = WazeTileCodec.coordToTileId(lon, lat);
+            String url = WazeTileCodec.buildTileUrl(tileHost, session.serverSessionId, session.secretKey, tileId);
+
+            Map<String, String> headers = new LinkedHashMap<>();
+            headers.put("User-Agent", WazeConstants.APP_VERSION);   // bare "5.17.1.0"
+            headers.put("if-modified-since", "Thu, 01 Jan 1970 00:00:00 GMT");
+
+            WazeHttpClient.HttpResult r = http.get(url, headers);
+            if (r.code >= 400 || r.body.length == 0) {
+                Log.w(TAG, "fetchTileSegments: tile GET HTTP " + r.code + " (" + r.body.length + "B)");
+                return new ArrayList<>();
+            }
+            return WazeTileParser.parse(r.body);
+        } catch (Exception e) {
+            Log.w(TAG, "fetchTileSegments failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
     /** Thumbs-up an existing Waze alert by its numeric id. */
