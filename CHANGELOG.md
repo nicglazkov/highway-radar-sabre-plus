@@ -2,6 +2,11 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.10.1] - 2026-08-12
+
+### Changed
+- **Clearer, more consistent wording in the app.** Section headers and option labels now use sentence case ("CHP alert categories" rather than "CHP ALERT CATEGORIES", "Keep default" rather than "Keep Default"), visible labels spell out "and" instead of using an ampersand, the shared diagnostics report spells out "Highway Radar" instead of "HR", and the incident age setting no longer shows an internal field name. The README, this changelog, the privacy policy and the website were revised the same way. Nothing changed in how the plugin works, what it fetches, or what it sends to Highway Radar.
+
 ## [1.10.0] - 2026-08-12
 
 ### Added
