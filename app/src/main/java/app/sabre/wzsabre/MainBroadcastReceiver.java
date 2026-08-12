@@ -49,6 +49,12 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
                 final double lat = numberExtra(intent, "lat", 37.8044);
                 final double lon = numberExtra(intent, "lon", -122.2712);
                 new Thread(() -> app.sabre.wzsabre.waze.WazeProtocolSource.selfTest(lat, lon)).start();
+            } else if (BuildConfig.DEBUG && action != null && action.endsWith(".REPORT_TEST")) {
+                // Debug-only: exercise the Waze report write path without HR.
+                final double lat = numberExtra(intent, "lat", 37.8044);
+                final double lon = numberExtra(intent, "lon", -122.2712);
+                final String type = intent.hasExtra("type") ? intent.getStringExtra("type") : "POLICE_VISIBLE";
+                new Thread(() -> app.sabre.wzsabre.waze.WazeReporter.selfTest(context, lat, lon, type)).start();
             } else if (BuildConfig.DEBUG && action != null && action.endsWith(".INJECT_TEST")) {
                 // Debug-only: toggle synthetic one-of-each-type alerts to validate HR rendering.
                 SabreService.injectTestAlerts = intent.getBooleanExtra("on", true);
