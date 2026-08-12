@@ -32,10 +32,16 @@ final class WazeReportCodec {
                     .setFromNode(fromNode).setToNode(toNode).build());
         }
 
+        // Normalize to [0,360), matching WazeSession.submitReport's normalizeAngle360
+        // for the At command. HR omits heading by defaulting ReportRequest.headingDeg
+        // to the -720 sentinel, which must not be sent to Waze as-is.
+        int azymuth = (int) (Math.round(r.headingDeg) % 360);
+        if (azymuth < 0) azymuth += 360;
+
         WazeProto.AddUserReportedAlertRequest.Builder b =
                 WazeProto.AddUserReportedAlertRequest.newBuilder()
                 .setUserPosition(pos.build())
-                .setAzymuth((int) Math.round(r.headingDeg))
+                .setAzymuth(azymuth)
                 .setAlertDetails(buildDetails(sub))
                 .setSegmentDirection(r.isOpposite
                         ? WazeProto.SegmentDirection.SEGMENT_DIRECTION_BACKWARD

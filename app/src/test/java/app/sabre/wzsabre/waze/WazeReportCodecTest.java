@@ -50,6 +50,34 @@ public class WazeReportCodecTest {
         assertNull(WazeReportCodec.buildRequest(req("SOS_MEDICAL_HELP"), 1L, 0, 0));
     }
 
+    // Unknown heading defaults to the -720 sentinel (ReportRequest.fromJson); the
+    // azymuth sent to Waze must be normalized to [0,360), matching
+    // WazeSession.submitReport's normalizeAngle360 for the At command, not sent
+    // raw as an invalid -720 compass value.
+    @Test public void unknownHeadingNormalizesAzymuthToZero() throws JSONException {
+        ReportRequest noHeading = ReportRequest.fromJson("{\"lat\":37.8,\"lon\":-122.2712," +
+                "\"type\":\"POLICE_VISIBLE\",\"time_delta_s\":10}");
+        WazeProto.AddUserReportedAlertRequest r =
+                WazeReportCodec.buildRequest(noHeading, 1_700_000_000_000L, 0, 0);
+        assertEquals(0, r.getAzymuth());
+    }
+
+    @Test public void normalHeadingAzymuthUnchanged() throws JSONException {
+        ReportRequest h27 = ReportRequest.fromJson("{\"lat\":37.8,\"lon\":-122.2712," +
+                "\"heading_deg\":27.0,\"type\":\"POLICE_VISIBLE\",\"time_delta_s\":10}");
+        WazeProto.AddUserReportedAlertRequest r =
+                WazeReportCodec.buildRequest(h27, 1_700_000_000_000L, 0, 0);
+        assertEquals(27, r.getAzymuth());
+    }
+
+    @Test public void headingOver360WrapsAzymuth() throws JSONException {
+        ReportRequest h370 = ReportRequest.fromJson("{\"lat\":37.8,\"lon\":-122.2712," +
+                "\"heading_deg\":370.0,\"type\":\"POLICE_VISIBLE\",\"time_delta_s\":10}");
+        WazeProto.AddUserReportedAlertRequest r =
+                WazeReportCodec.buildRequest(h370, 1_700_000_000_000L, 0, 0);
+        assertEquals(10, r.getAzymuth());
+    }
+
     @Test public void parsesResponseUuidAndPoints() {
         WazeProto.Batch batch = WazeProto.Batch.newBuilder()
                 .addElement(WazeProto.Element.newBuilder()
