@@ -366,4 +366,18 @@ public class SabreProtocolTest {
             assertEquals("Alert[" + i + "] must have exactly 9 fields", 9, a.length());
         }
     }
+
+    // ── wire type is Highway Radar 3.2 vocabulary ─────────────────────────────
+
+    @Test
+    public void wireType_isTranslatedToWhatHighwayRadarDraws() throws Exception {
+        SabreAlert congestion = new SabreAlert("lcs_1", SabreResponseBuilder.SOURCE_LCS,
+                "HAZARD_ON_ROAD_CONGESTION", 38.1, -122.2, -720.0, "SR-29", NOW_SECONDS);
+        assertEquals("HAZARD_ON_ROAD_CAR_STOPPED",
+                firstAlert(parseResponse(Collections.singletonList(congestion))).getString("type"));
+        assertEquals("HAZARD_ON_ROAD_OBJECT",
+                firstAlert(parseResponse(Collections.singletonList(wazeAlert()))).getString("type"));
+        assertEquals("POLICE_VISIBLE",
+                firstAlert(parseResponse(Collections.singletonList(chpAlert()))).getString("type"));
+    }
 }

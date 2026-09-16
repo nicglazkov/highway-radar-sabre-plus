@@ -21,7 +21,7 @@ import okhttp3.Response;
  * per-session cookie jar (login sets cookies that subsequent commands must carry).
  * Ported from wzsabre 2.2 wazemo.WazeHttpClient.
  */
-final class WazeHttpClient {
+class WazeHttpClient {
     private static final MediaType OCTET = MediaType.parse("binary/octet-stream");
 
     private final SessionCookieJar cookieJar = new SessionCookieJar();

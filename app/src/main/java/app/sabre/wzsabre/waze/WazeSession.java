@@ -31,16 +31,23 @@ final class WazeSession {
     private WazeSessionInfo session;       // from login()
     private int  seqCount = 1;
     private long lastRequestMs = 0L;
+    /** Server session the handshake last ran on (0 = none), so it runs once per login. */
+    private long handshakedSessionId = 0L;
 
     WazeSession(String region) {
         this(region, DeviceIdentity.random(), null);
     }
 
     WazeSession(String region, DeviceIdentity device, WazeCredentials credentials) {
+        this(region, device, credentials, new WazeHttpClient());
+    }
+
+    /** Test seam: same as above with the transport supplied by the caller. */
+    WazeSession(String region, DeviceIdentity device, WazeCredentials credentials, WazeHttpClient http) {
         this.region = region;
         this.device = device;
         this.credentials = credentials;
-        this.http = new WazeHttpClient();
+        this.http = http;
     }
 
     WazeCredentials getCredentials() { return credentials; }
@@ -234,13 +241,21 @@ final class WazeSession {
 
     /**
      * Register (if no credentials) + log in (if no valid session) + run the
-     * SeeMe/SetMood/Location/MapDisplayed handshake. Call once before a run of
-     * {@link #queryBox} calls: mirrors the official, which handshakes per login,
-     * not per query.
+     * SeeMe/SetMood/Location/MapDisplayed handshake once per login, mirroring the
+     * official client's ensureAlive (login + handshake only when the session is
+     * new or idle; nothing at all otherwise).
+     *
+     * The handshake's MapDisplayed box is a real viewport query, and the RT server
+     * sends each alert once per session, so its response is returned for the
+     * caller to merge into the alert cache instead of being discarded. Returns
+     * null when the session was already handshaken (no request was sent).
      */
-    void prepareForArea(double lat, double lon) throws Exception {
+    WazeProto.Batch prepareForArea(double lat, double lon) throws Exception {
         ensureReady(lon, lat);
-        command(WazeRtCodec.handshakePayload(lon, lat));
+        if (session != null && session.serverSessionId == handshakedSessionId) return null;
+        WazeProto.Batch batch = command(WazeRtCodec.handshakePayload(lon, lat));
+        handshakedSessionId = session != null ? session.serverSessionId : 0L;
+        return batch;
     }
 
     /**

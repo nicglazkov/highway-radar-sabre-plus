@@ -2,6 +2,15 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
+## [1.11.0] - 2026-09-16
+
+### Fixed
+- **Lane closures, chain controls, wildfires, CHP debris and congestion, and Waze weather alerts show on the map again.** The current Highway Radar (3.2, update 7) draws a plugin hazard only when its type is one of six names it knows, such as "object on road" or "vehicle stopped on road", and silently drops every other hazard type. The plugin was sending its own names for those alerts, so on this Highway Radar version they never appeared, while police and accident alerts were unaffected. The plugin now translates each hazard to the closest name Highway Radar draws: debris becomes "object on road", closures and traffic jams become "vehicle stopped on road", and every other hazard (chain controls, wildfires, weather, ice, construction) becomes the generic "object on road" pin. The alert text still describes what it really is. Verified on the live app with a side by side injection of every type.
+- **Waze alerts closest to you are no longer lost.** The plugin ran the Waze session handshake, which includes a small map query around you, before every fetch and threw its answer away. Waze sends each alert once per session, so an alert that arrived in that discarded answer could stay invisible until the session expired. The handshake now runs once per login, as the Waze app does, and its answer is merged into the alert cache.
+
+### Changed
+- The CI workflow can be started by hand from the Actions tab.
+
 ## [1.10.1] - 2026-08-12
 
 ### Changed

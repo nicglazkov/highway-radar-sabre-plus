@@ -435,32 +435,39 @@ public class SabreService extends Service {
     public static volatile double testLat = 38.4015, testLon = -121.8000;
 
     /**
-     * One synthetic alert of each SABRE type, lined up ~120m north of (lat,lon) and
-     * spread east-west, so driving north makes Highway Radar pop them all as stacked
-     * cards: used to visually confirm HR renders every alert type correctly.
+     * Synthetic alerts in two north-south columns ahead of (lat,lon), one row per
+     * type at ~175m spacing, so a single Highway Radar screenshot shows which types
+     * it draws. West column: the SABRE types this plugin emits internally. East
+     * column: Highway Radar's own hazard vocabulary plus police/accident, as
+     * controls that are known to render. A missing pin in the west column at a row
+     * that has one in the east column means HR dropped that type.
      */
     private List<SabreAlert> buildTestAlerts(double lat, double lon) {
-        String[][] specs = {
-            {"POLICE_VISIBLE",            "TEST Police visible"},
-            {"POLICE_HIDDEN",             "TEST Police hidden (speed trap)"},
-            {"ACCIDENT_MAJOR",            "TEST Accident major"},
-            {"ACCIDENT_MINOR",            "TEST Accident minor"},
-            {"HAZARD_ON_ROAD_CONGESTION", "TEST Congestion / closure"},
-            {"HAZARD_ON_ROAD_DEBRIS",     "TEST Debris on road"},
-            {"HAZARD_WEATHER_FOG",        "TEST Weather (fog)"},
+        String[][] west = {
+            {"HAZARD_ON_ROAD_CONGESTION", "TEST W1 congestion"},
+            {"HAZARD_ON_ROAD_DEBRIS",     "TEST W2 debris"},
+            {"HAZARD_ON_ROAD_SLIPPERY",   "TEST W3 slippery"},
+            {"HAZARD_ON_ROAD",            "TEST W4 generic on-road"},
+            {"HAZARD_WEATHER_FOG",        "TEST W5 fog"},
+            {"POLICE_HIDDEN",             "TEST W6 police hidden"},
+        };
+        String[][] east = {
+            {"HAZARD_ON_ROAD_OBJECT",      "TEST E1 object on road"},
+            {"HAZARD_ON_ROAD_POT_HOLE",    "TEST E2 pot hole"},
+            {"HAZARD_ON_ROAD_CAR_STOPPED", "TEST E3 car stopped"},
+            {"HAZARD_ON_SHOULDER_ANIMALS", "TEST E4 animals"},
+            {"ACCIDENT_MAJOR",             "TEST E5 accident"},
+            {"POLICE_VISIBLE",             "TEST E6 police visible"},
         };
         List<SabreAlert> out = new ArrayList<>();
         long nowSec = System.currentTimeMillis() / 1000L;
-        double lonScale = 0.00025 / Math.cos(Math.toRadians(lat));
-        for (int i = 0; i < specs.length; i++) {
-            // Put the HAZARD/WEATHER types ~120m north (ahead) and the POLICE/ACCIDENT
-            // types ~3.3km north (out of the immediate card range) so the hazards can be
-            // observed in isolation, without police/accident outranking them.
-            boolean isHazard = specs[i][0].startsWith("HAZARD");
-            double aLat = lat + (isHazard ? 0.0011 : 0.0300);
-            double aLon = lon + (i - specs.length / 2.0) * lonScale; // spread E-W
-            out.add(new SabreAlert("chp_TEST" + i, SabreResponseBuilder.SOURCE_CHP,
-                    specs[i][0], aLat, aLon, 0.0, specs[i][1], nowSec));
+        double colOffset = 0.0030 / Math.cos(Math.toRadians(lat));   // ~260m each side
+        for (int i = 0; i < west.length; i++) {
+            double rowLat = lat + 0.0011 + i * 0.0016;                // 120m ahead, then ~175m steps
+            out.add(new SabreAlert("chp_TESTW" + i, SabreResponseBuilder.SOURCE_CHP,
+                    west[i][0], rowLat, lon - colOffset, 0.0, west[i][1], nowSec));
+            out.add(new SabreAlert("chp_TESTE" + i, SabreResponseBuilder.SOURCE_CHP,
+                    east[i][0], rowLat, lon + colOffset, 0.0, east[i][1], nowSec));
         }
         return out;
     }

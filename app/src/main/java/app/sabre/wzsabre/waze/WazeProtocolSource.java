@@ -256,7 +256,10 @@ public final class WazeProtocolSource {
      */
     private void queryArea(WazeSession s, double lat, double lon, double radiusMeters) throws Exception {
         long sessionBefore = s.currentServerSessionId();
-        s.prepareForArea(lat, lon);
+        // Non-null only when a fresh login ran the handshake: its MapDisplayed box is a
+        // real viewport query whose alerts the server will not send again this session,
+        // so it is merged below (after the session-change clear) instead of discarded.
+        WazeProto.Batch handshake = s.prepareForArea(lat, lon);
         // Credentials exist now (register/login just ran), persist immediately so a
         // failure in the box loop below can't lose a freshly minted account and force
         // a wasteful re-register on the next run. Only write when they actually changed.
@@ -281,6 +284,11 @@ public final class WazeProtocolSource {
             if (sessionChanged && !cleared) {   // first successful box → safe to reset
                 alertCache.clear();
                 cleared = true;
+            }
+            if (handshake != null) {
+                alertCache.submit(new AlertQueryResult(
+                        WazeRtCodec.parseAlerts(handshake), WazeRtCodec.parseRemovedAlertIds(handshake)));
+                handshake = null;
             }
             alertCache.submit(new AlertQueryResult(
                     WazeRtCodec.parseAlerts(batch), WazeRtCodec.parseRemovedAlertIds(batch)));

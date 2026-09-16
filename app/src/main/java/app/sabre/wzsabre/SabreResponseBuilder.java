@@ -203,7 +203,7 @@ public class SabreResponseBuilder {
         JSONObject obj = new JSONObject();
         obj.put("alert_source",  a.alertSource);           // must be SOURCE_CHP or SOURCE_WAZE
         obj.put("alert_id",      a.alertId);
-        obj.put("type",          a.type);
+        obj.put("type",          HrTypes.toHrType(a.type));   // HR 3.2 draws only its own hazard names
         obj.put("lat",           a.lat);
         obj.put("lon",           a.lon);
         obj.put("heading_deg",   a.headingDeg);
