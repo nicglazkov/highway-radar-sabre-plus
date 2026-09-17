@@ -12,15 +12,11 @@ import java.util.zip.Inflater;
  * submitting a report. The tile response is NOT protobuf. Pure Java (no Android
  * APIs), so it stays plain-JVM testable.
  *
- * Ported nearly line-for-line from wzsabre 2.2 wazemo.WazeTileParser (parse/
- * parseSections/readU32/readU16/readI16/alignOffset/section), including the
- * section-directory addressing scheme: each of the {@code numSections} u32
+ * Section-directory addressing scheme: each of the {@code numSections} u32
  * values stored after the 8-byte header is the CUMULATIVE end offset (relative
  * to the start of the section body) of that section, not a per-section length;
  * a section's start is {@code alignOffset} of the previous section's end value.
- * {@code findBytes} is re-expressed as a standard substring scan (see the R2
- * report for why: the jadx decompilation of that helper has a control-flow
- * artifact that doesn't reflect correct byte-search behavior).
+ * {@code findBytes} is a standard substring scan.
  */
 final class WazeTileParser {
     private static final byte[] MAGIC = {87, 90, 68, 70, 1, 0, 0, 0, 0, 0, 3, 0}; // "WZDF" 01000000 00000300
@@ -134,9 +130,8 @@ final class WazeTileParser {
                     }
                 }
                 points.add(nodes.get(toIdx));
-                // GeoUtils.computeHeading (Task R3's RoadGeo.computeHeading exposes the
-                // same formula publicly for the segment-snap geometry); inlined here
-                // since it is self-contained (no other GeoUtils dependency).
+                // Same bearing formula RoadGeo.computeHeading exposes for the
+                // segment-snap geometry; inlined here since it is self-contained.
                 int heading = computeHeading(points.get(0), points.get(points.size() - 1));
                 segments.add(new RoadSegment(
                         ((long) tileId) * 100000L + (long) segIndex,
@@ -147,7 +142,7 @@ final class WazeTileParser {
         return segments;
     }
 
-    /** Ported from wzsabre 2.2 wazemo.GeoUtils.computeHeading. Bearing in [0,360) degrees. */
+    /** Initial bearing from one point to another, in [0,360) degrees. */
     private static int computeHeading(LatLon from, LatLon to) {
         double bearing = Math.toDegrees(Math.atan2(
                 (to.lon - from.lon) * Math.cos(Math.toRadians((from.lat + to.lat) / 2.0)),

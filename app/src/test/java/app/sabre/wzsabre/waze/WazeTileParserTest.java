@@ -10,10 +10,9 @@ import java.util.zip.Deflater;
 import org.junit.Test;
 
 /**
- * WZDF binary tile decoder. Ported from wzsabre 2.2 wazemo.WazeTileParser.
- * The full-decode fixture below hand-derives the section directory's
- * (offset, cumulative-end) encoding directly from the byte layout in
- * roadsnap-recon.md section B; it does not reuse WazeTileParser's own code.
+ * WZDF binary tile decoder. The full-decode fixture below hand-derives the
+ * section directory's (offset, cumulative-end) encoding directly from the byte
+ * layout; it does not reuse WazeTileParser's own code.
  */
 public class WazeTileParserTest {
 
@@ -72,7 +71,7 @@ public class WazeTileParserTest {
 
     @Test
     public void parseDecodesOneSegmentBetweenTwoNodes() {
-        // --- Hand-derive the section directory (recon B: alignOffset(v,bits) with
+        // --- Hand-derive the section directory (alignOffset(v,bits) with
         // bits=0 is the identity function, so directory "value" fields are simply
         // the cumulative end-offset, relative to `base`, of each section in turn). ---
         // Sections used: 8 (point deltas, empty), 9 (segments, 1 entry = 8 bytes),
@@ -126,7 +125,7 @@ public class WazeTileParserTest {
         assertEquals((long) tileId * 100000L, seg.segmentId);
         assertEquals(2, seg.points.size());
 
-        // Expected coords use the same decode formula as recon B (double math must
+        // Expected coords use the same decode formula as the tile format (double math must
         // match the implementation bit-for-bit since both compute it the same way).
         double lon0 = ((lonIdx * 10000 - 180000000) + 0) * 1e-6;
         double lat0 = ((latIdx * 10000 - 90000000) + 0) * 1e-6;

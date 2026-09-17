@@ -3,7 +3,6 @@ package app.sabre.wzsabre.waze;
 /**
  * Tile-id math and tile-server URL building for the Waze mobile-app "RT" protocol.
  * Pure Java (no Android APIs) so it is plain-JVM testable.
- * Ported from wzsabre 2.2 wazemo.WazeTileParser (buildTileUrl/coordToTileId).
  */
 final class WazeTileCodec {
     private WazeTileCodec() {}

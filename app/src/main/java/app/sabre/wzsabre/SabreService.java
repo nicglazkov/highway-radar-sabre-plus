@@ -75,8 +75,8 @@ public class SabreService extends Service {
     // Last fetch location, persisted so the Waze session can be pre-warmed at the
     // next service start (HR's handshake starts the service before its first
     // FETCH_REQUEST). Without this, a cold start has to register/login/query Waze
-    // while HR is already waiting, so police alerts took 10-15s to appear vs the
-    // official's <2s. See WazeProtocolSource.prewarm.
+    // while HR is already waiting, so police alerts took 10-15s to appear.
+    // See WazeProtocolSource.prewarm.
     private static final String STATE_PREFS = "sabre_state";
 
     @Override

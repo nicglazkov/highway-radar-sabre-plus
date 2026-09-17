@@ -7,8 +7,8 @@ import org.json.JSONObject;
 import java.util.List;
 
 /**
- * Builds the SABRE fetch-response JSON that Highway Radar deserializes into
- * SabreFetchResponse / SabreFetchResponseAlert (compatible with the wzsabre SABRE protocol).
+ * Builds the SABRE fetch-response JSON that Highway Radar deserializes
+ * (compatible with the wzsabre SABRE protocol).
  *
  * Extracted from SabreService so it can be exercised by JVM unit tests without
  * starting an Android service.
@@ -16,7 +16,7 @@ import java.util.List;
 public class SabreResponseBuilder {
 
     /**
-     * SabreDiscoveryResponseSource IDs we declare in our HANDSHAKE.
+     * Source IDs we declare in our HANDSHAKE discovery response.
      * alert_source MUST equal one of these; case-sensitive.
      * HR may use these IDs to look up source metadata (icon, color, etc.)
      * and crash with NPE/IOOB if the value is unknown.
@@ -56,8 +56,8 @@ public class SabreResponseBuilder {
      * type is outside this set can only be a bug in our own mapping, so {@link
      * #build} drops it rather than risk HR's renderer on an unexpected string.
      *
-     * <p>The Waze entries are the exact enum names the official's ALERT_TYPE_NAMES /
-     * ALERT_SUBTYPE_NAMES maps produce (see WazeRtCodec.typeName/subTypeName).
+     * <p>The Waze entries are the exact enum names WazeRtCodec.typeName/subTypeName
+     * produce.
      */
     private static final java.util.Set<String> VALID_TYPES = new java.util.HashSet<>(
             java.util.Arrays.asList(
@@ -120,7 +120,7 @@ public class SabreResponseBuilder {
      *     "n_batches": Int,           // required
      *     "batch_id":  Int,           // required
      *     "alerts": [                 // required list (may be empty)
-     *       {                            // EXACTLY HR 3.2's SabreFetchResponseAlert (9 fields)
+     *       {                            // EXACTLY the 9 fields Highway Radar 3.2 accepts
      *         "alert_source":  String,   // required; must be SOURCE_CHP or SOURCE_WAZE
      *         "alert_id":      String,   // required
      *         "type":          String,   // required SABRE type constant
@@ -193,13 +193,12 @@ public class SabreResponseBuilder {
             throw new IllegalArgumentException("heading_deg is NaN/Infinite for alert " + a.alertId);
         }
 
-        // These nine fields, in this order, are EXACTLY Highway Radar's current
-        // SabreFetchResponseAlert model (verified by decompiling HR 3.2). HR parses
-        // the response with kotlinx.serialization in strict mode (it never sets
-        // ignoreUnknownKeys), so ANY extra key makes it reject the whole batch and
-        // show no data. The older wzsabre 2.2 model also carried "user_id" and
-        // "confirm_count"; HR dropped both, so we must NOT send them. Do not add
-        // fields here without confirming HR's model still has them.
+        // These nine fields, in this order, are EXACTLY what Highway Radar 3.2
+        // accepts (verified against the app). HR parses the response strictly, so
+        // ANY extra key makes it reject the whole batch and show no data. Older
+        // versions also took "user_id" and "confirm_count"; HR 3.2 rejects both, so
+        // we must NOT send them. Do not add fields here without confirming HR still
+        // accepts them.
         JSONObject obj = new JSONObject();
         obj.put("alert_source",  a.alertSource);           // must be SOURCE_CHP or SOURCE_WAZE
         obj.put("alert_id",      a.alertId);

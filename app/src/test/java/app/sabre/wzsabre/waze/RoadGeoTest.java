@@ -14,7 +14,6 @@ import org.junit.Test;
 
 /**
  * Pure geometry for the road-snap match: computeHeading and findMatchingSegment.
- * Ported from wzsabre 2.2 wazemo.GeoUtils / SegmentMatch.
  */
 public class RoadGeoTest {
 

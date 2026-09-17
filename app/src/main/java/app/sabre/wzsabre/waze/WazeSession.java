@@ -13,8 +13,8 @@ import java.util.Map;
 /**
  * One Waze "RT" protocol session: mints an anonymous account (register), logs in,
  * and runs alert queries. Single-slot, synchronous (runs on the caller's worker
- * thread). Ported from wzsabre 2.2 wazemo.WazeSession (fetch path only: no
- * reporting/keepalive/pooling).
+ * thread). Follows the Waze client's own session sequence for the fetch path
+ * (no keepalive or session pooling).
  *
  * No backend or pre-shared credentials are needed: register() asks Waze itself for
  * a fresh username/password. Credentials + device can be injected (persisted across
@@ -65,7 +65,7 @@ final class WazeSession {
      * HTTP 200: a {@code ServerError} element, or a {@code LoginError}. Without this,
      * a server that invalidates the session but replies 200 looks like success and
      * the session zombies: {@code lastRequestMs} keeps updating so it never idles
-     * out, and no alerts are ever merged again. Mirrors the official's checkErrors.
+     * out, and no alerts are ever merged again.
      */
     static void checkErrors(WazeProto.Batch batch)
             throws WazeExceptions.AccountRejectedException,
@@ -269,13 +269,13 @@ final class WazeSession {
 
     /**
      * Submit a user report to Waze via the full road-snap command sequence
-     * (recon D): handshake, an initial SeeMe+Location+MapDisplayed, a tile
+     * the Waze client uses: handshake, an initial SeeMe+Location+MapDisplayed, a tile
      * fetch + nearest-segment snap, an At position update carrying the
      * (possibly absent) directional SegmentNodes, a short simulated-driving
      * camouflage sequence (only when a segment matched), the actual report,
      * and a trailing SeeMe close-out. Only the report POST's response batch
      * is parsed for the result; the rest are best-effort / fire-and-forget,
-     * mirroring the official client.
+     * as in the Waze client.
      */
     ReportResult submitReport(app.sabre.wzsabre.ReportRequest r, long nowMs) throws Exception {
         prepareForArea(r.lat, r.lon);
@@ -318,7 +318,7 @@ final class WazeSession {
         try {
             command(WazeRtCodec.seeMeCommand(2));
         } catch (Exception ignore) {
-            // best-effort, matches recon D step 9
+            // best-effort close-out, as in the Waze client
         }
 
         if (WazeReportCodec.reportAccepted(batch)) {
@@ -339,10 +339,10 @@ final class WazeSession {
     }
 
     /**
-     * Best-effort "driving" camouflage sent after the At update (recon D step 6):
+     * Best-effort "driving" camouflage sent after the At update:
      * three ~1s steps along {@code heading} at Waze's simulated driving speed
      * (13.4 m/s), each POSTing an At + MapDisplayed pair for the stepped
-     * position. Mirrors the official client's simulateDriving; anti-abuse
+     * position. The Waze client sends the same simulated-driving steps; anti-abuse
      * camouflage, so it must run (not be skippable) whenever a segment matched,
      * but a failed step (network or sleep) must never abort the report itself.
      */
@@ -368,10 +368,10 @@ final class WazeSession {
     }
 
     /**
-     * GETs and decodes the WZDF road-graph tile covering (lat,lon), for road-snap
-     * (Task R5). Requires a live session (uses {@code session.serverSessionId}/
-     * {@code session.secretKey} in the tile URL, matching how the official
-     * authenticates the tile GET). Best-effort: any failure (no session, HTTP
+     * GETs and decodes the WZDF road-graph tile covering (lat,lon), for road-snap.
+     * Requires a live session (uses {@code session.serverSessionId}/
+     * {@code session.secretKey} in the tile URL, which is how the tile GET is
+     * authenticated). Best-effort: any failure (no session, HTTP
      * error, empty body, decode error) returns an empty list rather than throwing,
      * so a snap failure degrades to a position-only report instead of aborting it.
      */

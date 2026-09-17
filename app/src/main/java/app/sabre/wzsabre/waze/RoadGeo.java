@@ -7,10 +7,8 @@ import java.util.List;
  * to attach directional SegmentNodes to a Waze report before submission. Pure
  * Java (no Android APIs), so it stays plain-JVM testable.
  *
- * Ported from wzsabre 2.2 wazemo.GeoUtils (computeHeading / pointToSegmentDist /
- * minDistToPolyline / findMatchingSegment), adapted from Coord to our LatLon.
- * Named RoadGeo (not GeoUtils) to avoid clashing with any future GeoBoxes-style
- * general geo helper in this package.
+ * Implements the same heading, point-to-segment distance, polyline distance and
+ * segment-matching rules the Waze client applies when snapping a report to a road.
  */
 final class RoadGeo {
     private RoadGeo() {}
@@ -83,9 +81,8 @@ final class RoadGeo {
     /**
      * Perpendicular distance in meters from `point` to the segment
      * [segStart, segEnd], via an equirectangular meters projection local to
-     * the segment's average latitude (matches wzsabre 2.2
-     * GeoUtils.pointToSegmentDist, including its degenerate-segment fallback
-     * to a straight point-to-point distance when segStart == segEnd).
+     * the segment's average latitude, with a degenerate-segment fallback to a
+     * straight point-to-point distance when segStart == segEnd.
      */
     private static double pointToSegmentDistM(LatLon point, LatLon segStart, LatLon segEnd) {
         double mPerDegLon = WazeConstants.mPerDegLon((segStart.lat + segEnd.lat) / 2.0);

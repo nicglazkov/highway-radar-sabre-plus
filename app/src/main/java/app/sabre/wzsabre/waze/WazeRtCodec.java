@@ -9,13 +9,12 @@ import java.util.UUID;
 
 /**
  * Encodes/decodes the Waze "RT" protocol wire format on top of the generated
- * {@link WazeProto} protobuf classes. Ported from wzsabre 2.2 wazemo.WazeProto +
- * WazeProtocolHelpersKt. (Named *Codec to avoid clashing with the generated
- * WazeProto outer class.)
+ * {@link WazeProto} protobuf classes. (Named *Codec to avoid clashing with the
+ * generated WazeProto outer class.)
  *
  * Body framing: each protobuf "line" is {@code "ProtoBase64," + base64(Batch{element})}
  * with NO_WRAP base64; multiple lines are joined with '\n'. Raw command lines
- * (SeeMe / Location / MapDisplayed) are sent verbatim, not protobuf-wrapped.
+ * (SeeMe / Location / MapDisplayed) are sent as plain text, not protobuf-wrapped.
  */
 final class WazeRtCodec {
     private WazeRtCodec() {}
@@ -101,7 +100,7 @@ final class WazeRtCodec {
         return Base64.encodeToString(uid.toByteArray(), Base64.NO_WRAP);
     }
 
-    // ── Raw command-line builders (sent verbatim as the /command body) ───────
+    // ── Raw command-line builders (sent as-is as the /command body) ──────────
 
     private static String f6(double v) { return String.format(Locale.US, "%.6f", v); }
 
@@ -121,8 +120,7 @@ final class WazeRtCodec {
     static String seeMeCommand()  { return seeMeCommand(1); }
 
     /** mode 1 = handshake SeeMe; mode 2 = the post-report SeeMe used to close
-     *  out the simulateDriving sequence (recon D step 9). Formula matches
-     *  wazemo.WazeProto.seeMeCommand(level): "SeeMe," + level + ",2,T,T,T,1,-1,1,7". */
+     *  out the simulateDriving sequence. Wire form: "SeeMe," + level + ",2,T,T,T,1,-1,1,7". */
     static String seeMeCommand(int mode) {
         return "SeeMe," + mode + ",2,T,T,T,1,-1,1,7";
     }
@@ -136,7 +134,7 @@ final class WazeRtCodec {
      * "At" position update carrying the road-snap result: fromNode/toNode are the
      * tile-local directional node indices from a {@code SegmentMatch}, or -1/-1 when
      * no segment matched. lon/lat formatted identically to {@link #locationCommand}
-     * (plain concatenation, not fixed-decimal), matching wazemo.WazeProto.atCommand.
+     * (plain concatenation, not fixed-decimal), as the Waze client formats it.
      */
     static String atCommand(double lon, double lat, int heading, long fromNode, long toNode) {
         return "At," + lon + "," + lat + ",0," + heading + ",1," + fromNode + "," + toNode + ",T,0,-1,-1,0";
@@ -159,8 +157,8 @@ final class WazeRtCodec {
     /**
      * Extracts removed-alert uuids from a batch. The RT server signals a cleared
      * alert with an {@code old_command} line of the form {@code "RmAlert,<uuid>"}
-     * (NOT a RemoveAlertAction message: verified in wzsabre 2.2
-     * WazeProto.parseRemovedAlertIds). Strip the prefix and trim to get the uuid.
+     * (NOT a RemoveAlertAction message; verified on the live feed). Strip the prefix
+     * and trim to get the uuid.
      */
     static List<String> parseRemovedAlertIds(WazeProto.Batch batch) {
         List<String> out = new ArrayList<>();
@@ -218,8 +216,8 @@ final class WazeRtCodec {
     }
 
     /**
-     * Type-enum → wire name, matching the official's ALERT_TYPE_NAMES map: the
-     * generated enum constant name, except types not in that map (UNKNOWN_TYPE and
+     * Type-enum → wire name, as the SABRE consumer expects it: the generated enum
+     * constant name, except the unnamed types (UNKNOWN_TYPE and
      * the reserved __NOT_IN_USE__ values) collapse to "UNKNOWN".
      */
     private static String typeName(WazeProto.AlertType t) {
@@ -229,7 +227,7 @@ final class WazeRtCodec {
     }
 
     /**
-     * Subtype-enum → wire name, matching the official's ALERT_SUBTYPE_NAMES map:
+     * Subtype-enum → wire name, as the SABRE consumer expects it:
      * the enum constant name, except NO_SUBTYPE and the reserved __NOT_IN_USE__
      * values map to "" so the caller falls back to the type name.
      */

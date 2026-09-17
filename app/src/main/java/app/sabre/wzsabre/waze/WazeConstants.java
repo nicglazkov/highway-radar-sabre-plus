@@ -2,7 +2,6 @@ package app.sabre.wzsabre.waze;
 
 /**
  * Constants and host resolution for the Waze mobile-app "RT" protocol.
- * Ported from the official wzsabre 2.2 wazemo.WazeConstants.
  */
 final class WazeConstants {
     static final int    PROTOCOL_VERSION       = 234;

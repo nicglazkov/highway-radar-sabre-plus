@@ -5,12 +5,12 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Derives an alert's {@code confirm_ts} the way the official wzsabre does
- * (WazeAlertJsonAlert.confirmMillis): the Waze RT feed has no explicit
+ * Derives an alert's {@code confirm_ts} the way the original wzsabre plugin
+ * does: the Waze RT feed has no explicit
  * confirmation timestamp, so it is inferred as the moment an alert's thumbs-up
  * count was last seen to INCREASE. State is held per alert id in a map whose
- * entries expire an hour after they were last touched (the official's 1-hour
- * TtlMap), so it self-trims for alerts that scroll out of view.
+ * entries expire an hour after they were last touched, so it self-trims for
+ * alerts that scroll out of view.
  *
  * <p>{@code confirm_count} is simply the thumbs-up count and is read directly off
  * the alert; only the timestamp needs this history.
@@ -44,7 +44,7 @@ final class WazeConfirmTracker {
             seen.put(id, m);
             return null;
         }
-        m.expiry = now + TTL_MS;   // touched → refresh TTL, like TtlMap.set
+        m.expiry = now + TTL_MS;   // touched → refresh TTL
         if (thumbs > m.thumbs) {
             m.confirmMs = now;
             m.thumbs = thumbs;

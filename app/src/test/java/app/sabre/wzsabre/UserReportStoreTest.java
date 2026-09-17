@@ -53,7 +53,7 @@ public class UserReportStoreTest {
     @Test
     public void renderableButInvalidTypeFallsBackToValid() throws JSONException {
         // HAZARD_ON_SHOULDER_CONSTRUCTION is renderable-prefixed (starts with HAZARD, so
-        // AlertMapper.renderableEchoType passes it through verbatim) but is NOT a member of
+        // AlertMapper.renderableEchoType passes it through unchanged) but is NOT a member of
         // SabreResponseBuilder.VALID_TYPES, unlike its siblings HAZARD_ON_SHOULDER_CAR_STOPPED /
         // _ANIMALS / _MISSING_SIGN. Proves the fallback is doing real work.
         String outOfSetType = "HAZARD_ON_SHOULDER_CONSTRUCTION";

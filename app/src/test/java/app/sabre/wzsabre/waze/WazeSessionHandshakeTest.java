@@ -78,7 +78,7 @@ public class WazeSessionHandshakeTest {
         assertEquals(1, http.loginPosts());
         assertEquals(1, http.commandPosts());
         String handshake = http.bodies.get(http.bodies.size() - 1);
-        assertTrue("handshake keeps the official MapDisplayed line", handshake.contains("MapDisplayed,"));
+        assertTrue("handshake keeps the MapDisplayed line", handshake.contains("MapDisplayed,"));
         assertTrue(handshake.startsWith("SeeMe,"));
     }
 
