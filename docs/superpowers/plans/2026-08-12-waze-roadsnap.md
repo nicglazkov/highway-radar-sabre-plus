@@ -9,7 +9,7 @@
 **Tech Stack:** Java, protobuf-javalite (unchanged), OkHttp (WazeHttpClient), JUnit (JVM unit tests, no Robolectric).
 
 ## Global Constraints
-- Port faithfully from the readable jadx reference `C:\Users\live\Documents\code\wzDecomp\wzsabre-2.2-jadx\sources\app\sabre\wzsabre\wazemo\`. The authoritative recon (exact wire formats, field offsets, URL params) is `.superpowers/sdd/2026-08-12-hr-reports-to-waze/roadsnap-recon.md` — read it first every task.
+- Port faithfully from the readable reference sources in the local (untracked) analysis workspace, package `wazemo`. The authoritative recon (exact wire formats, field offsets, URL params) is the local, untracked `roadsnap-recon.md` note — read it first every task.
 - Reference package is `app.sabre.wzsabre.wazemo`; OUR package is `app.sabre.wzsabre.waze`. Adapt names to our existing classes (`WazeSession`, `WazeRtCodec`, `WazeConstants`, `WazeHttpClient`, `WazeProto`, `WazeReportCodec`).
 - No new Android permission (tile GET uses existing INTERNET). No new protobuf. No em dashes, no attribution.
 - Tile-local node indices (u16 & 0x7FFF) are what go on the wire as from_node/to_node — port section indexing EXACTLY.
