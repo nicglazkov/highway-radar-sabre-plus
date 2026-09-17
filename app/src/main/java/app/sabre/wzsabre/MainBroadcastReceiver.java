@@ -136,8 +136,8 @@ public class MainBroadcastReceiver extends BroadcastReceiver {
         response.put("shutdown_action", "app.sabre.wzsabre.SHUTDOWN");
         // alternative_startup_activity lets HR launch us to the foreground so the
         // service can start without hitting Android 15/16 BFSL restrictions. This is
-        // the last field of HR 3.2's SabreDiscoveryResponse model. Do NOT re-add the
-        // old wzsabre 2.x "update_url" field: HR 3.2 dropped it and parses the
+        // the last field Highway Radar 3.2 accepts in a discovery response. Do NOT
+        // re-add the old "update_url" field: HR 3.2 no longer accepts it and parses the
         // discovery response strictly, so an extra key breaks discovery.
         response.put("alternative_startup_activity", pkg + ".AltStartupActivity");
         Intent resp = new Intent(responseAction);

@@ -6,7 +6,6 @@ import org.junit.Test;
 
 /**
  * Pure math for the Waze tile GET: tile-id computation and URL building.
- * Ported from wzsabre 2.2 wazemo.WazeTileParser (buildTileUrl/coordToTileId).
  */
 public class WazeTileCodecTest {
 

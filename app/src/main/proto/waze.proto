@@ -1,9 +1,6 @@
-// Minimal, wire-compatible reconstruction of the Waze mobile RT protocol.
-//
-// Reconstructed by reading decompiled wzsabre 2.2 (jadx WazeProtocol.java +
-// smali). Field NUMBERS and wire TYPES are taken directly from each message's
-// generated writeTo()/getSerializedSize() (the authoritative wire spec for this
-// protobuf-lite build) and from the *_FIELD_NUMBER int constants.
+// Minimal, wire-compatible description of the Waze mobile RT protocol, limited
+// to the messages this plugin exchanges. Field numbers and wire types match
+// what the Waze client sends and accepts on the wire.
 //
 // Scope: ONLY the messages needed for the area-alert FETCH path
 // (ClientInfo / register / login + incoming RealtimeAlert parsing). Reporting
@@ -13,7 +10,7 @@
 //
 // All integer scalars use plain int32/int64 (the writers emit writeInt32 /
 // writeInt64 -- NOT writeSInt32/writeUInt32 -- so there is no zig-zag encoding,
-// e.g. Coordinate.lat/lon and AlertInfo.azymuth are int32, confirmed in smali).
+// e.g. Coordinate.lat/lon and AlertInfo.azymuth are int32).
 
 syntax = "proto2";
 
@@ -32,7 +29,7 @@ message Batch {
 
 // The big polymorphic container. Each Element carries exactly one logical
 // payload (selected by the caller); proto2 makes them all independent optional
-// fields rather than a oneof. Only the FETCH-path members are reconstructed
+// fields rather than a oneof. Only the members this plugin uses are declared
 // here; many other high-numbered members exist in the full schema.
 message Element {
   optional int32 request_id = 1;
@@ -466,9 +463,8 @@ message LoginSuccessful {}
 message AT {}
 
 // ---------------------------------------------------------------------------
-// Alert REPORTING (write) path. Field numbers from *_FIELD_NUMBER smali
-// constants cross-checked against generated writeTo() (plain int32/int64/enum/
-// double/message, no zig-zag). Built by WazeReportCodec.
+// Alert REPORTING (write) path (plain int32/int64/enum/double/message, no
+// zig-zag). Built by WazeReportCodec.
 // ---------------------------------------------------------------------------
 
 message CoordinateWithAlt {

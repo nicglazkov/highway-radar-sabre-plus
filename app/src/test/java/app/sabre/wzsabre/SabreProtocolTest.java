@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
  * ignoreUnknownKeys), so the alert object must contain EXACTLY these nine fields
  * and no others, or HR rejects the whole batch and shows no data.
  *
- * HR 3.2's SabreFetchResponseAlert (verified by decompiling HR):
+ * The alert fields Highway Radar 3.2 accepts (verified against the app):
  *   0  alert_source   String  non-null
  *   1  alert_id       String  non-null
  *   2  type           String  non-null
@@ -27,8 +27,8 @@ import static org.junit.Assert.*;
  *   7  report_ts      Int     (not Long)
  *   8  confirm_ts     Int?    nullable
  *
- * The old wzsabre 2.2 model also had user_id and confirm_count; HR dropped both,
- * so sending them now breaks HR (this was the "plugin detected but no data" bug).
+ * Older versions also took user_id and confirm_count; HR 3.2 rejects both, so
+ * sending them now breaks HR (this was the "plugin detected but no data" bug).
  */
 public class SabreProtocolTest {
 
@@ -131,9 +131,9 @@ public class SabreProtocolTest {
             assertTrue("Missing required field: " + field, a.has(field));
         }
         // HR parses the response strictly (never sets ignoreUnknownKeys), so ANY
-        // extra key makes it reject the whole batch and show no data. HR 3.2's
-        // SabreFetchResponseAlert model is exactly these nine fields: user_id and
-        // confirm_count (present in the old wzsabre 2.2 model) were dropped. Lock
+        // extra key makes it reject the whole batch and show no data. HR 3.2
+        // accepts exactly these nine fields: user_id and confirm_count (accepted by
+        // older versions) are rejected. Lock
         // the field set to exactly nine so a regression can't silently break HR.
         assertEquals("alert must have exactly HR's 9 fields (no user_id/confirm_count)",
                 9, a.length());
@@ -159,7 +159,7 @@ public class SabreProtocolTest {
 
     @Test
     public void alert_sourceNotCapitalized() throws Exception {
-        // HR may NPE if alert_source doesn't match a declared SabreDiscoveryResponseSource id
+        // HR may NPE if alert_source doesn't match a source id declared in the handshake
         JSONObject a = firstAlert(parseResponse(Collections.singletonList(chpAlert())));
         assertNotEquals("'CHP' would not match declared source id 'chp'", "CHP",
                 a.getString("alert_source"));
@@ -239,7 +239,7 @@ public class SabreProtocolTest {
                 "HAZARD_WEATHER_SNOW", "HAZARD_WEATHER_WIND", "HAZARD_WEATHER_STORM",
                 "HAZARD_WEATHER_HAIL"};
         for (String t : canonical) assertTrue(t, SabreResponseBuilder.isValidType(t));
-        // Raw Waze type/subtype names now pass through (the official ships these to HR).
+        // Raw Waze type/subtype names now pass through (HR handles these strings).
         String[] waze = {"POLICE", "ACCIDENT", "HAZARD", "JAM", "SOS",
                 "POLICE_HIDING", "POLICE_WITH_MOBILE_CAMERA", "JAM_HEAVY_TRAFFIC",
                 "HAZARD_ON_SHOULDER_CAR_STOPPED", "HAZARD_ON_ROAD_CAR_STOPPED",

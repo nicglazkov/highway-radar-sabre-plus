@@ -5,8 +5,8 @@ import java.util.UUID;
 
 /**
  * A synthetic Android device fingerprint sent in ClientInfo when registering /
- * logging in to Waze. Ported from wzsabre 2.2 wazemo (WazeModelsKt.DEVICE_POOL +
- * randomDevice()): one of 8 hardcoded profiles, with a fresh random installationId.
+ * logging in to Waze: one of 8 fixed device profiles, matching what the Waze
+ * client itself reports, with a fresh random installationId.
  */
 final class DeviceIdentity {
     final String manufacturer;

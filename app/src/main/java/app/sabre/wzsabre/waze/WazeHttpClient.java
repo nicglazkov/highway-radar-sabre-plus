@@ -19,7 +19,6 @@ import okhttp3.Response;
 /**
  * Thin OkHttp wrapper for the Waze "RT" protocol: binary/octet-stream POSTs with a
  * per-session cookie jar (login sets cookies that subsequent commands must carry).
- * Ported from wzsabre 2.2 wazemo.WazeHttpClient.
  */
 class WazeHttpClient {
     private static final MediaType OCTET = MediaType.parse("binary/octet-stream");
@@ -78,7 +77,7 @@ class WazeHttpClient {
         throw last;
     }
 
-    /** Ported from wzsabre 2.2 wazemo.WazeHttpClient.get: plain GET, no body. */
+    /** Plain GET, no body (used for the tile server). */
     HttpResult get(String url, Map<String, String> headers) throws IOException {
         Request.Builder rb = new Request.Builder()
                 .url(url)

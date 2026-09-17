@@ -39,3 +39,5 @@ google-services.json
 last_crash.txt
 
 .claude/
+# Internal design notes and plans stay local; they are working documents, not user docs.
+/docs/superpowers/

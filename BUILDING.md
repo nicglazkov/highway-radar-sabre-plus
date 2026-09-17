@@ -117,7 +117,7 @@ app/src/main/java/app/sabre/wzsabre/
 ### Package ID = `app.sabre.wzsabre`
 Highway Radar's SABRE discovery allowlists this package ID. Keeping the same ID means HR finds this plugin without requiring any HR-side changes.
 
-### SABRE protocol: `SabreFetchResponseAlert` schema
+### SABRE protocol: fetch response alert schema
 HR uses `kotlinx.serialization` with a bitmask that requires **all 11 fields** to be present on every alert object. Missing any field throws `MissingFieldException` in HR and crashes the crowdsourced-alert layer. `SabreResponseBuilder.buildAlert()` enforces this and rejects NaN coordinates and overflowing `report_ts` at build time.
 
 The 11 fields: `alert_source`, `alert_id`, `user_id`, `type`, `lat`, `lon`, `heading_deg`, `street_name` (nullable), `report_ts` (Int, not Long), `confirm_ts` (nullable Int), `confirm_count`.

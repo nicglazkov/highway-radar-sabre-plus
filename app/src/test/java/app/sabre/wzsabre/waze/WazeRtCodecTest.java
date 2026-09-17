@@ -29,7 +29,7 @@ public class WazeRtCodecTest {
                 WazeProto.Batch.newBuilder().build()).isEmpty());
     }
 
-    // ── At / SeeMe command builders (Task R4) ──────────────────────────────
+    // ── At / SeeMe                command builders ──────────────────────────────
 
     @Test
     public void atCommandFormatsMatchedSegmentNodes() {

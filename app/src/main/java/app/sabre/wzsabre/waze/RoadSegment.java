@@ -4,8 +4,7 @@ import java.util.List;
 
 /**
  * A road-graph segment decoded from a WZDF tile: two tile-local node indices
- * and the polyline geometry between them. Ported from wzsabre 2.2
- * wazemo.RoadSegment (point type adapted from Coord to our LatLon).
+ * and the polyline geometry between them.
  */
 final class RoadSegment {
     public final long segmentId;

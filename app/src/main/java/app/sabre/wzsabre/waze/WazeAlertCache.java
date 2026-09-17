@@ -7,9 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Persistent uuid-keyed alert cache with soft-delete, ported verbatim from the
- * official wzsabre 2.2 {@code WazeAlertFetcher} (alertCache + softDeleted +
- * submitAlerts + purgeExpiredSoftDeletes + isSoftDeleteExpired + return filter).
+ * Persistent uuid-keyed alert cache with soft-delete, matching the caching
+ * behavior of the original wzsabre plugin (merge, soft-delete, expiry, filter).
  *
  * <p>WHY this exists: the Waze RT {@code /command} endpoint is session-stateful.
  * It returns each alert as an {@code AddAlertAction} only ONCE per session, then a
@@ -61,8 +60,7 @@ final class WazeAlertCache {
 
     /**
      * Live view of the cache: purge expired soft-deletes, then return every cached
-     * alert that is not currently soft-deleted. Mirrors the tail of
-     * {@code WazeAlertFetcher.fetchArea}.
+     * alert that is not currently soft-deleted.
      */
     synchronized List<WazeAlert> snapshot() {
         purgeExpiredSoftDeletes();

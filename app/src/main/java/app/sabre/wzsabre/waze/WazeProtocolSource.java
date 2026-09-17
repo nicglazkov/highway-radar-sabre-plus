@@ -52,10 +52,9 @@ public final class WazeProtocolSource {
     // worse than no Waze data.
     private static final long   CACHE_MAX_SERVE_AGE_MS = 10 * 60_000L;
 
-    // Zoom levels queried per refresh (WazeAlertFetcher default maxSteps=5) and the
-    // total wall-clock budget for the box loop (mirrors the official's per-slot
-    // withTimeout of ~10s: whatever boxes complete in time are merged, the rest
-    // wait for the next refresh).
+    // Zoom levels queried per refresh and the total wall-clock budget for the box
+    // loop (about 10s, like the Waze client's viewport refresh: whatever boxes
+    // complete in time are merged, the rest wait for the next refresh).
     private static final int  SHRINK_STEPS    = 5;
     private static final long QUERY_BUDGET_MS = 10_000L;
 
@@ -120,9 +119,8 @@ public final class WazeProtocolSource {
 
     /**
      * Warm the session + cache ahead of HR's first fetch (called at service start
-     * with the last known fetch location). Mirrors the official's pre-warmed
-     * session pool, which is why wzsabre shows alerts in &lt;2s while a cold start
-     * here used to take 10-15s.
+     * with the last known fetch location). Without a pre-warmed session a cold
+     * start used to take 10-15s before the first Waze alerts appeared.
      */
     public void prewarm(double lat, double lon, double radiusMeters) {
         triggerRefreshIfStale(lat, lon, radiusMeters);
@@ -248,10 +246,9 @@ public final class WazeProtocolSource {
 
     /**
      * Prepare the session, then query a series of progressively smaller boxes
-     * around the driver, merging each into the cache. Mirrors the official's
-     * one-account path: getShrinkingBboxes (full radius, then halved each step),
-     * each box shrunk to 0.75 as scanBoxes does, queried big→small on one session
-     * within a total time budget. The smaller viewports defeat the server-side
+     * around the driver, merging each into the cache: full radius, then halved
+     * each step, each box shrunk to 0.75, queried big→small on one session within
+     * a total time budget. The smaller viewports defeat the server-side
      * thinning that drops minor/near-driver alerts from a single large query.
      */
     private void queryArea(WazeSession s, double lat, double lon, double radiusMeters) throws Exception {
@@ -301,7 +298,7 @@ public final class WazeProtocolSource {
      * category for HR's icon.
      *
      * HR 3.2 only draws a crowd alert whose type starts with POLICE, HAZARD, or
-     * ACCIDENT (verified in HR's decompiled renderer) and silently drops the rest,
+     * ACCIDENT (verified against Highway Radar 3.2) and silently drops the rest,
      * including the very common JAM_* (traffic) and ROAD_CLOSED. So when the raw
      * subtype does not start with one of those, we remap it via
      * {@link AlertMapper#fromWazeType} (jams/closures become HAZARD_ON_ROAD_CONGESTION)

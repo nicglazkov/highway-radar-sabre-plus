@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * The result of one Waze RT area query: the alerts the server added (as
  * AddAlertAction elements) and the uuids it removed (as "RmAlert," old_command
- * lines). Mirrors wzsabre 2.2 wazemo.AlertQueryResult.
+ * lines).
  *
  * The RT /command endpoint is session-stateful, it only sends an alert once per
  * session, then a removal when it clears, so callers must MERGE these deltas into

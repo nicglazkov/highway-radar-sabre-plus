@@ -17,8 +17,8 @@ import androidx.work.WorkerParameters;
  * these restrictions and can reliably start foreground services even when the app is
  * in the background or its process was frozen.
  *
- * Mirrors the official wzsabre's WorkManager fallback (last resort in
- * ForegroundServiceStarter's escalation chain).
+ * The last resort in the service-start escalation chain, as in the original
+ * wzsabre plugin.
  */
 public class ServiceStartWorker extends Worker {
     private static final String TAG = "ServiceStartWorker";

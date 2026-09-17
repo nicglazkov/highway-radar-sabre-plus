@@ -1,8 +1,8 @@
 package app.sabre.wzsabre.waze;
 
 /**
- * A Waze alert decoded from a RealtimeAlert protobuf message.
- * Ported from wzsabre 2.2 wazemo.WazeAlert (fetch-relevant fields only).
+ * A Waze alert decoded from a RealtimeAlert protobuf message (fetch-relevant
+ * fields only).
  */
 public final class WazeAlert {
     public final String uuid;

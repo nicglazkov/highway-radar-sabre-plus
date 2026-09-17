@@ -11,8 +11,8 @@ import java.util.Set;
  *
  * <p>Highway Radar 3.2 (update 7) first requires the type to start with POLICE,
  * HAZARD or ACCIDENT, then for HAZARD/ACCIDENT does an exact match against a
- * short list and silently drops everything else (decompiled crowdsourced fetcher,
- * confirmed on the live app on 2026-09-16 with a synthetic two-column injection:
+ * short list and silently drops everything else (confirmed on the live app on
+ * 2026-09-16 with a synthetic two-column injection:
  * congestion, debris, slippery, generic on-road and weather pins never appeared,
  * while the six native hazard names next to them did). POLICE is prefix-only, so
  * any suffix renders.
