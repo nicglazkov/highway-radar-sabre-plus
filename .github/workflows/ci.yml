@@ -18,7 +18,7 @@ permissions:
 jobs:
   test:
     name: Unit tests + lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
@@ -46,7 +46,7 @@ jobs:
 
   build:
     name: Debug APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
