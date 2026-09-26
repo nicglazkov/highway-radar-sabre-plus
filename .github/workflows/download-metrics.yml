@@ -1,0 +1,55 @@
+name: Download metrics
+
+# Once a week, records how many times each release APK has been downloaded, on
+# the `metrics` branch (main is protected, and this is data, not code). Nothing
+# runs in the app; this only reads what GitHub already counts.
+
+on:
+  schedule:
+    - cron: '0 14 * * 1'   # Mondays, 14:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: download-metrics
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read release download counts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bash .github/scripts/download-metrics.sh > /tmp/downloads.json && cat /tmp/downloads.json
+
+      - name: Commit the snapshot to the metrics branch
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin metrics >/dev/null; then
+            git fetch origin metrics
+            git checkout metrics
+          else
+            git checkout --orphan metrics
+            git rm -rfq .
+            printf '%s\n' \
+              "# Download metrics" \
+              "" \
+              "Weekly snapshots of release APK download counts, written by the Download metrics workflow." \
+              "One file per run under \`downloads/\`, and \`downloads/latest.json\` for the most recent." \
+              > README.md
+          fi
+          mkdir -p downloads
+          DATE="$(date -u +%F)"
+          cp /tmp/downloads.json "downloads/$DATE.json"
+          cp /tmp/downloads.json downloads/latest.json
+          git add README.md downloads
+          git commit -m "Download counts for $DATE" || { echo "Nothing changed"; exit 0; }
+          git push origin metrics

@@ -42,6 +42,10 @@ As with any app that uses the internet, each service you contact can see your de
 - No location history or profiles.
 - No selling, renting, or sharing of data with anyone.
 
+## This website
+
+The project website at https://nicglazkov.github.io/highway-radar-sabre-plus/ uses Cloudflare Web Analytics to count page views. It is cookieless and collects no personal data. The app itself has no analytics.
+
 ## Permissions
 
 The app requests only what it needs to relay alerts while you drive (internet access, a foreground-service notification, wake lock, exact alarms to keep the service reachable, and an optional battery-optimization exemption). It does **not** request access to your contacts, camera, microphone, photos, or precise device location; the location it uses for filtering comes from Highway Radar's request, not from a location permission of its own.

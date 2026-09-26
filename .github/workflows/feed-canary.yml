@@ -1,0 +1,56 @@
+name: Feed canary
+
+# Checks the public upstream feeds once a day. When one goes dark or changes
+# shape, it opens (or updates) a single issue so the break is noticed before
+# users report empty maps. When everything is healthy again, it closes it.
+
+on:
+  schedule:
+    - cron: '30 14 * * *'   # daily, 14:30 UTC (06:30 or 07:30 Pacific)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: feed-canary
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check each feed
+        id: canary
+        run: |
+          set +e
+          bash .github/scripts/feed-canary.sh
+          echo "failures=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the canary issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          FAILURES: ${{ steps.canary.outputs.failures }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -e
+          gh label create feed-canary --color D93F0B \
+            --description "Opened automatically when an upstream feed fails" 2>/dev/null || true
+          existing="$(gh issue list --label feed-canary --state open --json number --jq '.[0].number')"
+          printf '\n[Workflow run](%s)\n' "$RUN_URL" >> canary-report.md
+          if [ "$FAILURES" != "0" ]; then
+            if [ -z "$existing" ]; then
+              gh issue create --title "Feed canary: an upstream feed is failing" \
+                --label feed-canary --body-file canary-report.md
+            else
+              gh issue comment "$existing" --body-file canary-report.md
+            fi
+            exit 1
+          elif [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file canary-report.md
+            gh issue close "$existing" --comment "All feeds are healthy again. Closing."
+          fi
