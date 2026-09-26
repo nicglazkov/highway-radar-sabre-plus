@@ -93,13 +93,27 @@ jobs:
           if [ ! -s BODY.md ]; then
             echo "See [CHANGELOG.md](https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md)." > BODY.md
           fi
-          # Every release leads with a friendly, unmissable note for wzsabre users.
+          # Search engines send people straight to this page, so the install
+          # steps come first: a direct link to the APK, then the Highway Radar
+          # step, then the note for wzsabre users, then what changed.
+          APK_URL="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/download/${GITHUB_REF_NAME}/SABRE-Plus-${GITHUB_REF_NAME}.apk"
           printf '%s\n' \
+            "## Install" \
+            "" \
+            "**[Download SABRE-Plus-${GITHUB_REF_NAME}.apk](${APK_URL})** and open it to install. Then open Highway Radar, go to **Settings**, then **SABRE**, and select **SABRE Plus**. First install? See the [install guide](https://github.com/nicglazkov/highway-radar-sabre-plus#installation)." \
+            "" \
             "> **Coming from the original wzsabre? Uninstall it first.**" \
             ">" \
-            "> SABRE Plus replaces wzsabre and uses the same plugin ID that Highway Radar discovers, so Android allows only one of them at a time. Uninstall the old **wzsabre** app (long-press its icon, then App info, then Uninstall), then install SABRE Plus below. Your Highway Radar setup stays exactly as it is. If you never had wzsabre, install SABRE Plus and you are all set." \
+            "> SABRE Plus replaces wzsabre and uses the same plugin ID that Highway Radar discovers, so Android allows only one of them at a time. Uninstall the old **wzsabre** app (long-press its icon, then App info, then Uninstall), then install SABRE Plus. Your Highway Radar setup stays exactly as it is. If you never had wzsabre, install SABRE Plus and you are all set." \
+            "" \
+            "## What's new" \
             "" > RELEASE_NOTES.md
           cat BODY.md >> RELEASE_NOTES.md
+          printf '%s\n' \
+            "" \
+            "---" \
+            "" \
+            "See the same official feeds on a live map and route planner: [commutescout.com](https://commutescout.com)" >> RELEASE_NOTES.md
           echo "--- release notes ---"; cat RELEASE_NOTES.md
 
       - name: Publish GitHub release

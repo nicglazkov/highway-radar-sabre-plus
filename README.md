@@ -25,31 +25,6 @@ An open-source **Highway Radar SABRE plugin** for California, and a drop-in **wz
 
 ---
 
-## What it does
-
-| Source | Data | Update cadence |
-|--------|------|----------------|
-| **CHP Live Feed** | Accidents, road closures, debris, officer on road, weather hazards, directly from the California Highway Patrol statewide XML feed | Every HR map refresh |
-| **Waze** | Crowdsourced police, accidents, hazards, road closures | Every HR map refresh |
-| **Caltrans Closures (LCS)** | Lane and road closures that are physically in place right now (CHP code 1097), from the per-district Caltrans Lane Closure System feeds | Cached, refreshed every 15 min |
-| **Wildfires** | Active California wildfires (name, size, containment) from the interagency WFIGS feed, shown as road hazards near the fire. Contained and stale records are filtered out | Cached, refreshed every 5 min |
-| **Chain Controls** | Caltrans winter chain requirements (R-1/R-2/R-3) on mountain routes, shown as slippery-road hazards | Cached, refreshed every 5 min |
-
-All sources run in parallel and feed into the standard HR crowdsourced-alerts layer, the same map overlay that wzsabre used to power.
-
-Reports work both ways, like the original wzsabre. When you report something in Highway Radar, it shows on your map right away and is submitted to Waze (snapped to the road you are on, over an anonymous session). Confirming an alert or marking one "not there" reaches Waze too.
-
----
-
-## Screenshots
-
-| Plugin settings | Detected by Highway Radar | Alerts on the HR map |
-|:---:|:---:|:---:|
-| <img src="docs/screenshots/settings.png" width="230" alt="Plugin settings screen"> | <img src="docs/screenshots/hr_state.png" width="230" alt="Highway Radar configuration status showing the plugin installed"> | <img src="docs/screenshots/hr-map.png" width="230" alt="Highway Radar map with a plugin-fed alert pin"> |
-| Per-category toggles and "shows as" overrides. | Highway Radar auto-discovers the plugin. | CHP / Waze / Caltrans alerts on the map. |
-
----
-
 ## Requirements
 
 - Android **7.0+** (API 24)
@@ -81,6 +56,33 @@ For hands-off updates, install via [Obtainium](https://github.com/ImranR98/Obtai
 ### Option C: Build from source
 
 See [BUILDING.md](BUILDING.md).
+
+---
+
+## What it does
+
+| Source | Data | Update cadence |
+|--------|------|----------------|
+| **CHP Live Feed** | Accidents, road closures, debris, officer on road, weather hazards, directly from the California Highway Patrol statewide XML feed | Every HR map refresh |
+| **Waze** | Crowdsourced police, accidents, hazards, road closures | Every HR map refresh |
+| **Caltrans Closures (LCS)** | Lane and road closures that are physically in place right now (CHP code 1097), from the per-district Caltrans Lane Closure System feeds | Cached, refreshed every 15 min |
+| **Wildfires** | Active California wildfires (name, size, containment) from the interagency WFIGS feed, shown as road hazards near the fire. Contained and stale records are filtered out | Cached, refreshed every 5 min |
+| **Chain Controls** | Caltrans winter chain requirements (R-1/R-2/R-3) on mountain routes, shown as slippery-road hazards | Cached, refreshed every 5 min |
+
+All sources run in parallel and feed into the standard HR crowdsourced-alerts layer, the same map overlay that wzsabre used to power.
+
+Reports work both ways, like the original wzsabre. When you report something in Highway Radar, it shows on your map right away and is submitted to Waze (snapped to the road you are on, over an anonymous session). Confirming an alert or marking one "not there" reaches Waze too.
+
+See the same official feeds on a live map and route planner: [commutescout.com](https://commutescout.com)
+
+---
+
+## Screenshots
+
+| Plugin settings | Detected by Highway Radar | Alerts on the HR map |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/settings.png" width="230" alt="Plugin settings screen"> | <img src="docs/screenshots/hr_state.png" width="230" alt="Highway Radar configuration status showing the plugin installed"> | <img src="docs/screenshots/hr-map.png" width="230" alt="Highway Radar map with a plugin-fed alert pin"> |
+| Per-category toggles and "shows as" overrides. | Highway Radar auto-discovers the plugin. | CHP / Waze / Caltrans alerts on the map. |
 
 ---
 
