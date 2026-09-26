@@ -1,3 +1,6 @@
 # The Gradle wrapper is a shell script, keep LF even on a Windows checkout, or it
 # breaks on macOS/Linux CI runners (bash: "\r": command not found).
 gradlew text eol=lf
+
+# Workflow helper scripts run on Linux runners: keep LF for the same reason.
+*.sh text eol=lf
