@@ -79,4 +79,23 @@ public class WazeAlertCacheTest {
         cache.submit(adds(alert("", 0)));
         assertTrue(cache.snapshot().isEmpty());
     }
+    // ── Session tracking: a new server session re-sends what is active, nothing more ──
+
+    @Test
+    public void sameSessionKeepsMerging() {
+        WazeAlertCache cache = new WazeAlertCache();
+        cache.submit(7L, adds(alert("A", 0)));
+        cache.submit(7L, adds(alert("B", 0)));
+        assertEquals(Arrays.asList("A", "B"), uuids(cache.snapshot()));
+    }
+
+    @Test
+    public void newSessionDropsAlertsFromTheOldOne() {
+        // The new session sends no RmAlert for alerts that cleared while we were on
+        // the old one, so keeping them would leave ghosts on the map.
+        WazeAlertCache cache = new WazeAlertCache();
+        cache.submit(7L, adds(alert("A", 0), alert("B", 0)));
+        cache.submit(8L, adds(alert("B", 0), alert("C", 0)));
+        assertEquals(Arrays.asList("B", "C"), uuids(cache.snapshot()));
+    }
 }

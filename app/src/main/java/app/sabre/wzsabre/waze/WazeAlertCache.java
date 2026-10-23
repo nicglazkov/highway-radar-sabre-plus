@@ -24,6 +24,22 @@ final class WazeAlertCache {
 
     private final Map<String, WazeAlert> alertCache = new LinkedHashMap<>();
     private final Map<String, Long> softDeleted = new LinkedHashMap<>();
+    /** Server session the cached alerts came from (0 = none yet). */
+    private long sessionId = 0L;
+
+    /**
+     * Apply one query answered on server session {@code sessionId}. An answer from a
+     * different session than the cached alerts first drops them: a new session
+     * re-sends every active alert but sends no removal for alerts that cleared while
+     * we were on the old one, so keeping them would leave ghosts.
+     */
+    synchronized void submit(long sessionId, AlertQueryResult result) {
+        if (sessionId != this.sessionId) {
+            clear();
+            this.sessionId = sessionId;
+        }
+        submit(result);
+    }
 
     /** Apply one query's deltas: upsert adds, soft-delete removals still cached. */
     synchronized void submit(AlertQueryResult result) {
@@ -76,6 +92,7 @@ final class WazeAlertCache {
     synchronized void clear() {
         alertCache.clear();
         softDeleted.clear();
+        sessionId = 0L;
     }
 
     synchronized int size() {

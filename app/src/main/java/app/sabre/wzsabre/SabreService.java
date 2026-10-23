@@ -46,11 +46,20 @@ public class SabreService extends Service {
     private static final long IDLE_TIMEOUT_MS   = 5 * 60_000L;  // no fetch this long → HR is gone
     private static final long SHUTDOWN_GRACE_MS = 20_000L;      // HR said bye; brief wait for a re-open
     private final Handler lifecycleHandler = new Handler(Looper.getMainLooper());
+    /** Start id of the most recent onStartCommand, for {@link #stopRunnable}. */
+    private int lastStartId;
+    private boolean inForeground;
     private final Runnable stopRunnable = () -> {
         Log.d(TAG, "Highway Radar idle/closed, stopping service");
         RUNNING = false;   // stop accepting SHUTDOWN forwards that would resurrect us
         stopForeground(STOP_FOREGROUND_REMOVE);
-        stopSelf();
+        inForeground = false;
+        // Stop only if no start arrived since the last one we handled. A fetch that
+        // Android has queued but not yet delivered is a startForegroundService(), and
+        // tearing the service down under it makes the system kill the whole app for
+        // never calling startForeground(). If one is pending, onStartCommand
+        // promotes the service again when it lands.
+        if (!stopSelfResult(lastStartId)) Log.d(TAG, "New start pending, staying up");
     };
 
     // Requests and source fetches run on SEPARATE executors. If they shared one
@@ -94,7 +103,7 @@ public class SabreService extends Service {
         wazeSource = new app.sabre.wzsabre.waze.WazeProtocolSource(this);
         wazeReporter = new app.sabre.wzsabre.waze.WazeReporter(this);
         createNotificationChannel();
-        startForeground(NOTIFICATION_ID, buildForegroundNotification());
+        ensureForeground();
         chpSource.prewarm();          // statewide feed: no location needed
         // Only warm wildfires if the source is enabled, otherwise it's a wasted
         // network fetch on every service start for a disabled source.
@@ -103,6 +112,12 @@ public class SabreService extends Service {
         maybeCheckForUpdate();        // throttled; notifies once per new version
         armIdleStop();                // stop if no HR activity arrives
         Log.d(TAG, "Service started");
+    }
+
+    private void ensureForeground() {
+        if (inForeground) return;
+        startForeground(NOTIFICATION_ID, buildForegroundNotification());
+        inForeground = true;
     }
 
     /** (Re)arm the watchdog that stops the service after a stretch of no HR activity. */
@@ -181,6 +196,7 @@ public class SabreService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent != null ? intent.getStringExtra("action") : null;
+        lastStartId = startId;
 
         // HR is ending the session. Wait a short grace period in case it immediately
         // opens a new one (its normal behaviour), then stop, a fresh FETCH/handshake
@@ -193,7 +209,10 @@ public class SabreService extends Service {
 
         // Any other start (fetch, handshake pre-warm, boot, or a system restart with
         // a null intent) means HR still wants us, cancel any pending stop and
-        // re-arm the idle watchdog.
+        // re-arm the idle watchdog. If an idle stop already ran but this start
+        // arrived before the service went away, come back to the foreground.
+        RUNNING = true;
+        ensureForeground();
         armIdleStop();
         if (action != null && action.contains("FETCH_REQUEST")) {
             handleFetchRequest(intent.getStringExtra("data"));

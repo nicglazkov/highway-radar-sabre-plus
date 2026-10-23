@@ -252,11 +252,14 @@ public final class WazeProtocolSource {
      * thinning that drops minor/near-driver alerts from a single large query.
      */
     private void queryArea(WazeSession s, double lat, double lon, double radiusMeters) throws Exception {
-        long sessionBefore = s.currentServerSessionId();
         // Non-null only when a fresh login ran the handshake: its MapDisplayed box is a
-        // real viewport query whose alerts the server will not send again this session,
-        // so it is merged below (after the session-change clear) instead of discarded.
+        // real viewport query whose alerts the server will not send again this session.
+        // Merge it right away. Holding it until a box query succeeds would lose it for
+        // the whole session whenever that query fails (cell dead zone, exactly when
+        // re-logins happen). The cache drops alerts from the previous session on the
+        // first answer from a new one.
         WazeProto.Batch handshake = s.prepareForArea(lat, lon);
+        if (handshake != null) merge(s, handshake);
         // Credentials exist now (register/login just ran), persist immediately so a
         // failure in the box loop below can't lose a freshly minted account and force
         // a wasteful re-register on the next run. Only write when they actually changed.
@@ -265,31 +268,17 @@ public final class WazeProtocolSource {
             persist();
             persistedCommunity = creds.community;
         }
-        // A new server session re-sends all currently-active alerts for the area but
-        // sends no RmAlert for alerts that cleared while we were logged out, so the
-        // stale cache must be dropped to avoid ghosts in Highway Radar. Defer that
-        // clear until the FIRST box query succeeds: if the box loop fails right after
-        // a re-login (cell dead zone, exactly when re-logins happen), we keep serving
-        // the old cache instead of blanking Waze for up to CACHE_MAX_SERVE_AGE_MS.
-        boolean sessionChanged = s.currentServerSessionId() != sessionBefore;
-        boolean cleared = false;
         double[][] zoomBoxes = GeoBoxes.shrinkingBoxes(lon, lat, radiusMeters, SHRINK_STEPS);
         long deadline = SystemClock.elapsedRealtime() + QUERY_BUDGET_MS;
         for (double[] zoom : zoomBoxes) {
             if (SystemClock.elapsedRealtime() >= deadline) break;   // best-effort, like the official
-            WazeProto.Batch batch = s.queryBox(GeoBoxes.shrink(zoom, 0.75));
-            if (sessionChanged && !cleared) {   // first successful box → safe to reset
-                alertCache.clear();
-                cleared = true;
-            }
-            if (handshake != null) {
-                alertCache.submit(new AlertQueryResult(
-                        WazeRtCodec.parseAlerts(handshake), WazeRtCodec.parseRemovedAlertIds(handshake)));
-                handshake = null;
-            }
-            alertCache.submit(new AlertQueryResult(
-                    WazeRtCodec.parseAlerts(batch), WazeRtCodec.parseRemovedAlertIds(batch)));
+            merge(s, s.queryBox(GeoBoxes.shrink(zoom, 0.75)));
         }
+    }
+
+    private void merge(WazeSession s, WazeProto.Batch batch) {
+        alertCache.submit(s.currentServerSessionId(), new AlertQueryResult(
+                WazeRtCodec.parseAlerts(batch), WazeRtCodec.parseRemovedAlertIds(batch)));
     }
 
     /**

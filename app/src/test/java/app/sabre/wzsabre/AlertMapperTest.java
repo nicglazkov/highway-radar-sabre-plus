@@ -184,6 +184,32 @@ public class AlertMapperTest {
     }
 
     @Test
+    public void waze_everyPoliceAndCameraVariantReachesHrAsPolice() {
+        // Every enforcement variant the RT server sends must survive the whole path:
+        // the response builder's allowlist, the HR wire type (POLICE* draws), and the
+        // Waze police toggle.
+        String[][] cases = {
+            {"POLICE", ""}, {"POLICE", "POLICE_VISIBLE"}, {"POLICE", "POLICE_HIDING"},
+            {"POLICE", "POLICE_WITH_MOBILE_CAMERA"}, {"CAMERA", ""}, {"CAMERA", "DEFAULT_CAMERA"}
+        };
+        for (String[] c : cases) {
+            String type = AlertMapper.wazeRenderableType(c[0], c[1]);
+            String label = c[0] + "/" + c[1] + " -> " + type;
+            assertTrue("dropped by the allowlist: " + label, SabreResponseBuilder.isValidType(type));
+            assertTrue("not drawn as police: " + label, HrTypes.toHrType(type).startsWith("POLICE"));
+            assertEquals("not under the police toggle: " + label, "police", AlertMapper.wazeCategory(type));
+        }
+    }
+
+    @Test
+    public void waze_hiddenPoliceKeepsHighwayRadarsOwnName() {
+        // POLICE_HIDING is the name Highway Radar itself uses for hidden police (it
+        // sends it in reports, and the original wzsabre passed it through), so it is
+        // not renamed to the CHP-side POLICE_HIDDEN.
+        assertEquals("POLICE_HIDING", AlertMapper.wazeRenderableType("POLICE", "POLICE_HIDING"));
+    }
+
+    @Test
     public void waze_emptyTypeReturnsNull() {
         assertNull(AlertMapper.wazeRenderableType(null, null));
         assertNull(AlertMapper.wazeRenderableType("", ""));
