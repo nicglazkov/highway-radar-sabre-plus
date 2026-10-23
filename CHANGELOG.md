@@ -2,7 +2,7 @@
 
 All notable changes to this project. This project adheres to [semantic-ish versioning](https://semver.org/); dates are release dates.
 
-## [1.11.1] - 2026-10-22
+## [1.11.1] - 2026-10-23
 
 ### Fixed
 - **Waze alerts right around you no longer go missing after a weak signal.** When the plugin starts a new Waze session, Waze's first answer covers the area around you, and Waze sends each alert only once per session. If the next request failed, for example in a dead zone, the plugin threw that first answer away, so the closest alerts could stay hidden until the session ended. The plugin now keeps that answer as soon as it arrives.
