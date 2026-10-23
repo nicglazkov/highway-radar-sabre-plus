@@ -7,7 +7,7 @@ All notable changes to this project. This project adheres to [semantic-ish versi
 ### Fixed
 - **Waze alerts right around you no longer go missing after a weak signal.** When the plugin starts a new Waze session, Waze's first answer covers the area around you, and Waze sends each alert only once per session. If the next request failed, for example in a dead zone, the plugin threw that first answer away, so the closest alerts could stay hidden until the session ended. The plugin now keeps that answer as soon as it arrives.
 - **No more stale Waze alerts after a reconnect.** If the connection dropped right after the plugin logged back in to Waze, alerts from the old session could stay on the map after they had cleared. The plugin now tracks which session each alert came from and drops the old ones on the first answer from the new session.
-- **Fixed a rare crash when Highway Radar sent a request just as the plugin was stopping.** The plugin stops itself a few minutes after Highway Radar goes quiet, or shortly after Highway Radar closes. If a new request arrived at that moment, Android shut the plugin down with an error. The plugin now stays running when a request is on the way.
+- **Requests that arrive just as the plugin stops now get an answer.** The plugin stops itself a few minutes after Highway Radar goes quiet, or shortly after Highway Radar closes. If a new request arrived at that moment, it could go unanswered and Highway Radar showed nothing until the next one. The plugin now stays running when a request is on the way. If Android restarts the plugin in the background and will not let it run, it now stops quietly instead of crashing.
 
 ### Changed
 - The README explains what to do when a Samsung phone blocks the install (Auto Blocker).
