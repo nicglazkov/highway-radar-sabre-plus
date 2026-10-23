@@ -133,6 +133,9 @@ If you already have wzsabre installed:
 **"App not installed", "package conflicts with an existing package", or "signatures do not match"**
 - You have the official wzsabre (from wzsabre.rocks) installed. SABRE Plus replaces wzsabre and must use the same plugin ID that Highway Radar looks for, so the two cannot be installed at once, and they are signed by different developers. Uninstall the official wzsabre (long-press its icon, then App info, then Uninstall), then install SABRE Plus. Highway Radar rediscovers the plugin automatically, and your settings are unaffected.
 
+**Samsung phone blocks the install, or nothing happens when you tap the APK**
+- Samsung's Auto Blocker stops installs from outside the Galaxy Store and Play Store. Turn it off in Settings, then Security and privacy, then Auto Blocker, install SABRE Plus, then turn it back on if you like. While it is on, it also blocks updates.
+
 **"Crowd-Sourced Alert Problems" banner in HR**
 - Open the SABRE Plus app and check that the service status shows *"Plugin active"*.
 - Tap the green start button in HR, this sends a fresh handshake.
