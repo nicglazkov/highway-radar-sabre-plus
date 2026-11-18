@@ -183,7 +183,7 @@ p { margin: 0; }
 .nd-more__all:hover { color: var(--nd-amber); }
 .nd-more ul {
   list-style: none; margin: 0; padding: 0;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); gap: 0.5rem;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(10rem, 100%), 1fr)); gap: 0.5rem;
 }
 .nd-more a.nd-more__item {
   display: block; height: 100%; padding: 0.85rem 1rem; text-decoration: none;
