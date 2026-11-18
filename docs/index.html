@@ -6,8 +6,28 @@
 <title>SABRE Plus: CHP, Waze and Caltrans alerts for Highway Radar</title>
 <meta name="description" content="A free, open-source Highway Radar SABRE plugin for California. Adds live CHP incidents, Waze crowd alerts, Caltrans lane closures, active wildfires and winter chain controls to your Highway Radar map. Drop-in wzsabre replacement, Android 7.0+.">
 <link rel="canonical" href="https://nicglazkov.github.io/highway-radar-sabre-plus/">
-<meta name="theme-color" content="#0a0d16">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#f4f3ef">
+<script>
+/* Theme: Day Drive (light) for everyone; Night Drive only when the visitor
+   picks it with the sun/moon button. Runs before first paint, so no flash. */
+(function () {
+  var d = document.documentElement, key = "nd-theme";
+  function set(t, save) {
+    if (t === "dark") d.setAttribute("data-theme", "dark"); else d.removeAttribute("data-theme");
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (!m) { m = document.createElement("meta"); m.name = "theme-color"; document.head.appendChild(m); }
+    m.setAttribute("content", t === "dark" ? "#0a0d16" : "#f4f3ef");
+    if (save) { try { localStorage.setItem(key, t); } catch (e) {} }
+  }
+  var saved = null;
+  try { saved = localStorage.getItem(key); } catch (e) {}
+  set(saved === "dark" ? "dark" : "light");
+  document.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest && e.target.closest(".nd-theme");
+    if (b) set(d.getAttribute("data-theme") === "dark" ? "light" : "dark", true);
+  });
+})();
+</script>
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://nicglazkov.github.io/highway-radar-sabre-plus/">
@@ -74,6 +94,7 @@
       <a class="nd-hide" href="#sources">Sources</a>
       <a class="nd-hide" href="#install">Install</a>
       <a class="nd-hide" href="#faq">FAQ</a>
+      <button class="nd-theme" type="button" aria-label="Switch between light and dark theme" title="Light or dark theme"><svg class="nd-theme__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg class="nd-theme__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg></button>
       <a class="nd-btn nd-btn--sm" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download</a>
     </nav>
   </div>
