@@ -6,8 +6,8 @@
 <title>SABRE Plus: CHP, Waze and Caltrans alerts for Highway Radar</title>
 <meta name="description" content="A free, open-source Highway Radar SABRE plugin for California. Adds live CHP incidents, Waze crowd alerts, Caltrans lane closures, active wildfires and winter chain controls to your Highway Radar map. Drop-in wzsabre replacement, Android 7.0+.">
 <link rel="canonical" href="https://nicglazkov.github.io/highway-radar-sabre-plus/">
-<meta name="theme-color" content="#E6E7E4" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0a0d16">
+<meta name="color-scheme" content="dark">
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://nicglazkov.github.io/highway-radar-sabre-plus/">
@@ -59,42 +59,47 @@
 }
 </script>
 
+<link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header class="masthead">
-  <div class="wrap">
-    <a class="mark" href="./">
-      <img src="screenshots/app-icon.png" alt="">
+<header class="nd-nav">
+  <div class="nd-wrap nd-nav__in">
+    <a class="nd-brand" href="./">
+      <img src="screenshots/app-icon.png" alt="" width="28" height="28">
       SABRE Plus
     </a>
-    <nav>
-      <a class="nav-hide" href="#sources">Sources</a>
-      <a class="nav-hide" href="#install">Install</a>
-      <a class="nav-hide" href="#faq">FAQ</a>
-      <a class="btn" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download</a>
+    <nav class="nd-links" aria-label="Primary">
+      <a class="nd-hide" href="#sources">Sources</a>
+      <a class="nd-hide" href="#install">Install</a>
+      <a class="nd-hide" href="#faq">FAQ</a>
+      <a class="nd-btn nd-btn--sm" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download</a>
     </nav>
   </div>
 </header>
 
 <main>
 
-  <section class="hero">
-    <div class="wrap">
-      <h1>CHP, Waze and Caltrans alerts on your Highway&nbsp;Radar map.</h1>
-      <p class="lede">
-        Highway Radar can pull crowd-sourced alerts from a plugin. SABRE Plus is that
-        plugin, wired to five live California feeds instead of one.
-      </p>
+  <section class="hero nd-hero">
+    <div class="nd-streak" aria-hidden="true"></div>
+    <div class="nd-wrap hero__grid">
+      <div>
+        <p class="nd-eyebrow">Highway Radar SABRE plugin for California</p>
+        <h1>CHP, Waze and Caltrans alerts on your Highway&nbsp;Radar map.</h1>
+        <p class="lede">
+          Highway Radar can pull crowd-sourced alerts from a plugin. SABRE Plus is that
+          plugin, wired to five live California feeds instead of one.
+        </p>
 
-      <div class="actions">
-        <a class="btn btn--lg" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">
-          Download the APK
-        </a>
-        <a class="btn btn--ghost btn--lg" href="#install">Read the install steps</a>
+        <div class="nd-actions">
+          <a class="nd-btn" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>Download the APK
+          </a>
+          <a class="nd-btn nd-btn--ghost" href="#install">Read the install steps</a>
+        </div>
+        <p class="terms">Android 7.0+, no account, no ads, no tracking, MIT licensed</p>
       </div>
-      <p class="terms">Android 7.0+, no account, no ads, no tracking, MIT licensed</p>
 
       <!-- The signature element: a Caltrans-style changeable message sign
            cycling the kind of alert each source actually produces. -->
@@ -111,23 +116,26 @@
           <p class="sign__src" id="signSrc">Source: CHP live feed</p>
         </div>
         <div class="gantry__legs" aria-hidden="true"><i></i><i></i></div>
+        <ul class="feeds" id="signFeeds" aria-hidden="true">
+          <li class="is-on">CHP</li><li>Chains</li><li>Caltrans</li><li>Fire</li><li>Waze</li>
+        </ul>
       </div>
     </div>
   </section>
 
-  <hr class="lane">
-
   <section class="band" id="sources">
-    <div class="wrap">
-      <p class="label">What it adds</p>
-      <h2>Five feeds, one map layer.</h2>
-      <p>
-        SABRE Plus fetches every source in parallel, filters it to the area Highway Radar
-        requested, de-duplicates it across sources, and hands over the result as standard
-        crowd alerts. Reports go both ways too: when you report something in Highway Radar
-        it shows on your map and is submitted to Waze, over an anonymous session.
-        Turn any of them off in the app.
-      </p>
+    <div class="nd-wrap split">
+      <div class="split__head">
+        <p class="nd-eyebrow">What it adds</p>
+        <h2>Five feeds, one map layer.</h2>
+        <p>
+          SABRE Plus fetches every source in parallel, filters it to the area Highway Radar
+          requested, de-duplicates it across sources, and hands over the result as standard
+          crowd alerts. Reports go both ways too: when you report something in Highway Radar
+          it shows on your map and is submitted to Waze, over an anonymous session.
+          Turn any of them off in the app.
+        </p>
+      </div>
 
       <div class="sources">
         <article class="source">
@@ -189,9 +197,11 @@
   <hr class="lane">
 
   <section class="band">
-    <div class="wrap">
-      <p class="label">On your phone</p>
-      <h2>Settings you control, alerts where you already look.</h2>
+    <div class="nd-wrap">
+      <div class="band__head">
+        <p class="nd-eyebrow">On your phone</p>
+        <h2>Settings you control, alerts where you already look.</h2>
+      </div>
 
       <div class="screens">
         <figure>
@@ -216,54 +226,57 @@
   <hr class="lane">
 
   <section class="band" id="install">
-    <div class="wrap">
-      <p class="label">Install</p>
-      <h2>Three steps, about two minutes.</h2>
-
-      <div class="warn">
-        <h3>Already running wzsabre? Uninstall it first.</h3>
-        <p>
-          SABRE Plus replaces wzsabre and has to use the same plugin ID that Highway
-          Radar looks for, so Android will not keep both. Uninstall wzsabre, then
-          install SABRE Plus. Your Highway Radar settings stay exactly as they are.
-        </p>
+    <div class="nd-wrap split">
+      <div class="split__head">
+        <p class="nd-eyebrow">Install</p>
+        <h2>Three steps, about two minutes.</h2>
+        <div class="nd-actions">
+          <a class="nd-btn" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>Download the APK</a>
+          <a class="nd-btn nd-btn--ghost" href="https://github.com/ImranR98/Obtainium">Auto-update with Obtainium</a>
+        </div>
       </div>
 
-      <ol class="steps">
-        <li>
-          <div>
-            <h3>Download the APK</h3>
-            <p>
-              Grab the latest build from GitHub Releases. Your browser will ask for
-              permission to install unknown apps, and Play Protect may warn that it does
-              not recognize the app: choose More details, then Install anyway.
-            </p>
-          </div>
-        </li>
-        <li>
-          <div>
-            <h3>Open SABRE Plus once</h3>
-            <p>
-              Allow notifications and the battery-optimization exemption when asked.
-              Without them Android can freeze the plugin in the background and alerts
-              stop arriving.
-            </p>
-          </div>
-        </li>
-        <li>
-          <div>
-            <h3>Pick it in Highway Radar</h3>
-            <p>
-              Open Highway Radar, then Settings, then SABRE, and choose SABRE Plus.
-              Alerts start on the next map refresh.
-            </p>
-          </div>
-        </li>
-      </ol>
+      <div>
+        <div class="warn">
+          <h3>Already running wzsabre? Uninstall it first.</h3>
+          <p>
+            SABRE Plus replaces wzsabre and has to use the same plugin ID that Highway
+            Radar looks for, so Android will not keep both. Uninstall wzsabre, then
+            install SABRE Plus. Your Highway Radar settings stay exactly as they are.
+          </p>
+        </div>
 
-      <div class="actions">
-        <a class="btn btn--lg" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download the APK</a>
-        <a class="btn btn--ghost btn--lg" href="https://github.com/ImranR98/Obtainium">Auto-update with Obtainium</a>
+        <ol class="steps">
+          <li>
+            <div>
+              <h3>Download the APK</h3>
+              <p>
+                Grab the latest build from GitHub Releases. Your browser will ask for
+                permission to install unknown apps, and Play Protect may warn that it does
+                not recognize the app: choose More details, then Install anyway.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Open SABRE Plus once</h3>
+              <p>
+                Allow notifications and the battery-optimization exemption when asked.
+                Without them Android can freeze the plugin in the background and alerts
+                stop arriving.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Pick it in Highway Radar</h3>
+              <p>
+                Open Highway Radar, then Settings, then SABRE, and choose SABRE Plus.
+                Alerts start on the next map refresh.
+              </p>
+            </div>
+          </li>
+        </ol>
       </div>
     </div>
   </section>
@@ -271,13 +284,18 @@
   <hr class="lane">
 
   <section class="band">
-    <div class="wrap">
-      <p class="label">Privacy</p>
-      <h2>What it does not do.</h2>
-      <p>
-        The app runs entirely on your phone. It reads public road feeds and Waze, and
-        nothing else.
-      </p>
+    <div class="nd-wrap split">
+      <div class="split__head">
+        <p class="nd-eyebrow">Privacy</p>
+        <h2>What it does not do.</h2>
+        <p>
+          The app runs entirely on your phone. It reads public road feeds and Waze, and
+          nothing else.
+        </p>
+        <div class="nd-actions">
+          <a class="nd-btn nd-btn--ghost" href="privacy.html">Read the full privacy policy</a>
+        </div>
+      </div>
 
       <dl class="ledger">
         <div><dt>Accounts</dt><dd>None</dd></div>
@@ -287,119 +305,137 @@
         <div><dt>Data leaving your device</dt><dd class="is-note">Approximate location, to Waze only</dd></div>
         <div><dt>Source code</dt><dd class="is-note">Public, MIT licensed</dd></div>
       </dl>
-
-      <div class="actions">
-        <a class="btn btn--ghost" href="privacy.html">Read the full privacy policy</a>
-      </div>
     </div>
   </section>
 
   <hr class="lane">
 
   <section class="band" id="faq">
-    <div class="wrap">
-      <p class="label">Questions</p>
-      <h2>Before you install.</h2>
+    <div class="nd-wrap split">
+      <div class="split__head">
+        <p class="nd-eyebrow">Questions</p>
+        <h2>Before you install.</h2>
+      </div>
 
       <div class="faq">
-        <details open>
-          <summary>Is this a replacement for wzsabre?</summary>
-          <p>
-            Yes. It uses the same plugin ID that Highway Radar's discovery looks for, so
-            Highway Radar picks it up automatically. Android only allows one app to hold
-            that ID, so uninstall wzsabre before installing SABRE Plus.
-          </p>
-        </details>
-        <details>
-          <summary>I installed it but no alerts arrive, or Highway Radar still says "WzSabre"</summary>
-          <p>
-            Highway Radar caches the plugin registration it first discovered and keeps
-            using it after you switch. Fully close and reopen Highway Radar,
-            which makes it run discovery again. If that does not fix it, clear Highway
-            Radar's cache: Android Settings, then Apps, then Highway Radar, then Storage,
-            then Clear cache. Use <strong>Clear cache</strong>, not Clear storage, because
-            Clear storage would erase your Highway Radar settings.
-          </p>
-          <p>
-            Tapping Share diagnostics in the SABRE Plus app tells you which case you are
-            in: it reports whether Highway Radar has re-detected SABRE Plus or is still
-            running off a cached registration.
-          </p>
-        </details>
-        <details>
-          <summary>Does it cost anything?</summary>
-          <p>
-            No. It is free and open source under the MIT license. No account, no ads, no
-            in-app purchases, no premium tier.
-          </p>
-        </details>
-        <details>
-          <summary>Why is it not on Google Play?</summary>
-          <p>
-            The plugin has to use the exact package ID Highway Radar looks for, and that
-            ID is already taken on Play. You install the APK from GitHub Releases
-            instead, or point Obtainium at the repository and let it handle updates.
-          </p>
-        </details>
-        <details>
-          <summary>Does it drain my battery or my data plan?</summary>
-          <p>
-            The plugin runs only while Highway Radar is open and stops itself shortly
-            after you close it. The large Caltrans feeds are cached, refreshed on a long
-            interval, and skipped entirely when Caltrans reports nothing has changed.
-          </p>
-        </details>
-        <details>
-          <summary>Which areas are covered?</summary>
-          <p>
-            California. CHP incidents and Caltrans closures are statewide, chain
-            controls cover the mountain passes, wildfires cover the state, and Waze
-            reports work anywhere Waze does.
-          </p>
-        </details>
-        <details>
-          <summary>Is it affiliated with Highway Radar, Waze, CHP or Caltrans?</summary>
-          <p>
-            No. It is an independent project, not affiliated with, endorsed by or
-            supported by any of them. Do not rely on it for safety-critical decisions.
-          </p>
-        </details>
+          <details open>
+            <summary>Is this a replacement for wzsabre?</summary>
+            <p>
+              Yes. It uses the same plugin ID that Highway Radar's discovery looks for, so
+              Highway Radar picks it up automatically. Android only allows one app to hold
+              that ID, so uninstall wzsabre before installing SABRE Plus.
+            </p>
+          </details>
+          <details>
+            <summary>I installed it but no alerts arrive, or Highway Radar still says "WzSabre"</summary>
+            <p>
+              Highway Radar caches the plugin registration it first discovered and keeps
+              using it after you switch. Fully close and reopen Highway Radar,
+              which makes it run discovery again. If that does not fix it, clear Highway
+              Radar's cache: Android Settings, then Apps, then Highway Radar, then Storage,
+              then Clear cache. Use <strong>Clear cache</strong>, not Clear storage, because
+              Clear storage would erase your Highway Radar settings.
+            </p>
+            <p>
+              Tapping Share diagnostics in the SABRE Plus app tells you which case you are
+              in: it reports whether Highway Radar has re-detected SABRE Plus or is still
+              running off a cached registration.
+            </p>
+          </details>
+          <details>
+            <summary>Does it cost anything?</summary>
+            <p>
+              No. It is free and open source under the MIT license. No account, no ads, no
+              in-app purchases, no premium tier.
+            </p>
+          </details>
+          <details>
+            <summary>Why is it not on Google Play?</summary>
+            <p>
+              The plugin has to use the exact package ID Highway Radar looks for, and that
+              ID is already taken on Play. You install the APK from GitHub Releases
+              instead, or point Obtainium at the repository and let it handle updates.
+            </p>
+          </details>
+          <details>
+            <summary>Does it drain my battery or my data plan?</summary>
+            <p>
+              The plugin runs only while Highway Radar is open and stops itself shortly
+              after you close it. The large Caltrans feeds are cached, refreshed on a long
+              interval, and skipped entirely when Caltrans reports nothing has changed.
+            </p>
+          </details>
+          <details>
+            <summary>Which areas are covered?</summary>
+            <p>
+              California. CHP incidents and Caltrans closures are statewide, chain
+              controls cover the mountain passes, wildfires cover the state, and Waze
+              reports work anywhere Waze does.
+            </p>
+          </details>
+          <details>
+            <summary>Is it affiliated with Highway Radar, Waze, CHP or Caltrans?</summary>
+            <p>
+              No. It is an independent project, not affiliated with, endorsed by or
+              supported by any of them. Do not rely on it for safety-critical decisions.
+            </p>
+          </details>
       </div>
     </div>
   </section>
 
-  <section class="closer">
-    <div class="wrap">
+  <section class="closer nd-hero">
+    <div class="nd-streak" aria-hidden="true"></div>
+    <div class="nd-wrap">
       <h2>Put the whole state on your map.</h2>
       <p>Free, open source, and about two minutes to set up.</p>
-      <div class="actions">
-        <a class="btn btn--lg" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download the APK</a>
-        <a class="btn btn--ghost btn--lg" href="https://github.com/nicglazkov/highway-radar-sabre-plus">View the source</a>
+      <div class="nd-actions">
+        <a class="nd-btn" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>Download the APK</a>
+        <a class="nd-btn nd-btn--ghost" href="https://github.com/nicglazkov/highway-radar-sabre-plus">View the source</a>
       </div>
     </div>
   </section>
 
 </main>
 
-<footer>
-  <div class="wrap">
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus">GitHub</a>
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases">Releases</a>
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md">Changelog</a>
-    <a href="privacy.html">Privacy policy</a>
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/issues">Report a problem</a>
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/LICENSE">MIT license</a>
-  </div>
-  <div class="wrap">
-    <p class="disclaim">
+<footer class="nd-foot">
+  <div class="nd-wrap">
+    <div class="nd-foot__top">
+      <a class="nd-brand" href="./"><img src="screenshots/app-icon.png" alt="" width="28" height="28">SABRE Plus</a>
+      <nav class="nd-foot__links" aria-label="Project">
+        <a href="https://github.com/nicglazkov/highway-radar-sabre-plus">GitHub</a>
+        <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases">Releases</a>
+        <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md">Changelog</a>
+        <a href="privacy.html">Privacy policy</a>
+        <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/issues">Report a problem</a>
+        <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/LICENSE">MIT license</a>
+      </nav>
+    </div>
+    <p class="nd-foot__note disclaim">
       SABRE Plus is an independent, unofficial project. It is not affiliated with,
       endorsed by or supported by Waze, Google, the California Highway Patrol, Caltrans
       or Highway Radar. Road data comes from public feeds and is provided without any
       guarantee of accuracy or timeliness. Always follow real-world conditions, signage
       and the law.
     </p>
+    <div class="nd-more">
+      <div class="nd-more__head">
+        <p class="nd-eyebrow">More from Nic</p>
+        <a class="nd-more__all" href="https://nicglazkov.github.io/">All projects &rarr;</a>
+      </div>
+      <ul>
+        <li><a class="nd-more__item" href="https://commutescout.com"><b>CommuteScout</b><span>Live road conditions and the best time to leave</span></a></li>
+        <li><a class="nd-more__item" href="https://nicglazkov.github.io/chaincheck/"><b>ChainCheck</b><span>Sierra chain controls and pass weather</span></a></li>
+        <li><a class="nd-more__item" href="./" aria-current="page"><b>SABRE Plus</b><span>California road alerts for Highway Radar</span></a></li>
+        <li><a class="nd-more__item" href="https://nicglazkov.github.io/outagewatch/"><b>OutageWatch</b><span>PG&amp;E power outage alerts</span></a></li>
+        <li><a class="nd-more__item" href="https://getfiberwatch.com"><b>FiberWatch</b><span>Know when fiber reaches your address</span></a></li>
+        <li><a class="nd-more__item" href="https://nicglazkov.github.io/switchboard/"><b>Switchboard</b><span>Claude Code chats on all your computers</span></a></li>
+        <li><a class="nd-more__item" href="https://chalkboard.studio"><b>Chalkboard</b><span>Turn a topic into a narrated explainer video</span></a></li>
+      </ul>
+    </div>
   </div>
 </footer>
+
 
 <script>
 // Cycle the sign through one representative alert per source. The first message
@@ -418,6 +454,8 @@
     { lines: ['Police reported ahead', 'I-5 N near Stockton'],            src: 'Waze crowd reports' }
   ];
 
+  var chips = document.querySelectorAll('#signFeeds li');
+  var order = [0, 1, 2, 3, 4];
   var i = 0;
   setInterval(function () {
     i = (i + 1) % feed.length;
@@ -431,6 +469,7 @@
         msg.appendChild(el);
       });
       src.textContent = 'Source: ' + next.src;
+      for (var c = 0; c < chips.length; c++) chips[c].classList.toggle('is-on', c === order[i]);
       msg.classList.remove('is-swapping');
     }, 350);
   }, 3600);
