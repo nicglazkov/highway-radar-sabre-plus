@@ -6,8 +6,28 @@
 <title>Privacy policy: SABRE Plus for Highway Radar</title>
 <meta name="description" content="SABRE Plus has no servers, no accounts and no analytics, and collects no personal data. This policy sets out exactly what stays on your device, what leaves it, and what never happens.">
 <link rel="canonical" href="https://nicglazkov.github.io/highway-radar-sabre-plus/privacy.html">
-<meta name="theme-color" content="#E6E7E4" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f3ef">
+<script>
+/* Theme: Day Drive (light) for everyone; Night Drive only when the visitor
+   picks it with the sun/moon button. Runs before first paint, so no flash. */
+(function () {
+  var d = document.documentElement, key = "nd-theme";
+  function set(t, save) {
+    if (t === "dark") d.setAttribute("data-theme", "dark"); else d.removeAttribute("data-theme");
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (!m) { m = document.createElement("meta"); m.name = "theme-color"; document.head.appendChild(m); }
+    m.setAttribute("content", t === "dark" ? "#0a0d16" : "#f4f3ef");
+    if (save) { try { localStorage.setItem(key, t); } catch (e) {} }
+  }
+  var saved = null;
+  try { saved = localStorage.getItem(key); } catch (e) {}
+  set(saved === "dark" ? "dark" : "light");
+  document.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest && e.target.closest(".nd-theme");
+    if (b) set(d.getAttribute("data-theme") === "dark" ? "light" : "dark", true);
+  });
+})();
+</script>
 
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://nicglazkov.github.io/highway-radar-sabre-plus/privacy.html">
@@ -33,28 +53,30 @@
 }
 </script>
 
+<link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header class="masthead">
-  <div class="wrap">
-    <a class="mark" href="./">
-      <img src="screenshots/app-icon.png" alt="">
+<header class="nd-nav">
+  <div class="nd-wrap nd-nav__in">
+    <a class="nd-brand" href="./">
+      <img src="screenshots/app-icon.png" alt="" width="28" height="28">
       SABRE Plus
     </a>
-    <nav>
-      <a class="nav-hide" href="./#sources">Sources</a>
-      <a class="nav-hide" href="./#install">Install</a>
-      <a class="nav-hide" href="./#faq">FAQ</a>
-      <a class="btn" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download</a>
+    <nav class="nd-links" aria-label="Primary">
+      <a class="nd-hide" href="./#sources">Sources</a>
+      <a class="nd-hide" href="./#install">Install</a>
+      <a class="nd-hide" href="./#faq">FAQ</a>
+      <button class="nd-theme" type="button" aria-label="Switch between light and dark theme" title="Light or dark theme"><svg class="nd-theme__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><svg class="nd-theme__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg></button>
+      <a class="nd-btn nd-btn--sm" href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases/latest">Download</a>
     </nav>
   </div>
 </header>
 
-<main class="doc">
-  <div class="wrap">
-    <p class="label">Privacy policy</p>
+<main class="doc nd-hero">
+  <div class="nd-wrap">
+    <p class="nd-eyebrow">Privacy policy</p>
     <h1>SABRE Plus collects nothing about you.</h1>
     <p class="stamp">Last updated 2026-08-04</p>
 
@@ -202,14 +224,34 @@
   </div>
 </main>
 
-<footer>
-  <div class="wrap">
-    <a href="./">Home</a>
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus">GitHub</a>
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases">Releases</a>
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md">Changelog</a>
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/issues">Report a problem</a>
-    <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/LICENSE">MIT license</a>
+<footer class="nd-foot">
+  <div class="nd-wrap">
+    <div class="nd-foot__top">
+      <a class="nd-brand" href="./"><img src="screenshots/app-icon.png" alt="" width="28" height="28">SABRE Plus</a>
+      <nav class="nd-foot__links" aria-label="Project">
+        <a href="./">Home</a>
+        <a href="https://github.com/nicglazkov/highway-radar-sabre-plus">GitHub</a>
+        <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/releases">Releases</a>
+        <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/CHANGELOG.md">Changelog</a>
+        <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/issues">Report a problem</a>
+        <a href="https://github.com/nicglazkov/highway-radar-sabre-plus/blob/main/LICENSE">MIT license</a>
+      </nav>
+    </div>
+    <div class="nd-more">
+      <div class="nd-more__head">
+        <p class="nd-eyebrow">More from Nic</p>
+        <a class="nd-more__all" href="https://nicglazkov.github.io/">All projects &rarr;</a>
+      </div>
+      <ul>
+        <li><a class="nd-more__item" href="https://commutescout.com"><b>CommuteScout</b><span>Live road conditions and the best time to leave</span></a></li>
+        <li><a class="nd-more__item" href="https://nicglazkov.github.io/chaincheck/"><b>ChainCheck</b><span>Sierra chain controls and pass weather</span></a></li>
+        <li><a class="nd-more__item" href="./" aria-current="page"><b>SABRE Plus</b><span>California road alerts for Highway Radar</span></a></li>
+        <li><a class="nd-more__item" href="https://nicglazkov.github.io/outagewatch/"><b>OutageWatch</b><span>PG&amp;E power outage alerts</span></a></li>
+        <li><a class="nd-more__item" href="https://getfiberwatch.com"><b>FiberWatch</b><span>Know when fiber reaches your address</span></a></li>
+        <li><a class="nd-more__item" href="https://nicglazkov.github.io/switchboard/"><b>Switchboard</b><span>Claude Code chats on all your computers</span></a></li>
+        <li><a class="nd-more__item" href="https://chalkboard.studio"><b>Chalkboard</b><span>Turn a topic into a narrated explainer video</span></a></li>
+      </ul>
+    </div>
   </div>
 </footer>
 
